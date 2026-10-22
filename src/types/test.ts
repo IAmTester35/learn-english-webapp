@@ -175,3 +175,16 @@ export interface TestAttempt {
   speakingReviews: DeferredTaskReview[];
   writingReviews: DeferredTaskReview[];
 }
+
+export type SkillSection = 'reading' | 'listening' | 'speaking' | 'writing';
+
+export interface TestProgress {
+  testId: string;
+  testTitle: string;
+  lastActiveSection: SkillSection;
+  answers: UserAnswers;
+  updatedAt: string;
+  answeredCount: number;
+  totalCount: number;
+}
+

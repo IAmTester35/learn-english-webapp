@@ -34,7 +34,7 @@ export const NavigationGuardProvider: React.FC<{ children: React.ReactNode }> = 
   const confirmNavigation = useCallback(() => {
     if (!isTestInProgress) return true;
     const ok = window.confirm(
-      'Bạn đang trong tiến trình làm bài thi. Rời khỏi trang này sẽ hủy toàn bộ bài làm chưa nộp. Bạn có chắc chắn muốn tiếp tục?'
+      'Bạn đang trong tiến trình làm bài thi. Tiến độ bài làm đã được tự động lưu vào bộ nhớ máy, bạn có thể tiếp tục bất cứ lúc nào từ trang chủ. Bạn có muốn rời khỏi trang không?'
     );
     if (ok) {
       setIsTestInProgress(false);

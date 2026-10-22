@@ -58,9 +58,9 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
   if (attempts.length === 0) {
     return (
       <main className="max-w-4xl mx-auto p-6 space-y-4">
-        <div className="border-2 border-black p-8 text-center bg-white space-y-3">
-          <h2 className="text-xl font-bold">Chưa có kết quả bài thi nào</h2>
-          <p className="text-sm text-neutral-600">
+        <div className="border-2 border-black p-8 text-center bg-[#fffdf5] space-y-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <h2 className="text-xl font-black text-black">Chưa có kết quả bài thi nào</h2>
+          <p className="text-sm font-semibold text-neutral-800">
             Hãy vào mục &ldquo;Danh mục bài thi&rdquo; để chọn đề và hoàn thành bài kiểm tra.
           </p>
         </div>
@@ -71,24 +71,24 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
   return (
     <main className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
       {/* Top Header & Selector */}
-      <div className="border-2 border-black p-4 bg-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="border-2 border-black p-4 bg-[#fffdf5] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
         <div>
-          <h2 className="text-xl font-bold">Hồ sơ kết quả bài thi (Local History)</h2>
-          <p className="text-xs text-neutral-600">
+          <h2 className="text-xl font-black text-black">Hồ sơ kết quả bài thi (Local History)</h2>
+          <p className="text-xs font-semibold text-neutral-800">
             Xem lại chi tiết câu trả lời, đối chiếu đáp án Reading / Listening và chấm điểm Speaking / Writing.
           </p>
         </div>
 
         {/* Attempt Picker */}
         <div className="flex items-center gap-2">
-          <label htmlFor="attempt-select" className="text-xs font-bold uppercase shrink-0">
+          <label htmlFor="attempt-select" className="text-xs font-bold uppercase shrink-0 text-black">
             Chọn lần thi:
           </label>
           <select
             id="attempt-select"
             value={currentAttempt?.id || ''}
             onChange={(e) => onSelectAttempt(e.target.value)}
-            className="border-2 border-black p-2 text-sm font-mono bg-white text-black focus-visible:outline-2"
+            className="border-2 border-black p-2 text-sm font-mono font-bold bg-[#fcf8ed] text-black focus-visible:outline-2 cursor-pointer"
           >
             {attempts.map((att, idx) => (
               <option key={att.id} value={att.id}>
@@ -104,17 +104,17 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
           {/* Summary Card */}
           <section
             aria-labelledby="summary-heading"
-            className="border-2 border-black p-5 bg-white space-y-4"
+            className="border-2 border-black p-5 bg-[#fffdf5] space-y-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-black pb-3">
               <div>
-                <span className="text-xs font-mono font-bold px-2 py-0.5 border border-black inline-block">
+                <span className="text-xs font-mono font-bold px-2 py-0.5 border-2 border-black bg-[#f4eed9] inline-block">
                   {currentAttempt.testId}
                 </span>
-                <h3 id="summary-heading" className="text-xl font-bold mt-1">
+                <h3 id="summary-heading" className="text-xl font-black mt-1 text-black">
                   {currentAttempt.testTitle}
                 </h3>
-                <p className="text-xs text-neutral-600">
+                <p className="text-xs font-semibold text-neutral-800">
                   Thời gian nộp: {new Date(currentAttempt.submittedAt).toLocaleString('vi-VN')}
                 </p>
               </div>
@@ -122,7 +122,7 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
               <button
                 type="button"
                 onClick={() => handleDelete(currentAttempt.id)}
-                className="self-start sm:self-center px-3 py-1.5 border border-black text-xs font-bold hover:bg-neutral-100"
+                className="self-start sm:self-center px-3 py-1.5 border-2 border-black text-xs font-bold bg-[#f4eed9] text-black hover:bg-black hover:text-[#fffdf5] transition-colors cursor-pointer"
               >
                 Xóa bài thi này
               </button>
@@ -130,38 +130,38 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
 
             {/* Score Badges */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-              <div className="border-2 border-black p-3 bg-white">
-                <span className="text-xs font-bold block uppercase text-neutral-600">Reading</span>
-                <span className="text-2xl font-bold font-mono">
+              <div className="border-2 border-black p-3 bg-[#fcf8ed]">
+                <span className="text-xs font-black block uppercase text-neutral-800">Reading</span>
+                <span className="text-2xl font-black font-mono text-black">
                   {currentAttempt.scores.reading.correctCount} / {currentAttempt.scores.reading.totalCount}
                 </span>
-                <span className="text-xs block text-neutral-500 font-mono">
+                <span className="text-xs block text-neutral-800 font-mono font-bold">
                   ({Math.round((currentAttempt.scores.reading.correctCount / (currentAttempt.scores.reading.totalCount || 1)) * 100)}%)
                 </span>
               </div>
 
-              <div className="border-2 border-black p-3 bg-white">
-                <span className="text-xs font-bold block uppercase text-neutral-600">Listening</span>
-                <span className="text-2xl font-bold font-mono">
+              <div className="border-2 border-black p-3 bg-[#fcf8ed]">
+                <span className="text-xs font-black block uppercase text-neutral-800">Listening</span>
+                <span className="text-2xl font-black font-mono text-black">
                   {currentAttempt.scores.listening.correctCount} / {currentAttempt.scores.listening.totalCount}
                 </span>
-                <span className="text-xs block text-neutral-500 font-mono">
+                <span className="text-xs block text-neutral-800 font-mono font-bold">
                   ({Math.round((currentAttempt.scores.listening.correctCount / (currentAttempt.scores.listening.totalCount || 1)) * 100)}%)
                 </span>
               </div>
 
-              <div className="border-2 border-black p-3 bg-white">
-                <span className="text-xs font-bold block uppercase text-neutral-600">Speaking</span>
-                <span className="text-xs font-bold font-mono mt-2 inline-block px-2 py-1 border border-black">
+              <div className="border-2 border-black p-3 bg-[#fcf8ed]">
+                <span className="text-xs font-black block uppercase text-neutral-800">Speaking</span>
+                <span className="text-xs font-black font-mono mt-2 inline-block px-2 py-1 border-2 border-black bg-[#fffdf5]">
                   {currentAttempt.speakingReviews.some((r) => r.status === 'pending_review')
                     ? 'CHỜ CHẤM'
                     : 'ĐÃ CHẤM'}
                 </span>
               </div>
 
-              <div className="border-2 border-black p-3 bg-white">
-                <span className="text-xs font-bold block uppercase text-neutral-600">Writing</span>
-                <span className="text-xs font-bold font-mono mt-2 inline-block px-2 py-1 border border-black">
+              <div className="border-2 border-black p-3 bg-[#fcf8ed]">
+                <span className="text-xs font-black block uppercase text-neutral-800">Writing</span>
+                <span className="text-xs font-black font-mono mt-2 inline-block px-2 py-1 border-2 border-black bg-[#fffdf5]">
                   {currentAttempt.writingReviews.some((r) => r.status === 'pending_review')
                     ? 'CHỜ CHẤM'
                     : currentAttempt.writingReviews.map((r) => r.score || 'ĐÃ CHẤM').join(' | ')}
@@ -174,10 +174,10 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
           <section aria-labelledby="reading-results-heading" className="space-y-4">
             <h3
               id="reading-results-heading"
-              className="text-lg font-bold border-b-2 border-black pb-1 flex items-center justify-between"
+              className="text-lg font-black border-b-2 border-black pb-1 flex items-center justify-between text-black"
             >
               <span>1. Chi tiết bài thi Reading</span>
-              <span className="text-sm font-mono font-normal">
+              <span className="text-sm font-mono font-bold">
                 Điểm: {currentAttempt.scores.reading.correctCount}/{currentAttempt.scores.reading.totalCount} câu đúng
               </span>
             </h3>
@@ -186,38 +186,36 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
               {currentAttempt.scores.reading.results.map((res, idx) => (
                 <div
                   key={res.questionId}
-                  className={`border-2 p-4 bg-white space-y-2 ${
-                    res.isCorrect ? 'border-black' : 'border-neutral-400'
-                  }`}
+                  className="border-2 border-black p-4 bg-[#fffdf5] space-y-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-mono font-bold">
+                    <span className="text-xs font-mono font-bold text-black">
                       #{idx + 1} ({res.questionId} - {res.type})
                     </span>
                     <span
-                      className={`text-xs px-2 py-0.5 border font-bold font-mono ${
-                        res.isCorrect ? 'bg-black text-white border-black' : 'bg-white text-black border-black'
+                      className={`text-xs px-2 py-0.5 border-2 font-black font-mono ${
+                        res.isCorrect ? 'bg-black text-[#fffdf5] border-black' : 'bg-[#f4eed9] text-black border-black'
                       }`}
                     >
                       {res.isCorrect ? '[ĐÚNG]' : '[CHƯA ĐÚNG]'}
                     </span>
                   </div>
 
-                  <p className="font-semibold text-sm">{res.prompt}</p>
+                  <p className="font-bold text-sm text-black">{res.prompt}</p>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono pt-1">
-                    <div className="p-2 border border-neutral-300 bg-neutral-50">
-                      <span className="font-bold block text-neutral-600">Bạn đã trả lời:</span>
-                      <span className="text-black font-medium">{res.userAnswer}</span>
+                    <div className="p-2 border-2 border-black bg-[#fcf8ed]">
+                      <span className="font-bold block text-neutral-800">Bạn đã trả lời:</span>
+                      <span className="text-black font-black">{res.userAnswer}</span>
                     </div>
-                    <div className="p-2 border border-black bg-white">
-                      <span className="font-bold block text-neutral-600">Đáp án đúng quy chuẩn:</span>
-                      <span className="text-black font-bold">{res.correctAnswerSummary}</span>
+                    <div className="p-2 border-2 border-black bg-[#f4eed9]">
+                      <span className="font-bold block text-neutral-800">Đáp án đúng quy chuẩn:</span>
+                      <span className="text-black font-black">{res.correctAnswerSummary}</span>
                     </div>
                   </div>
 
                   {res.explanation && (
-                    <p className="text-xs text-neutral-700 bg-neutral-100 p-2 border-l-2 border-black">
+                    <p className="text-xs text-black bg-[#f4eed9] p-2.5 border-l-4 border-black font-medium">
                       <strong>Giải thích:</strong> {res.explanation}
                     </p>
                   )}
@@ -230,10 +228,10 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
           <section aria-labelledby="listening-results-heading" className="space-y-4">
             <h3
               id="listening-results-heading"
-              className="text-lg font-bold border-b-2 border-black pb-1 flex items-center justify-between"
+              className="text-lg font-black border-b-2 border-black pb-1 flex items-center justify-between text-black"
             >
               <span>2. Chi tiết bài thi Listening</span>
-              <span className="text-sm font-mono font-normal">
+              <span className="text-sm font-mono font-bold">
                 Điểm: {currentAttempt.scores.listening.correctCount}/{currentAttempt.scores.listening.totalCount} câu đúng
               </span>
             </h3>
@@ -242,38 +240,36 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
               {currentAttempt.scores.listening.results.map((res, idx) => (
                 <div
                   key={res.questionId}
-                  className={`border-2 p-4 bg-white space-y-2 ${
-                    res.isCorrect ? 'border-black' : 'border-neutral-400'
-                  }`}
+                  className="border-2 border-black p-4 bg-[#fffdf5] space-y-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-mono font-bold">
+                    <span className="text-xs font-mono font-bold text-black">
                       #{idx + 1} ({res.questionId} - {res.type})
                     </span>
                     <span
-                      className={`text-xs px-2 py-0.5 border font-bold font-mono ${
-                        res.isCorrect ? 'bg-black text-white border-black' : 'bg-white text-black border-black'
+                      className={`text-xs px-2 py-0.5 border-2 font-black font-mono ${
+                        res.isCorrect ? 'bg-black text-[#fffdf5] border-black' : 'bg-[#f4eed9] text-black border-black'
                       }`}
                     >
                       {res.isCorrect ? '[ĐÚNG]' : '[CHƯA ĐÚNG]'}
                     </span>
                   </div>
 
-                  <p className="font-semibold text-sm">{res.prompt}</p>
+                  <p className="font-bold text-sm text-black">{res.prompt}</p>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono pt-1">
-                    <div className="p-2 border border-neutral-300 bg-neutral-50">
-                      <span className="font-bold block text-neutral-600">Bạn đã trả lời:</span>
-                      <span className="text-black font-medium">{res.userAnswer}</span>
+                    <div className="p-2 border-2 border-black bg-[#fcf8ed]">
+                      <span className="font-bold block text-neutral-800">Bạn đã trả lời:</span>
+                      <span className="text-black font-black">{res.userAnswer}</span>
                     </div>
-                    <div className="p-2 border border-black bg-white">
-                      <span className="font-bold block text-neutral-600">Đáp án đúng quy chuẩn:</span>
-                      <span className="text-black font-bold">{res.correctAnswerSummary}</span>
+                    <div className="p-2 border-2 border-black bg-[#f4eed9]">
+                      <span className="font-bold block text-neutral-800">Đáp án đúng quy chuẩn:</span>
+                      <span className="text-black font-black">{res.correctAnswerSummary}</span>
                     </div>
                   </div>
 
                   {res.explanation && (
-                    <p className="text-xs text-neutral-700 bg-neutral-100 p-2 border-l-2 border-black">
+                    <p className="text-xs text-black bg-[#f4eed9] p-2.5 border-l-4 border-black font-medium">
                       <strong>Giải thích:</strong> {res.explanation}
                     </p>
                   )}
@@ -284,7 +280,7 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
 
           {/* SECTION 3: SPEAKING DEFERRED REVIEW */}
           <section aria-labelledby="speaking-results-heading" className="space-y-4">
-            <h3 id="speaking-results-heading" className="text-lg font-bold border-b-2 border-black pb-1">
+            <h3 id="speaking-results-heading" className="text-lg font-black border-b-2 border-black pb-1 text-black">
               3. Chấm bài Speaking (Tự chấm theo Rubric & Sample)
             </h3>
 
@@ -294,50 +290,50 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                 const currentNotes = scoringFormState[rev.taskId]?.notes ?? rev.notes ?? '';
 
                 return (
-                  <article key={rev.taskId} className="border-2 border-black p-5 bg-white space-y-4">
+                  <article key={rev.taskId} className="border-2 border-black p-5 bg-[#fffdf5] space-y-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-base">{rev.title}</h4>
+                      <h4 className="font-black text-base text-black">{rev.title}</h4>
                       <span
-                        className={`text-xs px-2 py-0.5 border font-mono font-bold ${
-                          rev.status === 'reviewed' ? 'bg-black text-white' : 'bg-white text-black'
+                        className={`text-xs px-2 py-0.5 border-2 font-mono font-bold ${
+                          rev.status === 'reviewed' ? 'bg-black text-[#fffdf5] border-black' : 'bg-[#f4eed9] text-black border-black'
                         }`}
                       >
                         {rev.status === 'reviewed' ? '[ĐÃ CHẤM]' : '[CHỜ CHẤM]'}
                       </span>
                     </div>
 
-                    <div className="text-xs text-neutral-700 bg-neutral-50 p-3 border border-neutral-300 whitespace-pre-line">
-                      <strong>Đề bài:</strong> {rev.prompt}
+                    <div className="text-xs text-black bg-[#f4eed9] p-3 border-2 border-black whitespace-pre-line font-medium">
+                      <strong className="block mb-1 uppercase font-mono font-bold">Đề bài:</strong> {rev.prompt}
                     </div>
 
                     {/* User response */}
                     <div className="space-y-1">
-                      <p className="text-xs font-bold uppercase tracking-wide">Dàn ý bài làm của bạn:</p>
-                      <div className="p-3 border-2 border-black bg-white text-sm whitespace-pre-line font-mono">
+                      <p className="text-xs font-bold uppercase tracking-wide text-black">Dàn ý bài làm của bạn:</p>
+                      <div className="p-3 border-2 border-black bg-[#fcf8ed] text-sm whitespace-pre-line font-mono font-medium text-black">
                         {rev.userText || '(Bạn chưa nhập nội dung nào khi làm bài)'}
                       </div>
                     </div>
 
                     {/* Rubric Table */}
                     <div className="space-y-2">
-                      <p className="text-xs font-bold uppercase tracking-wide">
+                      <p className="text-xs font-bold uppercase tracking-wide text-black">
                         Tiêu chí chấm bài (Rubric quy định trong JSON):
                       </p>
-                      <div className="border border-black overflow-x-auto">
+                      <div className="border-2 border-black overflow-x-auto">
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
-                            <tr className="bg-neutral-100 border-b border-black">
-                              <th className="p-2 border-r border-black font-bold">Tiêu chí</th>
-                              <th className="p-2 font-bold">Yêu cầu đạt được</th>
+                            <tr className="bg-[#f4eed9] border-b-2 border-black">
+                              <th className="p-2.5 border-r-2 border-black font-black text-black">Tiêu chí</th>
+                              <th className="p-2.5 font-black text-black">Yêu cầu đạt được</th>
                             </tr>
                           </thead>
                           <tbody>
                             {rev.rubric.map((r, rIdx) => (
-                              <tr key={rIdx} className="border-b border-neutral-300">
-                                <td className="p-2 border-r border-black font-semibold whitespace-nowrap">
+                              <tr key={rIdx} className="border-b border-black">
+                                <td className="p-2.5 border-r-2 border-black font-bold whitespace-nowrap text-black">
                                   {r.criterion}
                                 </td>
-                                <td className="p-2">{r.description}</td>
+                                <td className="p-2.5 text-neutral-900 font-medium">{r.description}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -348,21 +344,21 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                     {/* Sample Answer */}
                     {rev.sampleAnswer && (
                       <div className="space-y-1">
-                        <p className="text-xs font-bold uppercase tracking-wide">Bài mẫu tham khảo:</p>
-                        <div className="p-3 border border-neutral-400 bg-neutral-50 text-xs italic leading-relaxed">
+                        <p className="text-xs font-bold uppercase tracking-wide text-black">Bài mẫu tham khảo:</p>
+                        <div className="p-3 border-2 border-black bg-[#f4eed9] text-xs italic leading-relaxed text-black">
                           {rev.sampleAnswer}
                         </div>
                       </div>
                     )}
 
                     {/* Self-grading form */}
-                    <div className="border-t-2 border-black pt-4 space-y-3 bg-neutral-50 p-4">
-                      <h5 className="text-sm font-bold">Đánh giá & Ghi chú chấm bài:</h5>
+                    <div className="border-t-2 border-black pt-4 space-y-3 bg-[#fcf8ed] p-4 border-2">
+                      <h5 className="text-sm font-black text-black">Đánh giá & Ghi chú chấm bài:</h5>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                           <label
                             htmlFor={`speaking_score_${rev.taskId}`}
-                            className="block text-xs font-bold mb-1"
+                            className="block text-xs font-bold mb-1 text-black"
                           >
                             Điểm đánh giá (VD: 7.5 hoặc 8/10):
                           </label>
@@ -372,14 +368,14 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                             value={currentScore}
                             placeholder="Nhập điểm..."
                             onChange={(e) => handleScoreChange(rev.taskId, 'score', e.target.value)}
-                            className="w-full p-2 border-2 border-black text-sm bg-white"
+                            className="w-full p-2 border-2 border-black text-sm bg-[#fffdf5] font-semibold text-black focus-visible:outline-2"
                           />
                         </div>
 
                         <div className="sm:col-span-2">
                           <label
                             htmlFor={`speaking_notes_${rev.taskId}`}
-                            className="block text-xs font-bold mb-1"
+                            className="block text-xs font-bold mb-1 text-black"
                           >
                             Nhận xét / Rút kinh nghiệm:
                           </label>
@@ -389,7 +385,7 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                             value={currentNotes}
                             placeholder="Ghi chú nhận xét của bạn..."
                             onChange={(e) => handleScoreChange(rev.taskId, 'notes', e.target.value)}
-                            className="w-full p-2 border-2 border-black text-sm bg-white"
+                            className="w-full p-2 border-2 border-black text-sm bg-[#fffdf5] font-semibold text-black focus-visible:outline-2"
                           />
                         </div>
                       </div>
@@ -397,7 +393,7 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                       <button
                         type="button"
                         onClick={() => handleSaveReview(currentAttempt.id, 'speaking', rev.taskId)}
-                        className="px-4 py-2 bg-black text-white font-bold text-xs border border-black hover:bg-neutral-800"
+                        className="px-4 py-2 bg-black text-[#fffdf5] font-bold text-xs border-2 border-black hover:bg-[#fffdf5] hover:text-black transition-colors cursor-pointer"
                       >
                         Lưu đánh giá Speaking
                       </button>
@@ -410,7 +406,7 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
 
           {/* SECTION 4: WRITING DEFERRED REVIEW */}
           <section aria-labelledby="writing-results-heading" className="space-y-4">
-            <h3 id="writing-results-heading" className="text-lg font-bold border-b-2 border-black pb-1">
+            <h3 id="writing-results-heading" className="text-lg font-black border-b-2 border-black pb-1 text-black">
               4. Kết quả chấm bài Writing (AI Gemini 3.8 Flash theo Rubric)
             </h3>
 
@@ -421,12 +417,12 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                 const wordCount = rev.userText.trim() ? rev.userText.trim().split(/\s+/).length : 0;
 
                 return (
-                  <article key={rev.taskId} className="border-2 border-black p-5 bg-white space-y-4">
+                  <article key={rev.taskId} className="border-2 border-black p-5 bg-[#fffdf5] space-y-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-base">{rev.title}</h4>
+                      <h4 className="font-black text-base text-black">{rev.title}</h4>
                       <span
-                        className={`text-xs px-2 py-0.5 border font-mono font-bold ${
-                          rev.status === 'reviewed' ? 'bg-black text-white' : 'bg-white text-black'
+                        className={`text-xs px-2 py-0.5 border-2 font-mono font-bold ${
+                          rev.status === 'reviewed' ? 'bg-black text-[#fffdf5] border-black' : 'bg-[#f4eed9] text-black border-black'
                         }`}
                       >
                         {rev.status === 'reviewed'
@@ -435,41 +431,41 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                       </span>
                     </div>
 
-                    <div className="text-xs text-neutral-700 bg-neutral-50 p-3 border border-neutral-300 whitespace-pre-line">
-                      <strong>Đề bài:</strong> {rev.prompt}
+                    <div className="text-xs text-black bg-[#f4eed9] p-3 border-2 border-black whitespace-pre-line font-medium">
+                      <strong className="block mb-1 uppercase font-mono font-bold">Đề bài:</strong> {rev.prompt}
                     </div>
 
                     {/* User response */}
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide">
+                      <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide text-black">
                         <span>Bài viết của bạn:</span>
                         <span className="font-mono">Số từ: {wordCount}</span>
                       </div>
-                      <div className="p-4 border-2 border-black bg-white text-sm whitespace-pre-line leading-relaxed font-serif">
+                      <div className="p-4 border-2 border-black bg-[#fcf8ed] text-sm whitespace-pre-line leading-relaxed font-serif text-black">
                         {rev.userText || '(Bạn chưa viết bài luận nào khi làm bài)'}
                       </div>
                     </div>
 
                     {/* Rubric Table */}
                     <div className="space-y-2">
-                      <p className="text-xs font-bold uppercase tracking-wide">
+                      <p className="text-xs font-bold uppercase tracking-wide text-black">
                         Tiêu chí chấm bài (Rubric quy định trong JSON):
                       </p>
-                      <div className="border border-black overflow-x-auto">
+                      <div className="border-2 border-black overflow-x-auto">
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
-                            <tr className="bg-neutral-100 border-b border-black">
-                              <th className="p-2 border-r border-black font-bold">Tiêu chí</th>
-                              <th className="p-2 font-bold">Yêu cầu đạt được</th>
+                            <tr className="bg-[#f4eed9] border-b-2 border-black">
+                              <th className="p-2.5 border-r-2 border-black font-black text-black">Tiêu chí</th>
+                              <th className="p-2.5 font-black text-black">Yêu cầu đạt được</th>
                             </tr>
                           </thead>
                           <tbody>
                             {rev.rubric.map((r, rIdx) => (
-                              <tr key={rIdx} className="border-b border-neutral-300">
-                                <td className="p-2 border-r border-black font-semibold whitespace-nowrap">
+                              <tr key={rIdx} className="border-b border-black">
+                                <td className="p-2.5 border-r-2 border-black font-bold whitespace-nowrap text-black">
                                   {r.criterion}
                                 </td>
-                                <td className="p-2">{r.description}</td>
+                                <td className="p-2.5 text-neutral-900 font-medium">{r.description}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -480,21 +476,21 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                     {/* Sample Answer */}
                     {rev.sampleAnswer && (
                       <div className="space-y-1">
-                        <p className="text-xs font-bold uppercase tracking-wide">Bài viết mẫu tham khảo:</p>
-                        <div className="p-3 border border-neutral-400 bg-neutral-50 text-xs italic leading-relaxed whitespace-pre-line">
+                        <p className="text-xs font-bold uppercase tracking-wide text-black">Bài viết mẫu tham khảo:</p>
+                        <div className="p-3 border-2 border-black bg-[#f4eed9] text-xs italic leading-relaxed whitespace-pre-line text-black">
                           {rev.sampleAnswer}
                         </div>
                       </div>
                     )}
 
                     {/* Self-grading form */}
-                    <div className="border-t-2 border-black pt-4 space-y-3 bg-neutral-50 p-4">
-                      <h5 className="text-sm font-bold">Đánh giá & Ghi chú chấm bài:</h5>
+                    <div className="border-t-2 border-black pt-4 space-y-3 bg-[#fcf8ed] p-4 border-2">
+                      <h5 className="text-sm font-black text-black">Đánh giá & Ghi chú chấm bài:</h5>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                           <label
                             htmlFor={`writing_score_${rev.taskId}`}
-                            className="block text-xs font-bold mb-1"
+                            className="block text-xs font-bold mb-1 text-black"
                           >
                             Điểm đánh giá (VD: 8.0 hoặc 85/100):
                           </label>
@@ -504,14 +500,14 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                             value={currentScore}
                             placeholder="Nhập điểm..."
                             onChange={(e) => handleScoreChange(rev.taskId, 'score', e.target.value)}
-                            className="w-full p-2 border-2 border-black text-sm bg-white"
+                            className="w-full p-2 border-2 border-black text-sm bg-[#fffdf5] font-semibold text-black focus-visible:outline-2"
                           />
                         </div>
 
                         <div className="sm:col-span-2">
                           <label
                             htmlFor={`writing_notes_${rev.taskId}`}
-                            className="block text-xs font-bold mb-1"
+                            className="block text-xs font-bold mb-1 text-black"
                           >
                             Nhận xét chi tiết (AI / Ghi chú):
                           </label>
@@ -521,7 +517,7 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                             value={currentNotes}
                             placeholder="Ghi chú nhận xét của bạn..."
                             onChange={(e) => handleScoreChange(rev.taskId, 'notes', e.target.value)}
-                            className="w-full p-2 border-2 border-black text-sm bg-white whitespace-pre-line"
+                            className="w-full p-2 border-2 border-black text-sm bg-[#fffdf5] font-semibold text-black focus-visible:outline-2 whitespace-pre-line"
                           />
                         </div>
                       </div>
@@ -529,7 +525,7 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                       <button
                         type="button"
                         onClick={() => handleSaveReview(currentAttempt.id, 'writing', rev.taskId)}
-                        className="px-4 py-2 bg-black text-white font-bold text-xs border border-black hover:bg-neutral-800"
+                        className="px-4 py-2 bg-black text-[#fffdf5] font-bold text-xs border-2 border-black hover:bg-[#fffdf5] hover:text-black transition-colors cursor-pointer"
                       >
                         Lưu đánh giá Writing
                       </button>
