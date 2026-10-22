@@ -1,0 +1,793 @@
+{
+  "schemaVersion": "1.0",
+  "id": "test-01",
+  "title": "B1-Level Comprehensive English Examination (With Advanced Reading)",
+  "description": "Đề thi tiếng Anh tổng hợp trình độ B1 gồm 4 kỹ năng: Reading (thử thách học thuật cấp độ Thạc sĩ với 20 câu hỏi), Listening (5 hội thoại đời sống có bẫy paraphrase), Speaking (3 chủ đề hiện đại) và Writing (Email thực tế chấm điểm khách quan).",
+  "sections": {
+    "reading": {
+      "instructions": "Read the following excerpt from a graduate-level neurobiology and pathophysiology paper carefully. Then answer questions 1 to 20 by choosing the best option (A, B, C, or D) based strictly on the information provided in the text.",
+      "passages": [
+        {
+          "id": "r-p1",
+          "title": "Microbiota–Gut–Brain Axis Dysregulation and Blood–Brain Barrier Integrity",
+          "content": "Chronic psychosocial stress precipitates a cascade of maladaptive neuroimmune alterations, chiefly mediated by the bidirectional dysregulation of the microbiota–gut–brain axis and the consequent compromise of blood–brain barrier (BBB) endothelial integrity. Under homeostatic conditions, commensal anaerobic bacteria within the distal colon ferment recalcitrant dietary polysaccharides into short-chain fatty acids (SCFAs)—predominantly acetate, propionate, and butyrate—which not only fortify intestinal epithelial tight junctions via the upregulation of occludin and zonula occludens-1 (ZO-1), but also traverse the systemic circulation to modulate microglial maturation in the central nervous system. However, sustained activation of the hypothalamic–pituitary–adrenal (HPA) axis elevates circulating glucocorticoids and catecholamines, shifting the colonic lumen toward an oxidative, pro-inflammatory milieu that selectively depletes obligate butyrate-producing taxa such as Faecalibacterium prausnitzii while facilitating the opportunistic proliferation of pathobionts. This dysbiotic transition attenuates luminal SCFA synthesis and degrades the mucin bilayer, thereby permitting the paracellular translocation of lipopolysaccharides (LPS) and peptidoglycans into the portal vasculature—a phenomenon clinically termed metabolic endotoxemia. Once systemic LPS engages Toll-like receptor 4 (TLR4) complexes expressed on cerebral microvascular endothelial cells, it triggers nuclear factor kappa B (NF-κB) signal transduction, culminating in the proteolytic cleavage of cerebrovascular tight-junction proteins by matrix metalloproteinases (MMP-2 and MMP-9). Concurrently, peripheral pro-inflammatory cytokines, including interleukin-1 beta (IL-1β) and tumor necrosis factor-alpha (TNF-α), infiltrate the brain parenchyma through these newly fenestrated endothelial barriers, priming quiescent ramified microglia to adopt a neurotoxic, amoeboid phenotype. Rather than executing neuroprotective synaptic pruning, these hyperactivated microglia secrete reactive oxygen species (ROS) and quinolinic acid—an endogenous N-methyl-D-aspartate (NMDA) receptor agonist synthesized via the kynurenine pathway at the expense of serotonin biosynthesis—ultimately inducing excitotoxic dendritic spine retraction in the prefrontal cortex and hippocampus, although transient pharmacological inhibition of MMP-9 has been shown in murine models to partially arrest BBB hyperpermeability without rectifying the underlying enteric dysbiosis.",
+          "questions": [
+            {
+              "id": "r-q1",
+              "type": "multiple_choice",
+              "prompt": "What is identified in the passage as the primary driver of the cascade of maladaptive neuroimmune alterations?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Congenital deficiencies in cerebral microvascular endothelial cells"
+                },
+                {
+                  "id": "B",
+                  "text": "Chronic psychosocial stress affecting the microbiota–gut–brain axis"
+                },
+                {
+                  "id": "C",
+                  "text": "Acute viral infections targeting the prefrontal cortex and hippocampus"
+                },
+                {
+                  "id": "D",
+                  "text": "Excessive dietary intake of recalcitrant polysaccharides"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "The first sentence states that 'Chronic psychosocial stress precipitates a cascade of maladaptive neuroimmune alterations, chiefly mediated by the bidirectional dysregulation of the microbiota–gut–brain axis...'"
+            },
+            {
+              "id": "r-q2",
+              "type": "multiple_choice",
+              "prompt": "Under normal, homeostatic conditions, how are short-chain fatty acids (SCFAs) produced?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Through the hepatic conversion of circulating catecholamines and glucocorticoids"
+                },
+                {
+                  "id": "B",
+                  "text": "By microglial secretion within the central nervous system parenchyma"
+                },
+                {
+                  "id": "C",
+                  "text": "Through the fermentation of resistant dietary fibers by anaerobic bacteria in the distal colon"
+                },
+                {
+                  "id": "D",
+                  "text": "By the enzymatic breakdown of the mucin bilayer by pathobionts"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "The text states: 'commensal anaerobic bacteria within the distal colon ferment recalcitrant dietary polysaccharides into short-chain fatty acids (SCFAs)...'"
+            },
+            {
+              "id": "r-q3",
+              "type": "multiple_choice",
+              "prompt": "Which of the following is NOT listed as one of the predominant short-chain fatty acids synthesized under homeostatic conditions?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Propionate"
+                },
+                {
+                  "id": "B",
+                  "text": "Quinolinic acid"
+                },
+                {
+                  "id": "C",
+                  "text": "Butyrate"
+                },
+                {
+                  "id": "D",
+                  "text": "Acetate"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Acetate, propionate, and butyrate are the SCFAs listed; quinolinic acid is a neurotoxic NMDA agonist mentioned toward the end of the passage."
+            },
+            {
+              "id": "r-q4",
+              "type": "multiple_choice",
+              "prompt": "According to the passage, what dual protective role do SCFAs perform in a healthy state?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "They inhibit the HPA axis directly and degrade matrix metalloproteinases in the liver."
+                },
+                {
+                  "id": "B",
+                  "text": "They strengthen intestinal tight junctions and enter the bloodstream to regulate microglial maturation."
+                },
+                {
+                  "id": "C",
+                  "text": "They synthesize serotonin in the distal colon and block NMDA receptors in the hippocampus."
+                },
+                {
+                  "id": "D",
+                  "text": "They cleave lipopolysaccharides in the portal vein and stimulate catecholamine release."
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "SCFAs 'not only fortify intestinal epithelial tight junctions... but also traverse the systemic circulation to modulate microglial maturation in the central nervous system.'"
+            },
+            {
+              "id": "r-q5",
+              "type": "multiple_choice",
+              "prompt": "How do SCFAs fortify the tight junctions of the intestinal epithelium?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "By upregulating the expression of occludin and zonula occludens-1 (ZO-1)"
+                },
+                {
+                  "id": "B",
+                  "text": "By activating Toll-like receptor 4 (TLR4) complexes on epithelial surfaces"
+                },
+                {
+                  "id": "C",
+                  "text": "By stimulating matrix metalloproteinases MMP-2 and MMP-9"
+                },
+                {
+                  "id": "D",
+                  "text": "By increasing the paracellular translocation of peptidoglycans"
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "The passage notes they fortify tight junctions 'via the upregulation of occludin and zonula occludens-1 (ZO-1)'."
+            },
+            {
+              "id": "r-q6",
+              "type": "multiple_choice",
+              "prompt": "What is the immediate physiological consequence of sustained hypothalamic–pituitary–adrenal (HPA) axis activation?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "A rapid drop in systemic catecholamines and glucocorticoids"
+                },
+                {
+                  "id": "B",
+                  "text": "Elevated levels of circulating glucocorticoids and catecholamines"
+                },
+                {
+                  "id": "C",
+                  "text": "Immediate restoration of anaerobic fermentation in the distal colon"
+                },
+                {
+                  "id": "D",
+                  "text": "Complete suppression of nuclear factor kappa B (NF-κB) signaling"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "The passage states: 'sustained activation of the hypothalamic–pituitary–adrenal (HPA) axis elevates circulating glucocorticoids and catecholamines...'"
+            },
+            {
+              "id": "r-q7",
+              "type": "multiple_choice",
+              "prompt": "How does HPA axis hyperactivation alter the environment of the colonic lumen?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "It makes the lumen strictly anaerobic and alkaline, favoring commensal bacteria."
+                },
+                {
+                  "id": "B",
+                  "text": "It shifts the lumen toward an oxidative, pro-inflammatory state."
+                },
+                {
+                  "id": "C",
+                  "text": "It thickens the mucin bilayer, preventing any nutrient absorption."
+                },
+                {
+                  "id": "D",
+                  "text": "It floods the lumen with neuroprotective ramified microglia."
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "It elevates stress hormones, 'shifting the colonic lumen toward an oxidative, pro-inflammatory milieu...'"
+            },
+            {
+              "id": "r-q8",
+              "type": "multiple_choice",
+              "prompt": "What happens to Faecalibacterium prausnitzii during chronic stress-induced changes in the gut?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "It mutates into an opportunistic pathobiont that secretes lipopolysaccharides."
+                },
+                {
+                  "id": "B",
+                  "text": "It migrates across the intestinal wall into the portal vasculature."
+                },
+                {
+                  "id": "C",
+                  "text": "Its population is selectively depleted as an obligate butyrate-producing taxon."
+                },
+                {
+                  "id": "D",
+                  "text": "It proliferates rapidly due to high levels of circulating glucocorticoids."
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "The pro-inflammatory milieu 'selectively depletes obligate butyrate-producing taxa such as Faecalibacterium prausnitzii...'"
+            },
+            {
+              "id": "r-q9",
+              "type": "multiple_choice",
+              "prompt": "In the context of the passage, what does the term 'metabolic endotoxemia' specifically refer to?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "The buildup of reactive oxygen species inside hippocampal neurons"
+                },
+                {
+                  "id": "B",
+                  "text": "The depletion of serotonin in the central nervous system via the kynurenine pathway"
+                },
+                {
+                  "id": "C",
+                  "text": "The leakage of bacterial components like LPS and peptidoglycans across the gut barrier into the portal blood"
+                },
+                {
+                  "id": "D",
+                  "text": "The genetic mutation of commensal bacteria into anaerobic spores"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "The text defines it as 'permitting the paracellular translocation of lipopolysaccharides (LPS) and peptidoglycans into the portal vasculature—a phenomenon clinically termed metabolic endotoxemia.'"
+            },
+            {
+              "id": "r-q10",
+              "type": "multiple_choice",
+              "prompt": "Which two structural or biochemical failures directly allow lipopolysaccharides (LPS) to cross the intestinal wall?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Reduced SCFA synthesis and degradation of the mucin bilayer"
+                },
+                {
+                  "id": "B",
+                  "text": "Overproduction of occludin and thickening of ZO-1 proteins"
+                },
+                {
+                  "id": "C",
+                  "text": "Hyperactivation of NMDA receptors and dendritic spine retraction"
+                },
+                {
+                  "id": "D",
+                  "text": "Inhibition of MMP-9 and down-regulation of TLR4 complexes"
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "'This dysbiotic transition attenuates luminal SCFA synthesis and degrades the mucin bilayer, thereby permitting the paracellular translocation...'"
+            },
+            {
+              "id": "r-q11",
+              "type": "multiple_choice",
+              "prompt": "Where are the Toll-like receptor 4 (TLR4) complexes mentioned in the excerpt located?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "On the surface of Faecalibacterium prausnitzii in the distal colon"
+                },
+                {
+                  "id": "B",
+                  "text": "On cerebral microvascular endothelial cells"
+                },
+                {
+                  "id": "C",
+                  "text": "Inside the synaptic clefts of the prefrontal cortex"
+                },
+                {
+                  "id": "D",
+                  "text": "Within the adrenal glands of the HPA axis"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "The text explicitly mentions 'Toll-like receptor 4 (TLR4) complexes expressed on cerebral microvascular endothelial cells'."
+            },
+            {
+              "id": "r-q12",
+              "type": "multiple_choice",
+              "prompt": "What intracellular pathway is triggered when systemic LPS binds to TLR4 complexes?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "The kynurenine-serotonin conversion pathway"
+                },
+                {
+                  "id": "B",
+                  "text": "The anaerobic polysaccharide fermentation pathway"
+                },
+                {
+                  "id": "C",
+                  "text": "Nuclear factor kappa B (NF-κB) signal transduction"
+                },
+                {
+                  "id": "D",
+                  "text": "Glucocorticoid-mediated ZO-1 upregulation"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "'Once systemic LPS engages Toll-like receptor 4 (TLR4) complexes... it triggers nuclear factor kappa B (NF-κB) signal transduction...'"
+            },
+            {
+              "id": "r-q13",
+              "type": "multiple_choice",
+              "prompt": "What is the specific mechanism by which the blood–brain barrier (BBB) loses its tight-junction integrity?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Matrix metalloproteinases (MMP-2 and MMP-9) proteolytically cleave cerebrovascular tight-junction proteins."
+                },
+                {
+                  "id": "B",
+                  "text": "Butyrate and propionate dissolve the lipid membranes of cerebral endothelial cells."
+                },
+                {
+                  "id": "C",
+                  "text": "Amoeboid microglia physically engulf the portal vasculature."
+                },
+                {
+                  "id": "D",
+                  "text": "Serotonin overproduction causes osmotic swelling of the endothelial barrier."
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "NF-κB signal transduction culminates 'in the proteolytic cleavage of cerebrovascular tight-junction proteins by matrix metalloproteinases (MMP-2 and MMP-9).'"
+            },
+            {
+              "id": "r-q14",
+              "type": "multiple_choice",
+              "prompt": "In the phrase 'infiltrate the brain parenchyma through these newly fenestrated endothelial barriers,' the word 'fenestrated' most nearly means:",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Calcified or hardened"
+                },
+                {
+                  "id": "B",
+                  "text": "Perforated or having openings/leaks"
+                },
+                {
+                  "id": "C",
+                  "text": "Electrically insulated"
+                },
+                {
+                  "id": "D",
+                  "text": "Enlarged through cellular division"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "In biology and physiology, 'fenestrated' means having pores, windows, or openings (created here by the cleavage of tight-junction proteins)."
+            },
+            {
+              "id": "r-q15",
+              "type": "multiple_choice",
+              "prompt": "How do microglia change once peripheral pro-inflammatory cytokines (IL-1β and TNF-α) enter the brain parenchyma?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "They transition from an active amoeboid state to a dormant ramified state."
+                },
+                {
+                  "id": "B",
+                  "text": "They shift from a quiescent, ramified state into a neurotoxic, amoeboid phenotype."
+                },
+                {
+                  "id": "C",
+                  "text": "They undergo immediate apoptosis and are cleared by the lymphatic system."
+                },
+                {
+                  "id": "D",
+                  "text": "They begin fermenting glucose into short-chain fatty acids."
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Infiltrating cytokines act by 'priming quiescent ramified microglia to adopt a neurotoxic, amoeboid phenotype.'"
+            },
+            {
+              "id": "r-q16",
+              "type": "multiple_choice",
+              "prompt": "What normal function do microglia fail to perform properly once they become hyperactivated?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Synthesizing glucocorticoids for the HPA axis"
+                },
+                {
+                  "id": "B",
+                  "text": "Maintaining the intestinal mucin bilayer"
+                },
+                {
+                  "id": "C",
+                  "text": "Executing neuroprotective synaptic pruning"
+                },
+                {
+                  "id": "D",
+                  "text": "Transporting lipopolysaccharides to the liver"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "'Rather than executing neuroprotective synaptic pruning, these hyperactivated microglia secrete reactive oxygen species (ROS)...'"
+            },
+            {
+              "id": "r-q17",
+              "type": "multiple_choice",
+              "prompt": "How does the synthesis of quinolinic acid affect neurotransmitter production?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "It increases the availability of dopamine and norepinephrine in the gut."
+                },
+                {
+                  "id": "B",
+                  "text": "It is produced via the kynurenine pathway at the expense of serotonin biosynthesis."
+                },
+                {
+                  "id": "C",
+                  "text": "It converts excess glutamate directly into neuroprotective GABA."
+                },
+                {
+                  "id": "D",
+                  "text": "It blocks the breakdown of acetylcholine in the prefrontal cortex."
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Quinolinic acid is 'synthesized via the kynurenine pathway at the expense of serotonin biosynthesis'."
+            },
+            {
+              "id": "r-q18",
+              "type": "multiple_choice",
+              "prompt": "What is the direct pharmacological action of quinolinic acid in the brain?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "It acts as an endogenous agonist of N-methyl-D-aspartate (NMDA) receptors."
+                },
+                {
+                  "id": "B",
+                  "text": "It functions as a selective inhibitor of matrix metalloproteinase-9 (MMP-9)."
+                },
+                {
+                  "id": "C",
+                  "text": "It binds to occludin to reinforce the blood–brain barrier."
+                },
+                {
+                  "id": "D",
+                  "text": "It neutralizes reactive oxygen species (ROS) in the hippocampus."
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "The text describes quinolinic acid as 'an endogenous N-methyl-D-aspartate (NMDA) receptor agonist'."
+            },
+            {
+              "id": "r-q19",
+              "type": "multiple_choice",
+              "prompt": "What structural damage occurs in the prefrontal cortex and hippocampus as the ultimate result of microglial hyperactivation?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Complete demyelination of motor neurons"
+                },
+                {
+                  "id": "B",
+                  "text": "Excitotoxic retraction of dendritic spines"
+                },
+                {
+                  "id": "C",
+                  "text": "Calcification of the pituitary and adrenal glands"
+                },
+                {
+                  "id": "D",
+                  "text": "Uncontrolled proliferation of cerebral blood vessels"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "It culminates in 'ultimately inducing excitotoxic dendritic spine retraction in the prefrontal cortex and hippocampus'."
+            },
+            {
+              "id": "r-q20",
+              "type": "multiple_choice",
+              "prompt": "What does the final clause regarding murine (mouse) models reveal about pharmacological MMP-9 inhibition?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "It permanently cures both gut dysbiosis and prefrontal dendritic spine loss."
+                },
+                {
+                  "id": "B",
+                  "text": "It worsens BBB permeability while restoring Faecalibacterium prausnitzii populations."
+                },
+                {
+                  "id": "C",
+                  "text": "It partially stops BBB leakiness temporarily, but fails to fix the underlying gut microbiome imbalance."
+                },
+                {
+                  "id": "D",
+                  "text": "It has no measurable effect on the blood–brain barrier in living organisms."
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "'...transient pharmacological inhibition of MMP-9 has been shown in murine models to partially arrest BBB hyperpermeability without rectifying the underlying enteric dysbiosis.'"
+            }
+          ]
+        }
+      ]
+    },
+    "listening": {
+      "instructions": "You will hear 5 short conversations. For each conversation, choose the best answer (A, B, C, or D).",
+      "parts": [
+        {
+          "id": "l-p1",
+          "title": "Conversation 1: Ordering Office Supplies",
+          "audioUrl": "/tests/audio/test-02-l-p1.wav",
+          "transcript": "Woman: Hi Mark, I'm putting in the stationery order before noon. Did you say we need twenty boxes of printer paper for the third floor?\nMan: Well, I thought we were completely out, so I asked for twenty yesterday. But Sarah just showed me a whole stack of twelve boxes hiding in the back cupboard.\nWoman: Oh, that saves us some budget! So I'll just order the remaining eight to reach your usual target, then?\nMan: Actually, since the regional conference is next week, we'll burn through paper much faster than usual. Let's still get ten new boxes just to be safe, plus a couple of black ink cartridges.\nWoman: Got it. Putting that through right now.",
+          "questions": [
+            {
+              "id": "l-q1",
+              "type": "multiple_choice",
+              "prompt": "How many boxes of printer paper will the woman order?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "20"
+                },
+                {
+                  "id": "B",
+                  "text": "12"
+                },
+                {
+                  "id": "C",
+                  "text": "8"
+                },
+                {
+                  "id": "D",
+                  "text": "10"
+                }
+              ],
+              "correctAnswer": "D",
+              "explanation": "Traps: 20 (yesterday's initial request), 12 (boxes found in the cupboard), 8 (the woman's calculation to reach 20). The man overrides 8 and says: 'Let's still get ten new boxes just to be safe.'"
+            }
+          ]
+        },
+        {
+          "id": "l-p2",
+          "title": "Conversation 2: Weekend Plans & Weather",
+          "audioUrl": "/tests/audio/test-02-l-p2.wav",
+          "transcript": "Man: Are you still planning to hike up Pine Ridge this Saturday, Elena? I heard the view from the summit is amazing.\nWoman: That was the plan! My brother even lent me his waterproof hiking boots because the forecast mentioned heavy rain on Saturday morning.\nMan: You're brave—I hate walking in mud.\nWoman: Well, I don't mind the rain, to be honest. The real issue is that the park rangers just closed the mountain road until Monday to clear some fallen rocks. So instead of staying home, we booked a beginner's indoor rock-climbing session downtown.",
+          "questions": [
+            {
+              "id": "l-q2",
+              "type": "multiple_choice",
+              "prompt": "Why did the woman cancel her outdoor hiking trip?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Heavy rain is forecast for Saturday morning."
+                },
+                {
+                  "id": "B",
+                  "text": "She did not have the right waterproof equipment."
+                },
+                {
+                  "id": "C",
+                  "text": "Access to the trail area is temporarily blocked for safety work."
+                },
+                {
+                  "id": "D",
+                  "text": "Her brother wanted to try an indoor sport instead."
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "Traps & Paraphrasing: A (heavy rain is mentioned, but she says 'I don't mind the rain'), B (her brother lent her boots). 'Park rangers just closed the mountain road... to clear some fallen rocks' is paraphrased as 'Access to the trail area is temporarily blocked for safety work.'"
+            }
+          ]
+        },
+        {
+          "id": "l-p3",
+          "title": "Conversation 3: Choosing an Apartment",
+          "audioUrl": "/tests/audio/test-02-l-p3.wav",
+          "transcript": "Woman: How did the apartment viewing go yesterday, David? Did you take the one right next to the subway station?\nMan: You mean the one on Elm Street? The rent was super affordable, which really tempted me, even though the kitchen was tiny.\nWoman: So you signed the lease?\nMan: Almost! Have you ever stood on Elm Street at rush hour, though? The train tracks are elevated right outside the bedroom window, and since I work night shifts at the hospital and sleep during the day, I'd never get any rest. I ended up choosing a place ten minutes further away that costs a bit more, mostly because it faces a quiet courtyard.",
+          "questions": [
+            {
+              "id": "l-q3",
+              "type": "multiple_choice",
+              "prompt": "What was the main reason the man rejected the Elm Street apartment?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "The monthly rent was too expensive for his budget."
+                },
+                {
+                  "id": "B",
+                  "text": "The kitchen was too small for his needs."
+                },
+                {
+                  "id": "C",
+                  "text": "It was too far from the hospital where he works."
+                },
+                {
+                  "id": "D",
+                  "text": "The daytime noise levels would disrupt his sleep schedule."
+                }
+              ],
+              "correctAnswer": "D",
+              "explanation": "Traps & Paraphrasing: B (tiny kitchen is mentioned, but wasn't the dealbreaker), A (the Elm Street rent was affordable; the other apartment costs more). Working night shifts + sleeping during the day + elevated train tracks outside the window at rush hour = daytime noise levels disrupting his sleep schedule."
+            }
+          ]
+        },
+        {
+          "id": "l-p4",
+          "title": "Conversation 4: Returning a Jacket",
+          "audioUrl": "/tests/audio/test-02-l-p4.wav",
+          "transcript": "Man: Excuse me, I bought this winter coat here on Tuesday, and I'd like to exchange it, please.\nWoman: Certainly, sir. Is it the wrong size? A lot of customers find this brand runs a little narrow in the shoulders.\nMan: Actually, the medium fits me like a glove, and the dark green color is exactly what I wanted. Look closely at the left pocket, though—the zipper teeth are bent, so it won't close at all.\nWoman: Oh, I see! I'm really sorry about that. Let me check our stockroom to see if we have another medium in dark green without any defects.",
+          "questions": [
+            {
+              "id": "l-q4",
+              "type": "multiple_choice",
+              "prompt": "Why is the man bringing the coat back to the store?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "It is too tight around the shoulders."
+                },
+                {
+                  "id": "B",
+                  "text": "Part of the fastener on the pocket is damaged."
+                },
+                {
+                  "id": "C",
+                  "text": "He prefers a different color than dark green."
+                },
+                {
+                  "id": "D",
+                  "text": "He accidentally bought a medium instead of a large."
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Traps & Paraphrasing: A/D (size medium 'fits me like a glove', even though the clerk mentions narrow shoulders as a distractor), C (he loves the dark green color). 'The zipper teeth are bent, so it won't close' is paraphrased as 'Part of the fastener on the pocket is damaged.'"
+            }
+          ]
+        },
+        {
+          "id": "l-p5",
+          "title": "Conversation 5: Arranging a Meeting Time",
+          "audioUrl": "/tests/audio/test-02-l-p5.wav",
+          "transcript": "Woman: Hi Leo, can we move our project review from 2:00 PM today? My dentist appointment at 11:30 is across town, and with the roadworks on Main Street, I doubt I'll be back at my desk before 2:15.\nMan: Sure, no problem. How about 3:30 PM?\nWoman: Hmm, I have to pick up my niece from school at 4:00, so thirty minutes wouldn't give us enough time to go through the budget spreadsheets. Could we squeeze it in right after I get back—say, half past two?\nMan: Let me check my calendar... Yes, my 2:30 slot just opened up because the client rescheduled. Let's lock that in.",
+          "questions": [
+            {
+              "id": "l-q5",
+              "type": "multiple_choice",
+              "prompt": "What time will the man and woman have their meeting?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "2:00 PM"
+                },
+                {
+                  "id": "B",
+                  "text": "2:15 PM"
+                },
+                {
+                  "id": "C",
+                  "text": "2:30 PM"
+                },
+                {
+                  "id": "D",
+                  "text": "3:30 PM"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "Traps & Paraphrasing: 2:00 PM (original time), 11:30 AM (dentist), 2:15 PM (when she arrives back at her desk), 3:30 PM (rejected because she leaves at 4:00 PM). She asks for 'half past two' and he confirms his '2:30 slot just opened up.'"
+            }
+          ]
+        }
+      ]
+    },
+    "speaking": {
+      "instructions": "Choose one or more of the topics below and write your outline or speaking notes (2–3 minutes per topic). These topics use everyday B1 vocabulary and grammar while avoiding overused topics like family, hometown, or past vacations.",
+      "tasks": [
+        {
+          "id": "s-t1",
+          "title": "Topic 1: The 'Cashless Society' Debate",
+          "prompt": "More and more cafes, shops, and buses no longer accept paper money or coins—you can only pay by card or smartphone. Do you think becoming a completely cashless society is a good idea or a bad idea? Explain why.\n\nFollow-up questions to consider:\n- Who in society might have a difficult time if paper money disappears completely?\n- Does paying with a phone or card make people spend more money than when they use real cash? Why?\n- What happens if there is a power cut or an internet problem for two days?",
+          "rubric": [
+            {
+              "criterion": "Fluency & Coherence",
+              "description": "Trình bày quan điểm rõ ràng, trả lời được câu hỏi chính và các câu hỏi phụ, sử dụng từ nối tự nhiên (however, for example, furthermore)."
+            },
+            {
+              "criterion": "Lexical Resource",
+              "description": "Sử dụng đúng từ vựng chủ đề thanh toán và đời sống (cashless, convenient, elderly people, overspend, power outage)."
+            },
+            {
+              "criterion": "Grammatical Range & Accuracy",
+              "description": "Sử dụng câu điều kiện (If paper money disappears...) và cấu trúc so sánh chính xác ở trình độ B1."
+            }
+          ],
+          "sampleAnswer": "In my opinion, becoming a completely cashless society is a mixed blessing, so we should still keep cash as an option. On the one hand, paying by smartphone or card is super fast and hygienic. However, if paper money disappears completely, elderly people or low-income citizens without smartphones will struggle to buy daily necessities. Also, people tend to spend more money with cards because they don't physically see the money leaving their wallet. Finally, if there is a power cut or internet failure, a 100% cashless city would stop functioning."
+        },
+        {
+          "id": "s-t2",
+          "title": "Topic 2: Designing a New Community Space",
+          "prompt": "Imagine the city government has an empty piece of land in a busy neighborhood, and they have asked residents to vote on what to build there. You must choose ONE of these three options and explain why it is the best choice:\n1. A free outdoor gym and sports court\n2. A quiet community garden where residents can grow vegetables\n3. A low-cost indoor study and co-working center with free Wi-Fi\n\nFollow-up questions to consider:\n- Why did you reject the other two options?\n- What is one problem that might happen with the place you chose, and how could the neighborhood solve it?\n- Which age group would benefit the most from your choice?",
+          "rubric": [
+            {
+              "criterion": "Fluency & Coherence",
+              "description": "Lựa chọn rõ 1 phương án, giải thích lý do thuyết phục và nêu được lý do loại bỏ 2 phương án còn lại."
+            },
+            {
+              "criterion": "Lexical Resource",
+              "description": "Vốn từ vựng phù hợp về không gian công cộng, lợi ích sức khỏe/cộng đồng và giải pháp quản lý."
+            },
+            {
+              "criterion": "Grammatical Range & Accuracy",
+              "description": "Dùng đúng động từ khuyết thiếu (would, could, should) để đề xuất giải pháp và so sánh hơn/nhất."
+            }
+          ],
+          "sampleAnswer": "If I had to vote, I would definitely choose the free outdoor gym and sports court. In a busy neighborhood, many people sit in offices all day and cannot afford expensive gym memberships. I rejected the community garden because the land is too small for everyone to grow vegetables, and a study center costs too much to maintain with air conditioning and staff. One possible problem with an outdoor sports court is noise late at night, but the neighborhood could solve this by turning off the court lights at 9:30 PM. Young adults and teenagers would benefit the most from this active space."
+        },
+        {
+          "id": "s-t3",
+          "title": "Topic 3: Product Reviews and Smart Shopping",
+          "prompt": "Before buying something new—like headphones, kitchen equipment, or shoes—many people read dozens of online reviews from strangers. How much do you trust online star ratings and reviews when you buy a product? Explain your strategy for deciding whether a product is actually good.\n\nFollow-up questions to consider:\n- Why do some people leave unfair 1-star or fake 5-star reviews online?\n- Have you ever bought something that had great reviews online, but turned out to be disappointing in real life?\n- For what kinds of products is it better to test them in a real shop rather than buying them online?",
+          "rubric": [
+            {
+              "criterion": "Fluency & Coherence",
+              "description": "Chia sẻ chiến lược mua sắm mạch lạc, có ví dụ thực tế từ trải nghiệm cá nhân."
+            },
+            {
+              "criterion": "Lexical Resource",
+              "description": "Từ vựng tốt về mua sắm trực tuyến (fake reviews, star ratings, quality, delivery issue, try on in person)."
+            },
+            {
+              "criterion": "Grammatical Range & Accuracy",
+              "description": "Kết hợp đúng thì hiện tại đơn (thói quen mua sắm) và hiện tại hoàn thành/quá khứ đơn (kể lại trải nghiệm mua hàng)."
+            }
+          ],
+          "sampleAnswer": "I usually trust online reviews about 70 percent, so I never look only at the five-star rating. Many companies pay for fake five-star reviews, while angry customers sometimes leave a one-star review just because the delivery driver was late, not because the product is bad. My strategy is to read the three-star and four-star reviews with real customer photos because they mention both pros and cons honestly. Last year, I bought a pair of headphones with glowing reviews, but they hurt my ears after thirty minutes. That is why for products like shoes, clothes, or headphones, it is much better to test them in a physical store."
+        }
+      ]
+    },
+    "writing": {
+      "instructions": "Read the situation below and write an email of 100–120 words. Make sure you include all four required points clearly.",
+      "tasks": [
+        {
+          "id": "w-t1",
+          "title": "Email to Workshop Organizer (Ms. Carter)",
+          "prompt": "You recently registered for a weekend photography workshop at a local community center, but you can no longer attend this weekend. Write an email to the workshop organizer, Ms. Carter. In your email, you must:\n1. State the exact date of the workshop you registered for and apologize for not being able to attend.\n2. Explain the specific reason why you cannot attend (for example, an unexpected work shift or a medical appointment).\n3. Propose one clear solution (ask to either move your registration to next month's workshop OR receive a refund).\n4. Ask one specific question about what documents or information you need to send her to complete this change.",
+          "minWords": 100,
+          "rubric": [
+            {
+              "criterion": "Task Point 1 (3 pts)",
+              "description": "Mentions a specific weekend date AND includes a clear apology expression ('I am sorry...' / 'I apologize...')."
+            },
+            {
+              "criterion": "Task Point 2 (3 pts)",
+              "description": "Gives a clear, logical reason for missing the event (e.g., unexpected work shift, family emergency, or medical appointment)."
+            },
+            {
+              "criterion": "Task Point 3 (3 pts)",
+              "description": "Clearly requests either a transfer to next month's course OR a full/partial refund."
+            },
+            {
+              "criterion": "Task Point 4 (3 pts)",
+              "description": "Includes a grammatically recognizable question asking what documents or details are required to complete the change."
+            },
+            {
+              "criterion": "Email Format & Word Count (4 pts)",
+              "description": "Includes an appropriate greeting ('Dear Ms. Carter,'), a sign-off ('Best regards,' / 'Sincerely,'), and is between 90 and 135 words."
+            },
+            {
+              "criterion": "B1 Grammar & Connectors (4 pts)",
+              "description": "Uses at least 3 linking words (because, so, however, therefore, would it be possible) and keeps basic verb tenses understandable."
+            }
+          ],
+          "sampleAnswer": "Dear Ms. Carter,\n\nI am writing regarding the beginner photography workshop that I registered for on Saturday, November 14th. I sincerely apologize, but I will no longer be able to attend the session this weekend.\n\nUnfortunately, my manager asked me to cover an urgent Saturday shift at the hospital because two of my colleagues are unwell. Therefore, I cannot take the day off as planned.\n\nWould it be possible to transfer my registration to next month's photography workshop instead? If that class is already full, I would like to request a refund. Could you please let me know what documents or receipt details I need to send you to complete this change?\n\nBest regards,\nAlex Nguyen"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,421 @@
+{
+  "schemaVersion": "1.0",
+  "id": "a2-english-proficiency-test-01",
+  "title": "A2 Elementary English Proficiency Exam",
+  "description": "A comprehensive CEFR A2 level English assessment testing Reading, Listening, Speaking, and Writing skills using everyday topics.",
+  "sections": {
+    "reading": {
+      "instructions": "Read the passages carefully and answer the questions that follow.",
+      "passages": [
+        {
+          "id": "r-p1",
+          "title": "Greenwood Community Sports Center",
+          "content": "Welcome to the Greenwood Community Sports Center! We are open every day from 7:00 AM to 9:00 PM. We offer many fun activities for children, adults, and seniors.\n\nOur large swimming pool is open from Monday to Saturday. On Sundays, the pool is closed all day for cleaning. If you want to learn how to swim, we have beginner classes on Tuesday and Thursday evenings at 6:00 PM. \n\nIn the main hall, you can play basketball, badminton, or table tennis. You do not need to bring your own rackets or balls because you can rent them at the front desk for $2. However, everyone must wear clean sports shoes in the main hall.\n\nWe also have a small café near the entrance. It sells healthy snacks, sandwiches, fruit juice, and hot coffee. Monthly membership costs $30 for adults and $15 for students and children under 16. If you come by car, there is a free car park behind the building.",
+          "questions": [
+            {
+              "id": "r-q1",
+              "type": "multiple_choice",
+              "prompt": "Why is the swimming pool closed on Sundays?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "There are beginner classes."
+                },
+                {
+                  "id": "B",
+                  "text": "The staff are on holiday."
+                },
+                {
+                  "id": "C",
+                  "text": "It is being cleaned."
+                },
+                {
+                  "id": "D",
+                  "text": "The whole center is closed."
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "Paragraph 2 states: 'On Sundays, the pool is closed all day for cleaning.'"
+            },
+            {
+              "id": "r-q2",
+              "type": "multiple_select",
+              "prompt": "Which TWO things can you buy at the sports center café?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Sandwiches"
+                },
+                {
+                  "id": "B",
+                  "text": "Sports shoes"
+                },
+                {
+                  "id": "C",
+                  "text": "Hot coffee"
+                },
+                {
+                  "id": "D",
+                  "text": "Pizza"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "Paragraph 4 states that the café sells 'healthy snacks, sandwiches, fruit juice, and hot coffee'."
+            },
+            {
+              "id": "r-q3",
+              "type": "fill_blank",
+              "prompt": "Visitors must wear clean ________ shoes when they are in the main hall.",
+              "acceptedAnswers": [
+                "sports",
+                "sport"
+              ],
+              "caseSensitive": false,
+              "explanation": "Paragraph 3 states: 'everyone must wear clean sports shoes in the main hall.'"
+            },
+            {
+              "id": "r-q4",
+              "type": "true_false_ng",
+              "prompt": "Visitors have to pay to park their cars behind the building.",
+              "correctAnswer": "FALSE",
+              "explanation": "The last sentence says 'there is a free car park behind the building'."
+            }
+          ]
+        },
+        {
+          "id": "r-p2",
+          "title": "Sarah's Weekend Trip to Brighton",
+          "content": "Last weekend, I went to the seaside town of Brighton with my best friend, Emma. We wanted to take the train, but the tickets were too expensive, so we travelled by bus instead. It took two hours from London, and we arrived at 10:00 AM on Saturday morning.\n\nThe weather was sunny and warm, which was great! First, we walked along the famous beach and looked at the sea. For lunch, we bought fish and chips and ate them while sitting on the beach. In the afternoon, we visited the Royal Pavilion, a very old and beautiful palace in the center of the town. Later, we went shopping in some small streets called 'The Lanes'. Emma bought a blue sweater, and I bought a silver necklace for my mother.\n\nWe stayed at a small guest house near the station. On Sunday morning, it started to rain, so we visited the Sea Life Aquarium before catching the 3:00 PM bus back home. It was a wonderful weekend!",
+          "questions": [
+            {
+              "id": "r-q5",
+              "type": "multiple_choice",
+              "prompt": "How did Sarah and Emma travel to Brighton?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "By train"
+                },
+                {
+                  "id": "B",
+                  "text": "By car"
+                },
+                {
+                  "id": "C",
+                  "text": "By bus"
+                },
+                {
+                  "id": "D",
+                  "text": "By bicycle"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "Paragraph 1 says: 'we travelled by bus instead.'"
+            },
+            {
+              "id": "r-q6",
+              "type": "fill_blank",
+              "prompt": "Sarah bought a silver ________ for her mother in The Lanes.",
+              "acceptedAnswers": [
+                "necklace"
+              ],
+              "caseSensitive": false,
+              "explanation": "Paragraph 2 says: 'I bought a silver necklace for my mother.'"
+            },
+            {
+              "id": "r-q7",
+              "type": "true_false_ng",
+              "prompt": "The breakfast at the small guest house was delicious.",
+              "correctAnswer": "NOT_GIVEN",
+              "explanation": "The text mentions they stayed at a small guest house near the station, but says nothing about the breakfast."
+            },
+            {
+              "id": "r-q8",
+              "type": "multiple_select",
+              "prompt": "Which TWO places did Sarah and Emma visit on Saturday?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "The beach"
+                },
+                {
+                  "id": "B",
+                  "text": "The Sea Life Aquarium"
+                },
+                {
+                  "id": "C",
+                  "text": "The Royal Pavilion"
+                },
+                {
+                  "id": "D",
+                  "text": "An art museum"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "On Saturday, they walked along the beach and visited the Royal Pavilion. They visited the Aquarium on Sunday."
+            }
+          ]
+        }
+      ]
+    },
+    "listening": {
+      "instructions": "Listen to the recordings and answer the questions.",
+      "parts": [
+        {
+          "id": "l-p1",
+          "title": "Part 1: Ordering Food at a Café",
+          "audioUrl": "/tests/audio/test-01-l-p1.wav",
+          "transcript": "Waiter: Good afternoon! Welcome to The Sunny Spoon. Are you ready to order?\nCustomer: Yes, please. Can I have a chicken salad, please?\nWaiter: I'm sorry, we don't have any chicken salad left today. We have a very nice cheese and tomato sandwich, or warm vegetable soup.\nCustomer: Oh, okay. I will have the cheese and tomato sandwich, please. Does it come with chips?\nWaiter: Yes, it comes with chips or a small green salad.\nCustomer: A small green salad, please.\nWaiter: Great. And what would you like to drink?\nCustomer: I'd like a glass of apple juice, and can I also get a piece of chocolate cake for dessert?\nWaiter: Of course! So that is one sandwich with a green salad, an apple juice, and chocolate cake. That will be twelve dollars and fifty cents, please.\nCustomer: Here you go. Thank you!",
+          "questions": [
+            {
+              "id": "l-q1",
+              "type": "multiple_choice",
+              "prompt": "What does the customer order to eat for their main meal?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Chicken salad"
+                },
+                {
+                  "id": "B",
+                  "text": "Vegetable soup"
+                },
+                {
+                  "id": "C",
+                  "text": "A cheese and tomato sandwich"
+                },
+                {
+                  "id": "D",
+                  "text": "Fish and chips"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "Because there is no chicken salad left, the customer says: 'I will have the cheese and tomato sandwich, please.'"
+            },
+            {
+              "id": "l-q2",
+              "type": "fill_blank",
+              "prompt": "The customer wants to drink a glass of ________ juice.",
+              "acceptedAnswers": [
+                "apple"
+              ],
+              "caseSensitive": false,
+              "explanation": "The customer says: 'I'd like a glass of apple juice'."
+            },
+            {
+              "id": "l-q3",
+              "type": "true_false_ng",
+              "prompt": "The customer chooses chips with their sandwich.",
+              "correctAnswer": "FALSE",
+              "explanation": "When asked if they want chips or a small green salad, the customer asks for 'A small green salad, please.'"
+            },
+            {
+              "id": "l-q4",
+              "type": "multiple_select",
+              "prompt": "Which TWO sweet or drink items does the customer order?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Chocolate cake"
+                },
+                {
+                  "id": "B",
+                  "text": "Ice cream"
+                },
+                {
+                  "id": "C",
+                  "text": "Apple juice"
+                },
+                {
+                  "id": "D",
+                  "text": "Hot tea"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "The customer orders 'a glass of apple juice' and 'a piece of chocolate cake for dessert'."
+            }
+          ]
+        },
+        {
+          "id": "l-p2",
+          "title": "Part 2: A Phone Message About a Party",
+          "audioUrl": "/tests/audio/test-01-l-p2.wav",
+          "transcript": "Hi David, this is Maria! I'm calling about Mark's birthday party this Saturday. As you know, the party starts at 7:30 in the evening at Mark's house. His address is 45 Park Road, just opposite the public library. Some of us are buying him a present together. We are going to get him a new watch because he lost his old one last month. If you want to join us, please bring ten dollars. Also, Mark's sister is making a big birthday cake, and I am bringing some pizzas, so could you please bring some cold drinks, like cola or orange juice? Call me back when you get this message. My new phone number is 555-8392. See you on Saturday!",
+          "questions": [
+            {
+              "id": "l-q5",
+              "type": "multiple_choice",
+              "prompt": "Where is Mark's house located?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Next to the train station"
+                },
+                {
+                  "id": "B",
+                  "text": "Opposite the public library"
+                },
+                {
+                  "id": "C",
+                  "text": "Behind the supermarket"
+                },
+                {
+                  "id": "D",
+                  "text": "On Green Street"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Maria says: 'His address is 45 Park Road, just opposite the public library.'"
+            },
+            {
+              "id": "l-q6",
+              "type": "fill_blank",
+              "prompt": "Mark's friends are buying him a new ________ for his birthday.",
+              "acceptedAnswers": [
+                "watch"
+              ],
+              "caseSensitive": false,
+              "explanation": "Maria states: 'We are going to get him a new watch because he lost his old one last month.'"
+            },
+            {
+              "id": "l-q7",
+              "type": "true_false_ng",
+              "prompt": "Maria asks David to make a birthday cake for the party.",
+              "correctAnswer": "FALSE",
+              "explanation": "Mark's sister is making the cake; Maria asks David to bring some cold drinks."
+            },
+            {
+              "id": "l-q8",
+              "type": "multiple_select",
+              "prompt": "Which TWO things does Maria ask David to bring to the party?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Ten dollars for the present"
+                },
+                {
+                  "id": "B",
+                  "text": "Pizzas"
+                },
+                {
+                  "id": "C",
+                  "text": "Cold drinks"
+                },
+                {
+                  "id": "D",
+                  "text": "Music CDs"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "Maria says 'please bring ten dollars' for the gift and 'could you please bring some cold drinks'."
+            }
+          ]
+        }
+      ]
+    },
+    "speaking": {
+      "instructions": "Read the prompts and prepare your speech notes. Speak clearly and try to answer all parts of the task.",
+      "tasks": [
+        {
+          "id": "s-t1",
+          "title": "Part 1: Talk About Your Daily Routine",
+          "prompt": "Describe a typical day in your life.\nYou should say:\n- What time you usually wake up\n- What you do in the morning and afternoon (work or study)\n- What you like to do in the evening to relax\nAnd explain what your favorite part of the day is.",
+          "rubric": [
+            {
+              "criterion": "Fluency and Coherence",
+              "description": "Can link simple sentences using basic connectors like 'and', 'but', 'then', and 'because' with reasonable ease."
+            },
+            {
+              "criterion": "Lexical Resource",
+              "description": "Uses appropriate basic vocabulary related to daily activities, time, work, and hobbies."
+            },
+            {
+              "criterion": "Grammar Accuracy",
+              "description": "Correctly uses present simple tense and adverbs of frequency (usually, always, sometimes)."
+            }
+          ],
+          "sampleAnswer": "I usually wake up at 7:00 AM every day. First, I brush my teeth, take a shower, and eat breakfast with my family. At 8:00 AM, I take the bus to school. I study until 4:00 PM. In the evening, I like to relax by listening to music or watching TV after dinner. My favorite part of the day is the evening because I can rest and talk to my friends."
+        },
+        {
+          "id": "s-t2",
+          "title": "Part 2: Describe Your Favorite Season",
+          "prompt": "Talk about your favorite season of the year (spring, summer, autumn, or winter).\nYou should say:\n- Which season it is\n- What the weather is like during this season\n- What clothes you usually wear\nAnd explain what activities you enjoy doing at this time of year.",
+          "rubric": [
+            {
+              "criterion": "Fluency and Coherence",
+              "description": "Addresses all bullet points clearly in a simple, organized way."
+            },
+            {
+              "criterion": "Lexical Resource",
+              "description": "Uses A2-level vocabulary for weather (sunny, warm, cold), clothing, and leisure activities."
+            },
+            {
+              "criterion": "Grammar Accuracy",
+              "description": "Uses simple sentence structures and verb forms (like + -ing) accurately."
+            }
+          ],
+          "sampleAnswer": "My favorite season is summer. In my country, the weather in summer is very hot and sunny, and the days are long. During this season, I usually wear light clothes like T-shirts, shorts, and sunglasses. I really love summer because we have school holidays. I enjoy going to the beach with my family, swimming in the sea, and eating cold ice cream."
+        }
+      ]
+    },
+    "writing": {
+      "instructions": "Read the prompts below and write your responses. Make sure to write at least the minimum number of words required.",
+      "tasks": [
+        {
+          "id": "w-t1",
+          "title": "Task 1: An Email to a Friend",
+          "prompt": "You want to invite your English-speaking friend, Alex, to go to the cinema with you this weekend.\n\nWrite an email to Alex. In your email, you should:\n- Invite Alex to go to the cinema this weekend\n- Say which movie you want to watch and why\n- Suggest a time and place to meet before the movie",
+          "minWords": 50,
+          "rubric": [
+            {
+              "criterion": "Task Achievement",
+              "description": "Includes all three points mentioned in the prompt clearly and uses an appropriate friendly tone."
+            },
+            {
+              "criterion": "Coherence & Cohesion",
+              "description": "Uses basic linking words (and, so, because) and appropriate email opening/closing."
+            },
+            {
+              "criterion": "Lexical & Grammatical Range",
+              "description": "Uses basic vocabulary for movies/arrangements and modal verbs for suggestions (would you like, let's, can we)."
+            }
+          ],
+          "sampleAnswer": "Hi Alex,\n\nHow are you? Would you like to go to the cinema with me this Saturday afternoon?\n\nI really want to watch the new comedy movie called 'Holiday Fun'. I heard it is very funny, and my favorite actor is in it.\n\nThe movie starts at 4:00 PM. Let's meet at 3:30 PM outside the Star Coffee Shop near the cinema. Please let me know if you can come!\n\nBest wishes,\nSam"
+        },
+        {
+          "id": "w-t2",
+          "title": "Task 2: A Memorable Holiday",
+          "prompt": "Write a short paragraph or story about a holiday or trip you enjoyed in the past.\n\nYou should write about:\n- Where you went and when\n- Who you went with\n- What you did and saw there\n- Why you enjoyed the holiday so much",
+          "minWords": 80,
+          "rubric": [
+            {
+              "criterion": "Task Achievement",
+              "description": "Answers all parts of the prompt with relevant details and meets the minimum word count of 80 words."
+            },
+            {
+              "criterion": "Coherence & Cohesion",
+              "description": "Events are organized logically in chronological order using time expressions (last year, first, after that, finally)."
+            },
+            {
+              "criterion": "Lexical & Grammatical Range",
+              "description": "Uses past simple tense (regular and irregular verbs) accurately alongside descriptive adjectives."
+            }
+          ],
+          "sampleAnswer": "Last summer, I went on a wonderful holiday to Da Nang with my parents and my younger brother. We travelled there by plane in July and stayed in a nice hotel near the beach for five days.\n\nEvery morning, we swam in the blue sea and walked on the warm sand. In the afternoon, we visited famous places like the Golden Bridge in the mountains and took many photos. In the evening, we ate delicious local seafood at small restaurants.\n\nI enjoyed this holiday very much because the weather was great, the food was amazing, and I had a lot of fun spending time with my family."
+        }
+      ]
+    }
+  }
+}
