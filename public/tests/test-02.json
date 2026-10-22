@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0",
-  "id": "test-01",
+  "id": "test-02",
   "title": "B1-Level Comprehensive English Examination (With Advanced Reading)",
-  "description": "Đề thi tiếng Anh tổng hợp trình độ B1 gồm 4 kỹ năng: Reading (thử thách học thuật cấp độ Thạc sĩ với 20 câu hỏi), Listening (5 hội thoại đời sống có bẫy paraphrase), Speaking (3 chủ đề hiện đại) và Writing (Email thực tế chấm điểm khách quan).",
+  "description": "A comprehensive B1-level English examination assessing four core skills: Reading (academic neurobiology passage with 20 questions), Listening (5 real-world dialogues with distractors), Speaking (3 contemporary discussion topics), and Writing (a practical communicative email).",
   "sections": {
     "reading": {
       "instructions": "Read the following excerpt from a graduate-level neurobiology and pathophysiology paper carefully. Then answer questions 1 to 20 by choosing the best option (A, B, C, or D) based strictly on the information provided in the text.",
@@ -639,7 +639,7 @@
                 },
                 {
                   "id": "C",
-                  "text": "He prefers a different color than dark green."
+                  "text": "He prefers a different color from dark green."
                 },
                 {
                   "id": "D",

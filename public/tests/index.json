@@ -2,14 +2,14 @@
   "tests": [
     {
       "id": "test-01",
-      "title": "General English Practice Test 01",
-      "description": "Level A2 for beginner",
+      "title": "A2 Key English Comprehensive Examination (Cambridge Standard)",
+      "description": "Comprehensive CEFR A2 assessment: Reading (5 passages, 30 questions), Listening (5 parts, 25 questions), Speaking (2 tasks), and Writing (2 tasks).",
       "file": "/tests/test-01.json"
     },
     {
       "id": "test-02",
-      "title": "B1 Advance Level Exaam",
-      "description": "Bài kiểm tra tổng hợp đến khỉ cũng làm được.",
+      "title": "B1 Advanced Level Examination",
+      "description": "A comprehensive B1-level English examination assessing Reading, Listening, Speaking, and Writing.",
       "file": "/tests/test-02.json"
     },
     {
@@ -17,6 +17,12 @@
       "title": "C1-Level Comprehensive English Examination (CAE / Academic Standard)",
       "description": "An advanced C1-level English proficiency examination assessing Reading, Listening, Speaking, and Writing.",
       "file": "/tests/test-03.json"
+    },
+    {
+      "id": "test-04",
+      "title": "B1 Intermediate English Examination (CEFR / PET Standard)",
+      "description": "A comprehensive B1-level English examination assessing Reading, Listening, Speaking, and Writing.",
+      "file": "/tests/test-04.json"
     }
   ]
 }
