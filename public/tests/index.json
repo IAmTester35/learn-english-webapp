@@ -11,6 +11,12 @@
       "title": "B1 Advance Level Exaam",
       "description": "Bài kiểm tra tổng hợp đến khỉ cũng làm được.",
       "file": "/tests/test-02.json"
+    },
+    {
+      "id": "test-03",
+      "title": "C1-Level Comprehensive English Examination (CAE / Academic Standard)",
+      "description": "An advanced C1-level English proficiency examination assessing Reading, Listening, Speaking, and Writing.",
+      "file": "/tests/test-03.json"
     }
   ]
 }
