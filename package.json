@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate-tts": "npx tsx scripts/generate-tts.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",
