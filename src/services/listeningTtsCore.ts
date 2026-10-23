@@ -1,10 +1,55 @@
 import type { Part, SpeechConfig } from '@google/genai';
+import type {
+  ListeningAudioConfig,
+  SpeakerConfig,
+  SpeakerGender,
+} from '../types/test';
 
 export const LISTENING_TTS_MODEL = 'gemini-3.8-flash-lite-tts';
 const DEFAULT_SAMPLE_RATE = 24000;
 
-const FEMALE_VOICE_POOL = ['Kore', 'Aoede'];
-const MALE_VOICE_POOL = ['Puck', 'Charon'];
+// Full library of 30 official Google Gemini Studio voices
+export const GOOGLE_PREBUILT_VOICES = {
+  female: [
+    'Kore',         // Firm, clear, professional
+    'Aoede',        // Breezy, natural, conversational
+    'Autonoe',      // Warm, expressive
+    'Leda',         // Polite, elegant
+    'Callirrhoe',   // Bright, youthful
+    'Despina',      // Gentle, friendly
+    'Erinome',      // Articulate, neutral
+    'Laomedeia',    // Clear, calm
+    'Sadaltager',   // Resonant, mature
+    'Sulafat',      // Soft, patient
+    'Pulcherrima',  // Energetic, expressive
+    'Vindemiatrix', // Deep, measured
+  ],
+  male: [
+    'Puck',         // Upbeat, energetic, conversational
+    'Charon',       // Informative, deep, steady, news/academic
+    'Fenrir',       // Dynamic, excitable
+    'Zephyr',       // Calm, warm, friendly
+    'Orus',         // Confident, professional
+    'Umbriel',      // Relaxed, natural
+    'Schedar',      // Direct, clear
+    'Achird',       // Authoritative, formal
+    'Sadachbia',    // Measured, storytelling
+    'Enceladus',    // Resonant, broadcast
+    'Algieba',      // Clear announcer
+    'Algenib',      // Friendly guide
+    'Achernar',     // Deep, serious
+    'Gacrux',       // Crisp, precise
+    'Zubenelgenubi',// Firm, corporate
+    'Iapetus',      // Scholarly, measured
+    'Rasalgethi',   // Casual, contemporary
+    'Alnilam',      // Storyteller, rhythmic
+  ],
+} as const;
+
+export const ALL_PREBUILT_VOICE_NAMES = [
+  ...GOOGLE_PREBUILT_VOICES.female,
+  ...GOOGLE_PREBUILT_VOICES.male,
+];
 
 export interface DialogueTurn {
   speaker: string;
@@ -16,17 +61,30 @@ export interface InlineAudioPart {
   mimeType?: string;
 }
 
-function inferGender(speakerName: string): 'female' | 'male' | 'unknown' {
+export interface ListeningPartTtsInput {
+  transcript: string;
+  audioConfig?: ListeningAudioConfig;
+  speakers?: SpeakerConfig[];
+}
+
+export interface ResolvedSpeakerProfile {
+  name: string;
+  gender: 'female' | 'male';
+  voiceName: string;
+  style?: string;
+}
+
+export function inferGender(speakerName: string): 'female' | 'male' | 'unknown' {
   const lower = speakerName.trim().toLowerCase();
   if (
-    /\b(woman|female|girl|waitress|lady|mom|mother|sister|maria|sarah|elena|jane|anna|lisa|emma)\b/.test(
+    /\b(woman|female|girl|waitress|lady|mom|mother|sister|daughter|mrs|ms|miss|chloe|maria|sarah|elena|jane|anna|lisa|emma|lucy|sophie|olivia|emily|hannah|claire|jessica|rachel)\b/.test(
       lower
     )
   ) {
     return 'female';
   }
   if (
-    /\b(man|male|boy|waiter|sir|dad|father|brother|mark|david|leo|joe|john|tom|alex|sam)\b/.test(
+    /\b(man|male|boy|waiter|sir|mr|dad|father|brother|son|sam|liam|daniel|mark|david|leo|joe|john|tom|alex|michael|peter|james|robert|paul|richard|george|steve)\b/.test(
       lower
     )
   ) {
@@ -35,6 +93,14 @@ function inferGender(speakerName: string): 'female' | 'male' | 'unknown' {
   return 'unknown';
 }
 
+/**
+ * Robust transcript dialogue parser.
+ * Handles:
+ * - Speaker turns: "Speaker: Text"
+ * - Multi-line continuations
+ * - Skips pure stage directions like "[Sound effect]" or "(At the station)"
+ * - Falls back to single-speaker if no speaker headers exist.
+ */
 export function parseTranscriptDialogue(transcript: string): {
   speakers: string[];
   turns: DialogueTurn[];
@@ -46,59 +112,215 @@ export function parseTranscriptDialogue(transcript: string): {
 
   const speakers: string[] = [];
   const turns: DialogueTurn[] = [];
-  const speakerRegex = /^([A-Za-z][A-Za-z0-9_ ]{0,24}):\s*(.+)$/;
+  const speakerRegex = /^([A-Za-z0-9_'\-.\(\) ]{1,48}):\s*(.+)$/;
 
   for (const line of lines) {
+    // Skip purely bracketed stage directions e.g. [Bell rings] or (Scene 1)
+    if (/^(\[[^\]]+\]|\([^)]+\))$/.test(line)) {
+      continue;
+    }
+
     const match = line.match(speakerRegex);
     if (match) {
-      const speaker = match[1].trim();
+      const rawSpeaker = match[1].trim();
       const text = match[2].trim();
-      if (!speakers.includes(speaker)) {
+
+      // Normalize speaker name (title case or trimmed)
+      const existingSpeaker = speakers.find(
+        (s) => s.toLowerCase() === rawSpeaker.toLowerCase()
+      );
+      const speaker = existingSpeaker || rawSpeaker;
+
+      if (!existingSpeaker) {
         speakers.push(speaker);
       }
       turns.push({ speaker, text });
     } else if (turns.length > 0) {
+      // Continuation of previous speaker turn
       turns[turns.length - 1].text += ` ${line}`;
-    } else {
-      return { speakers: [], turns: [] };
     }
+  }
+
+  // If no "Speaker: " format detected, treat as single-speaker announcement
+  if (turns.length === 0 && lines.length > 0) {
+    const singleSpeaker = 'Announcer';
+    return {
+      speakers: [singleSpeaker],
+      turns: [{ speaker: singleSpeaker, text: lines.join(' ') }],
+    };
   }
 
   return { speakers, turns };
 }
 
-function pickTwoSpeakerVoices(speakers: [string, string]): [string, string] {
-  const g1 = inferGender(speakers[0]);
-  const g2 = inferGender(speakers[1]);
+/**
+ * Builds standard style prompt directive from scenario, accent, and pacing.
+ */
+export function buildAudioStyleDirective(
+  audioConfig?: ListeningAudioConfig,
+  speakerStyle?: string
+): string | undefined {
+  const fragments: string[] = [];
 
-  if (g1 === 'female' && g2 === 'male') {
-    return [FEMALE_VOICE_POOL[0], MALE_VOICE_POOL[0]];
+  // Accent directive
+  if (audioConfig?.accent) {
+    switch (audioConfig.accent) {
+      case 'british':
+        fragments.push('British English RP accent');
+        break;
+      case 'american':
+        fragments.push('General American accent');
+        break;
+      case 'australian':
+        fragments.push('mild Australian English accent');
+        break;
+      case 'canadian':
+        fragments.push('Canadian English accent');
+        break;
+      case 'standard':
+        fragments.push('neutral international English accent');
+        break;
+    }
   }
-  if (g1 === 'male' && g2 === 'female') {
-    return [MALE_VOICE_POOL[0], FEMALE_VOICE_POOL[0]];
+
+  // Scenario directive
+  if (audioConfig?.scenario) {
+    switch (audioConfig.scenario) {
+      case 'public_announcement':
+        fragments.push('authoritative public address announcement, clear resonance, articulate');
+        break;
+      case 'everyday_dialogue':
+        fragments.push('natural everyday conversation, friendly, clear enunciation');
+        break;
+      case 'interview':
+        fragments.push('professional broadcast interview, polite and attentive');
+        break;
+      case 'academic_lecture':
+        fragments.push('formal academic lecture, informative, structured pacing');
+        break;
+      case 'group_discussion':
+        fragments.push('lively collaborative discussion, interactive turns');
+        break;
+      case 'news_broadcast':
+        fragments.push('steady broadcast news delivery, neutral and informative');
+        break;
+    }
   }
-  if (g1 === 'female' && g2 === 'female') {
-    return [FEMALE_VOICE_POOL[0], FEMALE_VOICE_POOL[1]];
+
+  // Pacing directive
+  if (audioConfig?.pacing) {
+    switch (audioConfig.pacing) {
+      case 'slow':
+        fragments.push('speak slowly and clearly for beginner language learners');
+        break;
+      case 'moderate':
+        fragments.push('moderate conversational speaking rate');
+        break;
+      case 'fast':
+        fragments.push('natural fast-paced native speech');
+        break;
+      case 'exam_standard':
+        fragments.push('clear exam standard speed with natural sentence breaks');
+        break;
+    }
   }
-  if (g1 === 'male' && g2 === 'male') {
-    return [MALE_VOICE_POOL[0], MALE_VOICE_POOL[1]];
+
+  if (audioConfig?.overallStyle) {
+    fragments.push(audioConfig.overallStyle);
   }
-  if (g1 === 'female') {
-    return [FEMALE_VOICE_POOL[0], MALE_VOICE_POOL[0]];
+
+  if (speakerStyle) {
+    fragments.push(speakerStyle);
   }
-  if (g1 === 'male') {
-    return [MALE_VOICE_POOL[0], FEMALE_VOICE_POOL[0]];
-  }
-  if (g2 === 'female') {
-    return [MALE_VOICE_POOL[0], FEMALE_VOICE_POOL[0]];
-  }
-  if (g2 === 'male') {
-    return [FEMALE_VOICE_POOL[0], MALE_VOICE_POOL[0]];
-  }
-  return ['Puck', 'Kore'];
+
+  return fragments.length > 0 ? fragments.join(', ') : undefined;
 }
 
-export function buildListeningTtsRequest(transcript: string): {
+/**
+ * Resolves distinct voice assignments for N speakers.
+ * Prioritizes author explicit config -> gender match -> distinct non-overlapping voices from 30-voice catalog.
+ */
+export function resolveSpeakerProfiles(
+  detectedSpeakers: string[],
+  declaredSpeakers?: SpeakerConfig[]
+): ResolvedSpeakerProfile[] {
+  const usedVoiceNames = new Set<string>();
+  const declaredMap = new Map<string, SpeakerConfig>();
+
+  if (declaredSpeakers) {
+    for (const s of declaredSpeakers) {
+      declaredMap.set(s.name.toLowerCase(), s);
+    }
+  }
+
+  const result: ResolvedSpeakerProfile[] = [];
+
+  let femaleIndex = 0;
+  let maleIndex = 0;
+
+  detectedSpeakers.forEach((speakerName, index) => {
+    const declared = declaredMap.get(speakerName.toLowerCase());
+
+    // Determine gender
+    let gender: 'female' | 'male' = 'female';
+    if (declared?.gender && declared.gender !== 'unspecified') {
+      gender = declared.gender;
+    } else {
+      const inferred = inferGender(speakerName);
+      if (inferred !== 'unknown') {
+        gender = inferred;
+      } else {
+        // Alternate gender if unknown
+        gender = index % 2 === 0 ? 'male' : 'female';
+      }
+    }
+
+    // Determine voiceName
+    let voiceName = declared?.voiceName;
+    if (voiceName && (ALL_PREBUILT_VOICE_NAMES as readonly string[]).includes(voiceName)) {
+      usedVoiceNames.add(voiceName);
+    } else {
+      const pool = gender === 'female' ? GOOGLE_PREBUILT_VOICES.female : GOOGLE_PREBUILT_VOICES.male;
+      let candidate: string | undefined;
+
+      // Find unused voice from preferred pool
+      for (let i = 0; i < pool.length; i++) {
+        const ptr = (gender === 'female' ? femaleIndex + i : maleIndex + i) % pool.length;
+        if (!usedVoiceNames.has(pool[ptr])) {
+          candidate = pool[ptr];
+          if (gender === 'female') femaleIndex = ptr + 1;
+          else maleIndex = ptr + 1;
+          break;
+        }
+      }
+
+      // Fallback if all in pool were used
+      if (!candidate) {
+        candidate = pool[index % pool.length];
+      }
+
+      voiceName = candidate;
+      usedVoiceNames.add(voiceName);
+    }
+
+    result.push({
+      name: speakerName,
+      gender,
+      voiceName,
+      style: declared?.style,
+    });
+  });
+
+  return result;
+}
+
+/**
+ * Builds Google GenAI TTS request params.
+ * Supports N speakers (1, 2, 3, ... N) and natural delivery styling via speechMetadata.
+ */
+export function buildListeningTtsRequest(
+  input: string | ListeningPartTtsInput
+): {
   model: string;
   contents: string | Part[];
   config: {
@@ -106,44 +328,46 @@ export function buildListeningTtsRequest(transcript: string): {
     speechConfig: SpeechConfig;
   };
 } {
+  const transcript = typeof input === 'string' ? input : input.transcript;
+  const audioConfig = typeof input === 'string' ? undefined : input.audioConfig;
+  const declaredSpeakers = typeof input === 'string' ? undefined : input.speakers;
+
   const { speakers, turns } = parseTranscriptDialogue(transcript);
-  const isTwoSpeakerDialogue = speakers.length === 2 && turns.length > 0;
+  const resolvedSpeakers = resolveSpeakerProfiles(speakers, declaredSpeakers);
+  const speakerProfileMap = new Map(resolvedSpeakers.map((s) => [s.name, s]));
 
-  const contents: string | Part[] = isTwoSpeakerDialogue
-    ? turns.map((turn) => ({
-        text: turn.text,
-        speechMetadata: {
-          speaker: turn.speaker,
+  const isMultiSpeaker = resolvedSpeakers.length > 1;
+
+  // Build Turn Parts with speechMetadata
+  const contents: string | Part[] = turns.map((turn) => {
+    const profile = speakerProfileMap.get(turn.speaker);
+    const turnStyle = buildAudioStyleDirective(audioConfig, profile?.style);
+
+    return {
+      text: turn.text,
+      speechMetadata: {
+        speaker: turn.speaker,
+        ...(turnStyle ? { style: turnStyle } : {}),
+      },
+    };
+  });
+
+  // Build SpeechConfig according to speaker count
+  const speechConfig: SpeechConfig = isMultiSpeaker
+    ? {
+        multiSpeakerVoiceConfig: {
+          speakerVoiceConfigs: resolvedSpeakers.map((s) => ({
+            speaker: s.name,
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: s.voiceName },
+            },
+          })),
         },
-      }))
-    : transcript;
-
-  const speechConfig: SpeechConfig = isTwoSpeakerDialogue
-    ? (() => {
-        const [v1, v2] = pickTwoSpeakerVoices([speakers[0], speakers[1]]);
-        return {
-          multiSpeakerVoiceConfig: {
-            speakerVoiceConfigs: [
-              {
-                speaker: speakers[0],
-                voiceConfig: {
-                  prebuiltVoiceConfig: { voiceName: v1 },
-                },
-              },
-              {
-                speaker: speakers[1],
-                voiceConfig: {
-                  prebuiltVoiceConfig: { voiceName: v2 },
-                },
-              },
-            ],
-          },
-        };
-      })()
+      }
     : {
         voiceConfig: {
           prebuiltVoiceConfig: {
-            voiceName: 'Kore',
+            voiceName: resolvedSpeakers[0]?.voiceName || 'Kore',
           },
         },
       };

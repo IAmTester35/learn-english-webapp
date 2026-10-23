@@ -1,0 +1,792 @@
+{
+  "schemaVersion": "1.0",
+  "id": "b2-upper-intermediate-english-test-01",
+  "title": "B2 Upper-Intermediate English Examination (CEFR / FCE Standard)",
+  "description": "Comprehensive CEFR B2 assessment evaluating Reading, Listening, Speaking, and Writing skills at the Cambridge B2 First (FCE) standard.",
+  "sections": {
+    "reading": {
+      "instructions": "Read the three passages carefully and answer all questions from r-q1 to r-q18.",
+      "passages": [
+        {
+          "id": "r-p1",
+          "title": "The Rise of Vertical Farming in Urban Centres",
+          "content": "As the global population continues to gravitate toward urban areas, traditional agriculture faces unprecedented pressures. Climate volatility, soil degradation, and the sheer logistical challenge of transporting fresh produce across continents have prompted scientists and entrepreneurs to rethink how food is cultivated. One of the most promising solutions emerging over the past decade is vertical farming—the practice of growing crops in vertically stacked layers within controlled indoor environments.\n\nUnlike conventional farming, which relies heavily on expansive tracts of arable land and favorable weather, vertical farms can be established inside repurposed warehouses, shipping containers, or even underground tunnels right in the heart of metropolitan areas. These facilities utilize soilless farming techniques such as hydroponics, where plant roots are submerged in nutrient-rich water solutions, and aeroponics, which suspends roots in the air and mists them with vital minerals. By precisely regulating temperature, humidity, and light spectra through specialized LED arrays, growers can optimize plant growth cycles and harvest crops year-round, completely independent of seasonal constraints.\n\nThe environmental benefits of this approach are substantial. Vertical farms consume up to ninety-five percent less water than traditional open-field agriculture because water is captured, treated, and continuously recycled within a closed-loop system. Furthermore, because the indoor environment is sealed off from the outside world, there is virtually no need for chemical pesticides or herbicides. The proximity of these farms to urban consumers also drastically cuts down on 'food miles,' reducing the carbon emissions associated with long-haul refrigerated transport and ensuring that leafy greens reach supermarket shelves within hours of being harvested.\n\nDespite its considerable promise, vertical farming is not without significant hurdles. The foremost challenge is the astronomical cost of energy required to power artificial lighting and climate control systems twenty-four hours a day. Critics point out that unless these facilities are powered entirely by renewable energy sources, their carbon footprint can actually exceed that of traditional farms. Additionally, the high initial capital investment needed for automated racking systems and sensor technology means that, for now, vertical farms are economically viable mainly for fast-growing, high-margin crops like microgreens, herbs, and strawberries. Staple crops such as wheat, corn, and rice remain far too space-intensive and low-value to be grown indoors profitably.\n\nNevertheless, industry experts remain optimistic. Advances in LED efficiency and solar integration are steadily driving down operational expenses. While vertical farming is unlikely to replace traditional countryside agriculture entirely, it is increasingly viewed as a vital complementary system that can bolster urban food security in an uncertain climatic future.",
+          "questions": [
+            {
+              "id": "r-q1",
+              "type": "multiple_choice",
+              "prompt": "What is the main advantage of regulating light and temperature inside vertical farms?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "It eliminates the need for nutrient solutions."
+                },
+                {
+                  "id": "B",
+                  "text": "It allows crops to be harvested throughout the entire year."
+                },
+                {
+                  "id": "C",
+                  "text": "It reduces the initial construction costs of the facility."
+                },
+                {
+                  "id": "D",
+                  "text": "It enables staple crops like wheat to grow twice as fast."
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 2 states that by precisely regulating temperature, humidity, and light spectra, growers can 'harvest crops year-round, completely independent of seasonal constraints.'"
+            },
+            {
+              "id": "r-q2",
+              "type": "fill_blank",
+              "prompt": "In the farming technique known as ________, plant roots are suspended in the air and sprayed with mineral mist.",
+              "acceptedAnswers": [
+                "aeroponics",
+                "aeroponic",
+                "aeroponics technique"
+              ],
+              "caseSensitive": false,
+              "explanation": "Paragraph 2 explains: '...and aeroponics, which suspends roots in the air and mists them with vital minerals.'"
+            },
+            {
+              "id": "r-q3",
+              "type": "multiple_select",
+              "prompt": "Which TWO environmental advantages of vertical farming are mentioned in paragraph 3?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Complete elimination of chemical pesticides"
+                },
+                {
+                  "id": "B",
+                  "text": "Restoration of degraded countryside soil"
+                },
+                {
+                  "id": "C",
+                  "text": "Up to a 95% reduction in water consumption"
+                },
+                {
+                  "id": "D",
+                  "text": "Lower electricity usage compared to open-field farms"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "Paragraph 3 notes that vertical farms 'consume up to ninety-five percent less water' (C) and that 'there is virtually no need for chemical pesticides or herbicides' (A)."
+            },
+            {
+              "id": "r-q4",
+              "type": "true_false_ng",
+              "prompt": "Vertical farms always produce lower carbon emissions than traditional open-field farms.",
+              "correctAnswer": "FALSE",
+              "explanation": "Paragraph 4 states that 'unless these facilities are powered entirely by renewable energy sources, their carbon footprint can actually exceed that of traditional farms.'"
+            },
+            {
+              "id": "r-q5",
+              "type": "true_false_ng",
+              "prompt": "Governments in major metropolitan areas are currently subsidizing the construction of vertical farms.",
+              "correctAnswer": "NOT_GIVEN",
+              "explanation": "The text mentions entrepreneurs and high initial capital investment, but does not mention whether governments are providing subsidies."
+            },
+            {
+              "id": "r-q6",
+              "type": "multiple_choice",
+              "prompt": "Why are staple crops like wheat and rice rarely grown in vertical farms?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "They cannot survive without natural sunlight and soil."
+                },
+                {
+                  "id": "B",
+                  "text": "They require too much space and do not generate enough profit."
+                },
+                {
+                  "id": "C",
+                  "text": "Urban consumers prefer buying imported grains."
+                },
+                {
+                  "id": "D",
+                  "text": "They are highly susceptible to indoor plant diseases."
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 4 states: 'Staple crops such as wheat, corn, and rice remain far too space-intensive and low-value to be grown indoors profitably.'"
+            }
+          ]
+        },
+        {
+          "id": "r-p2",
+          "title": "The Psychology of Procrastination: Why We Delay",
+          "content": "Almost everyone has experienced the familiar pang of guilt that comes from putting off an important task in favor of reorganizing a bookshelf or scrolling aimlessly through social media. For decades, popular culture and self-help literature dismissed procrastination as a simple failure of time management or a symptom of laziness. However, contemporary psychological research paints a very different picture: procrastination is fundamentally an issue of emotional regulation, not productivity.\n\nDr. Tim Pychyl, a leading researcher on the subject, argues that when we procrastinate, we are prioritizing our short-term mood repair over the long-term pursuit of our goals. Certain tasks—such as writing a complex financial report, studying for a decisive exam, or having a difficult conversation—inevitably trigger negative emotions like anxiety, self-doubt, boredom, or frustration. Faced with an aversive task, the human brain perceives the discomfort as a genuine threat. The amygdala, the brain's emotional processing center, overrides the prefrontal cortex, which is responsible for logical planning and future-oriented decision-making. By switching to an easy, enjoyable activity, we experience immediate relief from stress, inadvertently rewarding the brain for its avoidance behavior.\n\nUnfortunately, this temporary escape comes at a steep psychological cost. Chronic procrastinators do not actually enjoy their leisure time; instead, their relaxation is tainted by lingering apprehension and self-criticism. Studies conducted among university students have consistently shown that while procrastination may alleviate stress at the beginning of a semester, it leads to significantly higher levels of cortisol, compromised immune function, and poorer academic performance as deadlines loom. Moreover, the habit creates a vicious cycle: the guilt accumulated from delaying a task makes the task itself feel even more intimidating when the individual finally attempts to confront it.\n\nBecause the root cause of procrastination is emotional rather than logistical, buying a new planner or downloading a time-tracking app rarely solves the problem. Psychologists instead recommend strategies that address the underlying feelings of dread. One highly effective method is 'self-compassion.' Research demonstrates that individuals who forgive themselves for past delays are far less likely to procrastinate on subsequent tasks, as self-forgiveness reduces the emotional burden attached to the project.\n\nAnother practical technique is shrinking the threshold of action. Instead of resolving to write an entire essay, a student might commit to working for just ten minutes or drafting a single paragraph. By lowering the stakes, the brain no longer registers the task as an overwhelming threat. Once the initial inertia is overcome, the sense of progress often generates enough momentum to keep going.",
+          "questions": [
+            {
+              "id": "r-q7",
+              "type": "multiple_choice",
+              "prompt": "According to contemporary psychological research, what is the primary cause of procrastination?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "A lack of organizational skills and scheduling tools"
+                },
+                {
+                  "id": "B",
+                  "text": "An inability to manage negative emotions associated with a task"
+                },
+                {
+                  "id": "C",
+                  "text": "An inherent preference for physical leisure over mental effort"
+                },
+                {
+                  "id": "D",
+                  "text": "An overactive prefrontal cortex interfering with daily routines"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 1 and 2 explain that 'procrastination is fundamentally an issue of emotional regulation, not productivity' and occurs when tasks trigger negative emotions like anxiety and self-doubt."
+            },
+            {
+              "id": "r-q8",
+              "type": "fill_blank",
+              "prompt": "When a person faces an unpleasant task, the brain's emotional center, known as the ________, overrides logical planning.",
+              "acceptedAnswers": [
+                "amygdala",
+                "the amygdala"
+              ],
+              "caseSensitive": false,
+              "explanation": "Paragraph 2 states: 'The amygdala, the brain's emotional processing center, overrides the prefrontal cortex...'"
+            },
+            {
+              "id": "r-q9",
+              "type": "true_false_ng",
+              "prompt": "University students who procrastinate experience high levels of stress throughout the entire semester.",
+              "correctAnswer": "FALSE",
+              "explanation": "Paragraph 3 states that 'procrastination may alleviate stress at the beginning of a semester' before leading to higher stress later as deadlines loom."
+            },
+            {
+              "id": "r-q10",
+              "type": "multiple_select",
+              "prompt": "Which TWO negative consequences of chronic procrastination are mentioned in paragraph 3?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Weakened immune system function"
+                },
+                {
+                  "id": "B",
+                  "text": "Permanent damage to the prefrontal cortex"
+                },
+                {
+                  "id": "C",
+                  "text": "Increased feelings of guilt that make the task seem harder"
+                },
+                {
+                  "id": "D",
+                  "text": "Complete loss of interest in social media"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "Paragraph 3 mentions 'compromised immune function' (A) and notes that 'the guilt accumulated from delaying a task makes the task itself feel even more intimidating' (C)."
+            },
+            {
+              "id": "r-q11",
+              "type": "true_false_ng",
+              "prompt": "Men and women differ significantly in the types of tasks they tend to procrastinate on.",
+              "correctAnswer": "NOT_GIVEN",
+              "explanation": "The passage discusses university students and general human psychology, but makes no mention of gender differences."
+            },
+            {
+              "id": "r-q12",
+              "type": "multiple_choice",
+              "prompt": "Why does committing to work on a task for only ten minutes help overcome procrastination?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "It tricks the brain into viewing the task as less threatening."
+                },
+                {
+                  "id": "B",
+                  "text": "It allows the person to finish the entire project in ten minutes."
+                },
+                {
+                  "id": "C",
+                  "text": "It trains the user to rely on time-tracking applications."
+                },
+                {
+                  "id": "D",
+                  "text": "It eliminates the need for self-compassion."
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "Paragraph 5 explains: 'By lowering the stakes, the brain no longer registers the task as an overwhelming threat.'"
+            }
+          ]
+        },
+        {
+          "id": "r-p3",
+          "title": "Reclaiming the Streets: The 15-Minute City Concept",
+          "content": "For much of the twentieth century, urban planning in the Western world was dictated by a single dominant invention: the private automobile. Cities were divided into distinct zones—residential suburbs on the outskirts, commercial districts in the center, and industrial parks along the periphery—connected by sprawling networks of highways. While this model promised suburban tranquility and freedom of movement, it ultimately produced traffic congestion, air pollution, and socially fragmented neighborhoods. Today, a transformative urban planning model known as the '15-minute city' is challenging this car-centric legacy.\n\nFirst popularized by Franco-Colombian professor Carlos Moreno at the Sorbonne in Paris, the 15-minute city is built around a straightforward premise: every resident should be able to access their essential daily needs—work, housing, food, healthcare, education, culture, and leisure—within a fifteen-minute walk or bike ride from their front door. Rather than forcing citizens to adapt their lives to the demands of long-distance commuting, the model seeks to bring urban functions directly to the neighborhood level, creating polycentric cities composed of vibrant, self-sufficient communities.\n\nA cornerstone of this urban philosophy is the concept of 'multi-purpose infrastructure,' or maximizing the utility of existing buildings across different times of the day. In many cities, schoolyards sit locked and empty on weekends, while office buildings become ghost towns after six in the evening. Under Moreno's framework, a municipal school playground might be opened to the public as a neighborhood park after classes end, and a daytime café could transition into a community reading room or local coworking hub at night. This flexible approach reduces the need for new construction while fostering stronger social ties among neighbors who share the same spaces.\n\nSeveral global cities have already begun translating this vision into reality. Paris has spearheaded the movement by removing thousands of on-street parking spaces, constructing cientos of kilometers of protected cycling lanes, and planting micro-forests around historic plazas. Similarly, Barcelona's 'Superblocks' program restricts through-traffic across grids of nine city blocks, converting former asphalt intersections into pedestrian plazas filled with benches, play areas, and outdoor dining. Local merchants, who initially feared that restricting cars would hurt their sales, have largely witnessed the opposite effect: increased foot traffic has boosted patronage at small neighborhood shops.\n\nHowever, urban sociologists caution that implementing the 15-minute city requires careful policy safeguards. Without proactive measures to ensure affordable housing, the beautification and revitalization of central neighborhoods can accelerate gentrification, pricing out lower-income residents and pushing them further to the poorly connected suburbs. For the 15-minute city to be truly progressive, planners must ensure that proximity and livability do not become exclusive luxuries for the wealthy, but accessible rights for every urban citizen.",
+          "questions": [
+            {
+              "id": "r-q13",
+              "type": "multiple_choice",
+              "prompt": "What was a major consequence of twentieth-century urban planning mentioned in paragraph 1?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "A decline in the manufacturing of private automobiles"
+                },
+                {
+                  "id": "B",
+                  "text": "The integration of industrial parks into residential centers"
+                },
+                {
+                  "id": "C",
+                  "text": "Socially isolated neighborhoods and heavy traffic congestion"
+                },
+                {
+                  "id": "D",
+                  "text": "An overabundance of cycling lanes in suburban areas"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "Paragraph 1 states that the car-centric zoning model 'ultimately produced traffic congestion, air pollution, and socially fragmented neighborhoods.'"
+            },
+            {
+              "id": "r-q14",
+              "type": "fill_blank",
+              "prompt": "The 15-minute city concept was initially popularized by Professor ________ at the Sorbonne.",
+              "acceptedAnswers": [
+                "Carlos Moreno",
+                "Moreno"
+              ],
+              "caseSensitive": false,
+              "explanation": "Paragraph 2 states: 'First popularized by Franco-Colombian professor Carlos Moreno at the Sorbonne in Paris...'"
+            },
+            {
+              "id": "r-q15",
+              "type": "multiple_choice",
+              "prompt": "What is meant by 'multi-purpose infrastructure' in paragraph 3?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Demolishing old schools to build modern coworking offices"
+                },
+                {
+                  "id": "B",
+                  "text": "Using the same urban spaces for different functions at different times"
+                },
+                {
+                  "id": "C",
+                  "text": "Allowing both cars and bicycles to share the same highway lanes"
+                },
+                {
+                  "id": "D",
+                  "text": "Requiring citizens to work and live in the exact same building"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 3 defines 'multi-purpose infrastructure' as 'maximizing the utility of existing buildings across different times of the day,' such as using schoolyards as parks after classes end."
+            },
+            {
+              "id": "r-q16",
+              "type": "true_false_ng",
+              "prompt": "Local shopkeepers in Barcelona experienced a drop in revenue after cars were restricted in Superblocks.",
+              "correctAnswer": "FALSE",
+              "explanation": "Paragraph 4 states that local merchants 'have largely witnessed the opposite effect: increased foot traffic has boosted patronage at small neighborhood shops.'"
+            },
+            {
+              "id": "r-q17",
+              "type": "true_false_ng",
+              "prompt": "Carlos Moreno collaborated directly with the mayor of Barcelona to design the Superblocks program.",
+              "correctAnswer": "NOT_GIVEN",
+              "explanation": "The text mentions Carlos Moreno in connection with Paris and mentions Barcelona's Superblocks as a similar initiative, but does not state whether Moreno collaborated with Barcelona's mayor."
+            },
+            {
+              "id": "r-q18",
+              "type": "multiple_select",
+              "prompt": "Which TWO actions has Paris taken to implement the 15-minute city concept?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Eliminating thousands of street parking spots"
+                },
+                {
+                  "id": "B",
+                  "text": "Making all public buses free of charge"
+                },
+                {
+                  "id": "C",
+                  "text": "Building extensive protected bicycle lanes"
+                },
+                {
+                  "id": "D",
+                  "text": "Relocating historic plazas to the suburbs"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "Paragraph 4 states that Paris has spearheaded the movement by 'removing thousands of on-street parking spaces' (A) and 'constructing cientos of kilometers of protected cycling lanes' (C)."
+            }
+          ]
+        }
+      ]
+    },
+    "listening": {
+      "instructions": "Listen to the three audio recordings carefully, then answer questions l-q1 to l-q16.",
+      "parts": [
+        {
+          "id": "l-p1",
+          "title": "Radio Interview: Switching to a Four-Day Workweek",
+          "audioConfig": {
+            "scenario": "interview",
+            "accent": "british",
+            "pacing": "exam_standard",
+            "overallStyle": "engaged professional radio broadcast, articulate B2 level pacing"
+          },
+          "speakers": [
+            {
+              "name": "Host",
+              "gender": "female",
+              "voiceName": "Kore",
+              "style": "articulate, inquisitive radio presenter"
+            },
+            {
+              "name": "Marcus",
+              "gender": "male",
+              "voiceName": "Orus",
+              "style": "confident, reflective business director"
+            }
+          ],
+          "transcript": "Host: Welcome back to Business Perspectives. Today we're talking with Marcus Vance, the managing director of Brighton Creative, a mid-sized software design agency that permanently adopted a four-day workweek eighteen months ago. Marcus, take us back to the beginning. What prompted such a bold move?\nMarcus: Thanks, Sarah. Well, to be honest, it wasn't born out of pure idealism. After the pandemic, we noticed a sharp rise in staff burnout and turnover. Recruiting talented software engineers was becoming increasingly expensive. We realized we couldn't compete with the massive salaries of London tech giants, so we had to offer something they wouldn't—genuine work-life balance.\nHost: And just to clarify for our listeners, did reducing the hours mean reducing your employees' pay?\nMarcus: Not at all. We adopted what's known as the 100-80-100 model. Staff receive one hundred percent of their standard salary for working eighty percent of their previous hours, provided they maintain one hundred percent of their productivity.\nHost: That sounds wonderful on paper, Marcus, but how do you actually get five days of work done in four without everyone working frantic twelve-hour shifts?\nMarcus: That was our biggest worry during the six-month trial phase! The secret wasn't working faster; it was eliminating wasted time. The first thing we did was audit our internal meetings. Previously, a standard project update took an hour. Now, most daily check-ins are capped at fifteen minutes. We also introduced 'quiet mornings' from nine until noon, where internal messaging apps are muted so developers can focus without constant pings.\nHost: Did everything go smoothly right from the start?\nMarcus: Oh, definitely not. Our client support department struggled initially because our clients still operate on a five-day schedule. We couldn't just shut the office on Fridays. So, we had to split the team into two shifts: half the staff take Fridays off, and the other half take Mondays off. That way, our phone lines are covered five days a week.\nHost: And eighteen months on, what do the numbers say?\nMarcus: Revenue is up by twelve percent compared to two years ago, sick leave has dropped by nearly forty percent, and we haven't had a single senior developer resign since the trial ended.",
+          "questions": [
+            {
+              "id": "l-q1",
+              "type": "multiple_choice",
+              "prompt": "Why did Marcus's company initially decide to try a four-day workweek?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "To save money by cutting employee salaries by twenty percent"
+                },
+                {
+                  "id": "B",
+                  "text": "To reduce staff burnout and attract talent without matching big-city salaries"
+                },
+                {
+                  "id": "C",
+                  "text": "To comply with new local employment regulations in Brighton"
+                },
+                {
+                  "id": "D",
+                  "text": "To reduce the energy costs of running the office building"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Marcus explains they saw 'a sharp rise in staff burnout and turnover' and needed to offer 'genuine work-life balance' since they couldn't match the salaries of London tech giants."
+            },
+            {
+              "id": "l-q2",
+              "type": "fill_blank",
+              "prompt": "Under the company's new rules, most daily check-in meetings are limited to ________ minutes.",
+              "acceptedAnswers": [
+                "15",
+                "fifteen"
+              ],
+              "caseSensitive": false,
+              "explanation": "Marcus states: 'Now, most daily check-ins are capped at fifteen minutes.'"
+            },
+            {
+              "id": "l-q3",
+              "type": "true_false_ng",
+              "prompt": "Employees at Brighton Creative are encouraged to turn off their messaging apps for three hours every morning.",
+              "correctAnswer": "TRUE",
+              "explanation": "Marcus mentions introducing 'quiet mornings from nine until noon, where internal messaging apps are muted.'"
+            },
+            {
+              "id": "l-q4",
+              "type": "multiple_choice",
+              "prompt": "How did the company solve the problem of providing client support five days a week?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "They hired temporary staff to work only on Fridays."
+                },
+                {
+                  "id": "B",
+                  "text": "They automated their customer service using artificial intelligence."
+                },
+                {
+                  "id": "C",
+                  "text": "They divided the team so some take Mondays off and others take Fridays off."
+                },
+                {
+                  "id": "D",
+                  "text": "They paid the support department extra overtime to work five days."
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "Marcus says: 'we had to split the team into two shifts: half the staff take Fridays off, and the other half take Mondays off.'"
+            },
+            {
+              "id": "l-q5",
+              "type": "true_false_ng",
+              "prompt": "Several clients complained about slow response times during the first month of the trial.",
+              "correctAnswer": "NOT_GIVEN",
+              "explanation": "Marcus says the client support department struggled initially to organize coverage, but does not mention whether clients actually complained."
+            }
+          ],
+          "audioUrl": "/tests/audio/b2-upper-intermediate-english-test-01-l-p1.wav"
+        },
+        {
+          "id": "l-p2",
+          "title": "University Lecture: Bio-inspired Architecture",
+          "audioConfig": {
+            "scenario": "academic_lecture",
+            "accent": "american",
+            "pacing": "exam_standard",
+            "overallStyle": "engaging university lecture, clear transitions and emphasis"
+          },
+          "speakers": [
+            {
+              "name": "Professor",
+              "gender": "male",
+              "voiceName": "Charon",
+              "style": "authoritative, engaging academic lecturer"
+            }
+          ],
+          "transcript": "Professor: Good morning, everyone. Today, as part of our module on sustainable design, we're going to examine biomimicry in modern architecture. Simply put, biomimicry is the practice of studying nature's biological structures and processes and imitating them to solve complex human engineering problems. After all, living organisms have had nearly four billion years of evolutionary research and development to figure out how to survive using minimal energy.\n\nPerhaps the most famous architectural example of this is the Eastgate Centre, a large shopping and office complex in Harare, Zimbabwe, designed by architect Mick Pearce in the mid-1990s. Harare has a warm climate, and a conventional glass-covered office building of that size would normally require a massive, expensive air-conditioning system. Pearce, however, wanted a passive cooling solution. He found his inspiration in a rather unexpected place: the mounds built by native African termites.\n\nNow, termites require a remarkably stable environment inside their nests—right around thirty degrees Celsius—to cultivate the fungus they feed on, even when outside temperatures fluctuate from near freezing at night to over forty degrees during the day. They achieve this by constructing a network of narrow chimneys and air vents throughout the mound. As the sun warms the exterior, hot air rises and escapes through the upper flues, drawing cooler air in from the bottom.\n\nPearce applied this exact thermodynamic principle to the Eastgate Centre. The building is constructed from thick concrete slabs that absorb heat during the day without letting it penetrate the interior offices. At night, cool air is drawn in through the lower floors, absorbing the heat stored in the concrete and venting it out through forty-eight brick chimneys on the roof. By morning, the concrete is cool again, ready for the next day.\n\nThe results were extraordinary. Compared to conventional buildings of similar size in Harare, the Eastgate Centre consumes roughly thirty-five percent less energy overall, and saved its owners over three million dollars in capital costs during construction because they didn't have to install standard air-conditioning plants. It stands as proof that looking to the natural world isn't just about aesthetics; it's about radical efficiency.",
+          "questions": [
+            {
+              "id": "l-q6",
+              "type": "multiple_choice",
+              "prompt": "What is the main focus of the professor's lecture?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "The history of commercial shopping centers in Zimbabwe"
+                },
+                {
+                  "id": "B",
+                  "text": "How architects imitate natural biological systems to design efficient buildings"
+                },
+                {
+                  "id": "C",
+                  "text": "Why concrete is no longer a sustainable material in modern construction"
+                },
+                {
+                  "id": "D",
+                  "text": "Methods for protecting wooden buildings from African termites"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "The professor introduces the topic as 'biomimicry in modern architecture'—imitating nature's biological structures to solve engineering problems."
+            },
+            {
+              "id": "l-q7",
+              "type": "fill_blank",
+              "prompt": "African termites need to maintain a stable temperature inside their mounds in order to grow the ________ that they eat.",
+              "acceptedAnswers": [
+                "fungus",
+                "fungi"
+              ],
+              "caseSensitive": false,
+              "explanation": "The professor states termites need a stable environment 'to cultivate the fungus they feed on.'"
+            },
+            {
+              "id": "l-q8",
+              "type": "multiple_choice",
+              "prompt": "How does the Eastgate Centre cool itself down at night?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "By spraying cold water across the glass windows"
+                },
+                {
+                  "id": "B",
+                  "text": "By turning on solar-powered air-conditioning units"
+                },
+                {
+                  "id": "C",
+                  "text": "By drawing cool air through lower floors and releasing warm air via roof chimneys"
+                },
+                {
+                  "id": "D",
+                  "text": "By opening underground tunnels connected to a nearby river"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "The lecture explains: 'At night, cool air is drawn in through the lower floors, absorbing the heat stored in the concrete and venting it out through forty-eight brick chimneys on the roof.'"
+            },
+            {
+              "id": "l-q9",
+              "type": "fill_blank",
+              "prompt": "There are ________ brick chimneys located on the roof of the Eastgate Centre.",
+              "acceptedAnswers": [
+                "48",
+                "forty-eight",
+                "forty eight"
+              ],
+              "caseSensitive": false,
+              "explanation": "The professor mentions 'venting it out through forty-eight brick chimneys on the roof.'"
+            },
+            {
+              "id": "l-q10",
+              "type": "true_false_ng",
+              "prompt": "The Eastgate Centre uses about 35% less energy than similar conventional buildings in the same city.",
+              "correctAnswer": "TRUE",
+              "explanation": "The professor states: 'Compared to conventional buildings of similar size in Harare, the Eastgate Centre consumes roughly thirty-five percent less energy overall.'"
+            }
+          ],
+          "audioUrl": "/tests/audio/b2-upper-intermediate-english-test-01-l-p2.wav"
+        },
+        {
+          "id": "l-p3",
+          "title": "Colleagues Discussing a Community Museum Exhibition",
+          "audioConfig": {
+            "scenario": "group_discussion",
+            "accent": "british",
+            "pacing": "exam_standard",
+            "overallStyle": "collaborative workplace conversation, natural B2 turn-taking"
+          },
+          "speakers": [
+            {
+              "name": "Elena",
+              "gender": "female",
+              "voiceName": "Aoede",
+              "style": "organized, practical museum curator"
+            },
+            {
+              "name": "David",
+              "gender": "male",
+              "voiceName": "Puck",
+              "style": "enthusiastic, creative exhibition designer"
+            }
+          ],
+          "transcript": "Elena: Hi David, glad we could catch up before the committee meeting tomorrow. We really need to finalize our proposal for the autumn exhibition on our town's maritime history.\nDavid: Agreed, Elena. I've been looking over the floor plan for the main gallery. I think the centerpiece should definitely be the restored nineteenth-century lifeboat. It's visually striking and gives visitors an immediate sense of scale.\nElena: I love the lifeboat idea, but have you checked the measurements of the main gallery doors? Last year, when we tried to bring in that vintage printing press, we realized the doorway was ten centimeters too narrow!\nDavid: Ah, good catch... Actually, I did check with the maintenance supervisor yesterday. The double doors leading from the courtyard into the East Wing are wide enough, so if we hold the exhibition in the East Wing instead of the main gallery, we won't have to dismantle anything.\nElena: Oh, that's a relief! The East Wing has better lighting control anyway, which will protect the old parchment maps and ship logs from fading.\nDavid: Exactly. Now, what about interactive elements? The museum director specifically asked us to attract more secondary school students and families this autumn. If it's just glass cases full of old compasses and faded letters, teenagers will lose interest in five minutes.\nElena: True. What did you have in mind? A virtual reality headset station?\nDavid: I looked into VR headsets, but they're way over our budget—nearly eight thousand pounds for just four units, plus you need a staff member constantly sanitizing and troubleshooting them. Instead, I propose setting up an 'Oral History Listening Booth.' We have dozens of audio recordings from retired dockworkers and deep-sea fishermen recorded in the 1980s. Visitors can pick up vintage telephone handsets and hear real stories about storms at sea.\nElena: That's brilliant—much more authentic, and it fits comfortably within our three-thousand-pound tech budget. We should also organize a weekend workshop where local boatbuilders demonstrate traditional rope-knotting techniques.\nDavid: Yes! Let's put both of those in the final pitch. All we need to decide now is the admission price. Should we charge an extra ticket fee for this exhibition?\nElena: Given that the town council gave us a generous grant last month, I think entry should be completely free, though we can place a donation box near the exit.",
+          "questions": [
+            {
+              "id": "l-q11",
+              "type": "multiple_choice",
+              "prompt": "Why do Elena and David decide to hold the exhibition in the East Wing?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "The main gallery is currently closed for roof repairs."
+                },
+                {
+                  "id": "B",
+                  "text": "The courtyard doors to the East Wing are wide enough for the lifeboat."
+                },
+                {
+                  "id": "C",
+                  "text": "The East Wing is closer to the museum's gift shop and café."
+                },
+                {
+                  "id": "D",
+                  "text": "The museum director ordered them to reserve the main gallery for paintings."
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "David explains that the double doors leading from the courtyard into the East Wing are wide enough to bring the lifeboat in without dismantling it."
+            },
+            {
+              "id": "l-q12",
+              "type": "fill_blank",
+              "prompt": "Elena notes that the controlled lighting in the East Wing will prevent old ship logs and ________ maps from fading.",
+              "acceptedAnswers": [
+                "parchment"
+              ],
+              "caseSensitive": false,
+              "explanation": "Elena says: 'The East Wing has better lighting control anyway, which will protect the old parchment maps and ship logs from fading.'"
+            },
+            {
+              "id": "l-q13",
+              "type": "multiple_select",
+              "prompt": "Which TWO reasons does David give for rejecting the idea of virtual reality (VR) headsets?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "They exceed the available budget."
+                },
+                {
+                  "id": "B",
+                  "text": "Teenagers find virtual reality outdated."
+                },
+                {
+                  "id": "C",
+                  "text": "They require a staff member to clean and fix them constantly."
+                },
+                {
+                  "id": "D",
+                  "text": "They cause motion sickness when simulating storms at sea."
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "David states that VR headsets are 'way over our budget' (A) and 'you need a staff member constantly sanitizing and troubleshooting them' (C)."
+            },
+            {
+              "id": "l-q14",
+              "type": "multiple_choice",
+              "prompt": "What will visitors hear in the 'Oral History Listening Booth'?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Actors reading nineteenth-century newspaper articles"
+                },
+                {
+                  "id": "B",
+                  "text": "Live broadcasts from modern cargo ships"
+                },
+                {
+                  "id": "C",
+                  "text": "Interviews with retired fishermen and dockworkers recorded in the 1980s"
+                },
+                {
+                  "id": "D",
+                  "text": "Traditional sea songs performed by a local school choir"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "David mentions using 'dozens of audio recordings from retired dockworkers and deep-sea fishermen recorded in the 1980s.'"
+            },
+            {
+              "id": "l-q15",
+              "type": "true_false_ng",
+              "prompt": "The technology budget for the interactive elements is £8,000.",
+              "correctAnswer": "FALSE",
+              "explanation": "Elena mentions that the listening booth 'fits comfortably within our three-thousand-pound tech budget' (£8,000 was the cost of the rejected VR headsets)."
+            },
+            {
+              "id": "l-q16",
+              "type": "true_false_ng",
+              "prompt": "Visitors will not have to pay an admission fee to enter the maritime exhibition.",
+              "correctAnswer": "TRUE",
+              "explanation": "Elena says: 'Given that the town council gave us a generous grant last month, I think entry should be completely free...'"
+            }
+          ],
+          "audioUrl": "/tests/audio/b2-upper-intermediate-english-test-01-l-p3.wav"
+        }
+      ]
+    },
+    "speaking": {
+      "instructions": "Read the speaking tasks carefully and record or prepare your responses according to the evaluation rubrics.",
+      "tasks": [
+        {
+          "id": "s-t1",
+          "title": "Task 1: Individual Long Turn (Comparing Learning Environments)",
+          "prompt": "Compare two different ways of acquiring a new skill: attending an in-person group class versus learning independently through online video tutorials.\n\nIn your response, you should:\n- Compare the main advantages and disadvantages of both methods\n- Explain why different people might prefer one method over the other\n- State which approach you personally find more effective and why.",
+          "rubric": [
+            {
+              "criterion": "Fluency and Coherence",
+              "description": "Speaks at length (~1.5–2 minutes) with minimal hesitation, using cohesive devices to compare and contrast ideas smoothly."
+            },
+            {
+              "criterion": "Lexical Resource",
+              "description": "Uses a wide range of B2 vocabulary related to education, self-study, and interaction (e.g., 'flexibility', 'immediate feedback', 'self-discipline')."
+            },
+            {
+              "criterion": "Grammatical Range and Accuracy",
+              "description": "Uses comparative structures, conditionals, and complex sentences accurately with good control."
+            },
+            {
+              "criterion": "Pronunciation",
+              "description": "Clear articulation, appropriate word stress, and natural intonation patterns to highlight contrasts."
+            }
+          ],
+          "sampleAnswer": "Both attending an in-person group class and learning independently through online tutorials have distinct merits, depending on a person's lifestyle and learning style. On the one hand, a traditional classroom setting provides structure and immediate feedback. If you are learning something practical, like a foreign language or pottery, having an instructor right there to correct your mistakes is invaluable. Moreover, the social aspect of learning alongside peers can keep you motivated and accountable.\n\nOn the other hand, online video tutorials offer unmatched flexibility and affordability. Busy professionals or parents who work irregular hours often prefer online learning because they can study at their own pace—pausing or rewinding difficult explanations whenever necessary—without wasting time commuting. However, the biggest drawback of self-study is that it requires immense self-discipline; without a fixed schedule, it is very easy to procrastinate and give up.\n\nPersonally, I find a blended approach ideal, but if I had to choose one, I prefer in-person group classes. I thrive on social interaction, and knowing that a teacher and classmates are expecting me every Tuesday evening pushes me to stay committed even when I feel tired after work."
+        },
+        {
+          "id": "s-t2",
+          "title": "Task 2: Collaborative Decision-Making & Discussion (Community Improvement)",
+          "prompt": "Imagine your local town council has received a grant to improve the quality of life for residents and is considering three proposals:\n1. Building a modern public sports and fitness center\n2. Renovating an abandoned historic theater into an arts and cultural hub\n3. Expanding the town's public park with community gardens and cycling paths\n\nDiscuss the benefits of each proposal for the community, and decide which ONE project should be prioritized by the council.",
+          "rubric": [
+            {
+              "criterion": "Fluency and Coherence",
+              "description": "Organizes arguments logically, evaluates multiple options systematically, and reaches a reasoned conclusion."
+            },
+            {
+              "criterion": "Lexical Resource",
+              "description": "Employs precise vocabulary related to civic planning, well-being, and community life (e.g., 'accessible', 'demographics', 'long-term maintenance')."
+            },
+            {
+              "criterion": "Grammatical Range and Accuracy",
+              "description": "Demonstrates confident use of modal verbs of probability, hypothetical structures (second conditional), and persuasive phrasing."
+            },
+            {
+              "criterion": "Pronunciation",
+              "description": "Maintains clear intelligibility throughout, using emphatic stress to underscore key arguments."
+            }
+          ],
+          "sampleAnswer": "Looking at the three proposals, each one addresses an important aspect of community well-being, so the council faces a tough choice. First, building a modern sports and fitness center would obviously promote physical health, especially during the winter months when outdoor exercise is unpleasant. However, gym memberships often require ongoing fees, and maintaining a swimming pool or indoor courts can be very costly for the town.\n\nSecond, renovating the historic theater into a cultural hub would preserve local heritage and boost the evening economy by attracting visitors to nearby restaurants. Yet, it might appeal to a slightly narrower demographic compared to outdoor spaces.\n\nFinally, expanding the public park with community gardens and cycling paths offers the broadest benefits. Green spaces are completely free and accessible to everyone, from young families with children to retired citizens who enjoy gardening. Furthermore, cycling paths encourage sustainable transport and improve mental health.\n\nWeighing all these factors, I firmly believe the council should prioritize expanding the public park. It requires lower long-term maintenance costs than an indoor facility and provides an inclusive, healthy environment that every single resident can enjoy daily."
+        }
+      ]
+    },
+    "writing": {
+      "instructions": "Complete both writing tasks in the spaces provided. Pay careful attention to the required word count (140–190 words per task), style, and target reader.",
+      "tasks": [
+        {
+          "id": "w-t1",
+          "title": "Task 1: Compulsory Essay",
+          "prompt": "In your English class, you have been talking about the impact of remote work and digital technology on modern employment. Now, your English teacher has asked you to write an essay.\n\nWrite an essay using all the notes and giving reasons for your point of view.\n\nEssay Question:\n'Working from home is beneficial for both employees and companies.' Do you agree?\n\nNotes:\nWrite about:\n1. Work-life balance and commuting\n2. Team communication and collaboration\n3. ________ (your own idea)\n\nWrite your essay in 140–190 words in an appropriate style.",
+          "minWords": 140,
+          "rubric": [
+            {
+              "criterion": "Content / Task Achievement",
+              "description": "Addresses both required points (work-life balance/commuting and team communication) plus a relevant third idea of the candidate's own, within the 140–190 word target."
+            },
+            {
+              "criterion": "Communicative Achievement",
+              "description": "Uses an appropriate semi-formal or neutral academic register suitable for an essay, holding the reader's attention and expressing clear arguments."
+            },
+            {
+              "criterion": "Organization",
+              "description": "Well-structured with a clear introduction, distinct body paragraphs, and a concluding summary, linked effectively with discourse markers ('Furthermore', 'On the other hand', 'In conclusion')."
+            },
+            {
+              "criterion": "Language",
+              "description": "Demonstrates a good range of B2 workplace vocabulary and complex grammatical structures (passive voice, relative clauses, conditionals) with minimal errors."
+            }
+          ],
+          "sampleAnswer": "In recent years, working from home has shifted from a rare privilege to a standard practice for millions of office workers. While this transition offers undeniable advantages, whether it benefits both staff and employers equally remains a subject of debate.\n\nFrom the employee's perspective, the greatest benefit is improved work-life balance. Eliminating the daily commute saves hours of stressful travel and significant money, allowing workers to spend more time with their families or pursue healthy hobbies. Consequently, well-rested staff often show higher job satisfaction.\n\nHowever, remote work can hinder team communication and spontaneous collaboration. Video calls cannot fully replace the creative energy of face-to-face brainstorming, and junior employees may struggle to learn without senior colleagues sitting nearby.\n\nFurthermore, we must consider operational costs and workspace expenses. Companies can save substantial amounts by downsizing expensive city-center offices, though employees may face higher electricity and heating bills at home.\n\nIn conclusion, working from home is highly beneficial when managed sensibly. A hybrid model—combining three days at home with two days in the office—offers the ideal balance of flexibility and teamwork."
+        },
+        {
+          "id": "w-t2",
+          "title": "Task 2: Review of an Educational Website or App",
+          "prompt": "You see this announcement on an international student website:\n\nReviews Wanted: Digital Learning Tools!\nHave you used a website or mobile app to learn a new skill, subject, or language recently? Write a review of the website or app for our student readers. Describe its main features, explain what you liked and disliked about using it, and say who you would recommend it to.\n\nWrite your review in 140–190 words in an appropriate style.",
+          "minWords": 140,
+          "rubric": [
+            {
+              "criterion": "Content / Task Achievement",
+              "description": "Describes the app/website features, evaluates both strengths and weaknesses, and provides a clear recommendation to a specific target group."
+            },
+            {
+              "criterion": "Communicative Achievement",
+              "description": "Employs an engaging, lively tone appropriate for a student magazine review, using an eye-catching title and direct address where effective."
+            },
+            {
+              "criterion": "Organization",
+              "description": "Organized into logical paragraphs covering introduction/features, pros and cons, and final recommendation."
+            },
+            {
+              "criterion": "Language",
+              "description": "Uses varied descriptive adjectives, evaluative vocabulary ('user-friendly', 'intuitive', 'repetitive', 'subscription fee'), and accurate B2 grammar."
+            }
+          ],
+          "sampleAnswer": "LinguaSpark: A Pocket Tutor With a Few Flaws\n\nIf you have ever tried to learn a foreign language on your own, you know how hard it is to stay motivated. Over the past six months, I have been using the mobile app 'LinguaSpark' to study Spanish, and it has largely transformed my daily routine.\n\nThe app is designed around short, ten-minute interactive lessons that combine vocabulary flashcards, listening exercises, and AI-powered pronunciation checks. What impressed me most is its user-friendly interface and the 'Stories' feature, where you listen to natural dialogues between native speakers in realistic scenarios like ordering food or booking a train ticket.\n\nOn the downside, the free version of LinguaSpark is interrupted by frequent advertisements, which can break your concentration. Additionally, while the app is fantastic for building vocabulary, its grammar explanations are far too brief for complex tenses.\n\nOverall, LinguaSpark will not make you fluent overnight, but it is a superb supplementary tool. I would wholeheartedly recommend it to beginners and busy university students who want to turn their morning bus commute into productive study time."
+        }
+      ]
+    }
+  }
+}

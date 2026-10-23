@@ -1,4 +1,5 @@
 import type { TestAttempt } from '../types/test';
+import { saveAttemptSummaryAction } from '@/app/actions/storageActions';
 
 const STORAGE_KEY = 'english_webapp_attempts_v1';
 
@@ -34,6 +35,18 @@ export function saveNewAttempt(attempt: TestAttempt): void {
   const updated = [attempt, ...current];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   notifyStorageChanged();
+
+  // Keep server-side cookie summary in sync for RSC
+  saveAttemptSummaryAction({
+    id: attempt.id,
+    testId: attempt.testId,
+    testTitle: attempt.testTitle,
+    submittedAt: attempt.submittedAt,
+    readingScore: `${attempt.scores.reading.correctCount}/${attempt.scores.reading.totalCount}`,
+    listeningScore: `${attempt.scores.listening.correctCount}/${attempt.scores.listening.totalCount}`,
+  }).catch((err) => {
+    console.error('Failed to sync attempt summary to server cookie:', err);
+  });
 }
 
 export function updateDeferredReview(

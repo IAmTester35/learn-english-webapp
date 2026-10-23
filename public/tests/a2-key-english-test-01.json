@@ -1,0 +1,1266 @@
+{
+  "schemaVersion": "1.0",
+  "id": "a2-key-english-test-01",
+  "title": "A2 Key English Comprehensive Examination (CEFR / KET Standard)",
+  "description": "Comprehensive CEFR A2 assessment: Reading (5 passages, 30 questions), Listening (5 real-world scenarios, 25 questions), Speaking (2 tasks), and Writing (2 tasks).",
+  "sections": {
+    "reading": {
+      "instructions": "Read the five passages carefully and answer questions r-q1 to r-q30 according to the instructions for each question type.",
+      "passages": [
+        {
+          "id": "r-p1",
+          "title": "Greenwood Community Sports Center",
+          "content": "Welcome to the Greenwood Community Sports Center! We are open every day from 7:00 AM to 9:00 PM. We offer many fun activities for children, adults, and seniors.\n\nOur large indoor swimming pool is open from Monday to Saturday. On Sundays, the pool is closed all day for cleaning. If you want to learn how to swim, we have beginner classes on Tuesday and Thursday evenings at 6:00 PM.\n\nIn the main sports hall, you can play basketball, badminton, or table tennis. You do not need to bring your own rackets or balls because you can rent them at the front desk for $2. However, everyone must wear clean sports shoes inside the hall.\n\nWe also have a small café near the entrance. It sells healthy snacks, sandwiches, fresh fruit juice, and hot coffee. Monthly membership costs $30 for adults and $15 for students and children under 16 years old. If you come by car, there is a free car park behind the building.",
+          "questions": [
+            {
+              "id": "r-q1",
+              "type": "multiple_choice",
+              "prompt": "Why is the swimming pool closed on Sundays?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "There are beginner swimming classes."
+                },
+                {
+                  "id": "B",
+                  "text": "The staff are on their weekly holiday."
+                },
+                {
+                  "id": "C",
+                  "text": "The pool is being cleaned."
+                },
+                {
+                  "id": "D",
+                  "text": "The entire sports center is closed."
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "Paragraph 2 states: 'On Sundays, the pool is closed all day for cleaning.'"
+            },
+            {
+              "id": "r-q2",
+              "type": "multiple_select",
+              "prompt": "Which TWO food or drink items can visitors buy at the café?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Sandwiches"
+                },
+                {
+                  "id": "B",
+                  "text": "Sports equipment"
+                },
+                {
+                  "id": "C",
+                  "text": "Hot coffee"
+                },
+                {
+                  "id": "D",
+                  "text": "Spaghetti"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "Paragraph 4 explains that the café sells 'healthy snacks, sandwiches, fresh fruit juice, and hot coffee'."
+            },
+            {
+              "id": "r-q3",
+              "type": "fill_blank",
+              "prompt": "Visitors must wear clean ________ shoes when they play inside the sports hall.",
+              "acceptedAnswers": [
+                "sports",
+                "sport"
+              ],
+              "caseSensitive": false,
+              "explanation": "Paragraph 3 states: 'everyone must wear clean sports shoes inside the hall.'"
+            },
+            {
+              "id": "r-q4",
+              "type": "true_false_ng",
+              "prompt": "Visitors have to pay a fee to park their cars behind the building.",
+              "correctAnswer": "FALSE",
+              "explanation": "The final sentence mentions 'there is a free car park behind the building'."
+            },
+            {
+              "id": "r-q5",
+              "type": "multiple_choice",
+              "prompt": "How much does a monthly membership cost for a 14-year-old school student?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "$2"
+                },
+                {
+                  "id": "B",
+                  "text": "$15"
+                },
+                {
+                  "id": "C",
+                  "text": "$30"
+                },
+                {
+                  "id": "D",
+                  "text": "It is free."
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 4 states: 'Monthly membership costs $30 for adults and $15 for students and children under 16 years old.'"
+            },
+            {
+              "id": "r-q6",
+              "type": "true_false_ng",
+              "prompt": "The swimming instructor won an Olympic medal five years ago.",
+              "correctAnswer": "NOT_GIVEN",
+              "explanation": "The passage mentions beginner swimming classes on Tuesday and Thursday, but gives no information about the instructor's background or achievements."
+            }
+          ]
+        },
+        {
+          "id": "r-p2",
+          "title": "Sarah's Weekend Trip to Brighton",
+          "content": "Last weekend, I travelled to the seaside town of Brighton with my best friend, Emma. We wanted to take the train, but the tickets were too expensive, so we travelled by bus instead. It took two hours from central London, and we arrived at 10:00 AM on Saturday morning.\n\nThe weather was sunny and warm, which made walking very pleasant! First, we walked along the famous beach and looked at the historic pier. For lunch, we bought traditional fish and chips and ate them sitting on the pebbled shore. In the afternoon, we visited the Royal Pavilion, an exotic and beautiful palace located in the centre of town. Later, we spent an hour shopping in a lively maze of narrow streets known as 'The Lanes'. Emma bought a blue sweater, and I bought a delicate silver necklace for my mother's birthday.\n\nWe stayed overnight at a quiet guest house near the train station. On Sunday morning, dark clouds rolled in and it began to rain heavily, so we visited the indoor Sea Life Aquarium before boarding our 3:00 PM bus back home. Despite the rain on Sunday, it was an unforgettable weekend trip!",
+          "questions": [
+            {
+              "id": "r-q7",
+              "type": "multiple_choice",
+              "prompt": "Why did Sarah and Emma choose to travel by bus instead of train?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "The bus was much faster than the train."
+                },
+                {
+                  "id": "B",
+                  "text": "The train tickets were too expensive."
+                },
+                {
+                  "id": "C",
+                  "text": "The train station in London was closed."
+                },
+                {
+                  "id": "D",
+                  "text": "Emma prefers looking at views from the bus."
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 1 mentions: 'We wanted to take the train, but the tickets were too expensive, so we travelled by bus instead.'"
+            },
+            {
+              "id": "r-q8",
+              "type": "fill_blank",
+              "prompt": "Sarah bought a silver ________ for her mother's birthday in The Lanes.",
+              "acceptedAnswers": [
+                "necklace"
+              ],
+              "caseSensitive": false,
+              "explanation": "Paragraph 2 states: 'I bought a delicate silver necklace for my mother's birthday.'"
+            },
+            {
+              "id": "r-q9",
+              "type": "multiple_select",
+              "prompt": "Which TWO sights did the friends visit on Saturday?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "The beach"
+                },
+                {
+                  "id": "B",
+                  "text": "The Royal Pavilion"
+                },
+                {
+                  "id": "C",
+                  "text": "The Sea Life Aquarium"
+                },
+                {
+                  "id": "D",
+                  "text": "A science museum"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "B"
+              ],
+              "explanation": "On Saturday they walked along the beach and visited the Royal Pavilion. The Aquarium was visited on Sunday."
+            },
+            {
+              "id": "r-q10",
+              "type": "true_false_ng",
+              "prompt": "The breakfast served at the guest house was completely vegetarian.",
+              "correctAnswer": "NOT_GIVEN",
+              "explanation": "The text says they stayed at a quiet guest house near the station, but does not provide details about breakfast."
+            },
+            {
+              "id": "r-q11",
+              "type": "multiple_choice",
+              "prompt": "Why did Sarah and Emma decide to go to the Sea Life Aquarium on Sunday morning?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "They had discount coupons from their hotel."
+                },
+                {
+                  "id": "B",
+                  "text": "It was raining heavily outside."
+                },
+                {
+                  "id": "C",
+                  "text": "The bus back to London was delayed."
+                },
+                {
+                  "id": "D",
+                  "text": "Emma wanted to take photographs of sea turtles."
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 3 notes: 'On Sunday morning, dark clouds rolled in and it began to rain heavily, so we visited the indoor Sea Life Aquarium...'"
+            },
+            {
+              "id": "r-q12",
+              "type": "true_false_ng",
+              "prompt": "Sarah and Emma returned to London on Sunday afternoon.",
+              "correctAnswer": "TRUE",
+              "explanation": "Paragraph 3 states they boarded 'our 3:00 PM bus back home' on Sunday."
+            }
+          ]
+        },
+        {
+          "id": "r-p3",
+          "title": "Liam's High School Photography Club",
+          "content": "Liam is a fifteen-year-old student at Oakridge High School. At the start of the school year, he wanted to join an after-school club to make new friends. Because he loves taking photos with his smartphone, he joined the Oakridge Photography Club, which meets every Wednesday afternoon in Room 12.\n\nThe club is led by Mr. Roberts, the school art teacher. There are twelve students in the club. During their weekly meetings, Mr. Roberts teaches the members how to adjust camera lighting, choose interesting angles, and edit images using simple computer software. Last month, the club held an outdoor photography challenge in the local botanical garden. Students had one hour to take photos of flowers, trees, and birds.\n\nLiam took a wonderful close-up picture of a honeybee resting on a yellow sunflower. Mr. Roberts was so impressed that he entered Liam's photograph into the regional youth photography contest. To everyone's delight, Liam won second prize and received a brand-new digital camera! The club is now preparing an exhibition in the school library next Friday, where parents and students can admire all their artwork.",
+          "questions": [
+            {
+              "id": "r-q13",
+              "type": "multiple_choice",
+              "prompt": "When does the Photography Club hold its weekly meetings?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Every Monday morning before class"
+                },
+                {
+                  "id": "B",
+                  "text": "Every Wednesday afternoon"
+                },
+                {
+                  "id": "C",
+                  "text": "Every Friday evening"
+                },
+                {
+                  "id": "D",
+                  "text": "On Saturday mornings"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 1 states: 'he joined the Oakridge Photography Club, which meets every Wednesday afternoon in Room 12.'"
+            },
+            {
+              "id": "r-q14",
+              "type": "fill_blank",
+              "prompt": "The Oakridge Photography Club is supervised by Mr. Roberts, who is an ________ teacher.",
+              "acceptedAnswers": [
+                "art"
+              ],
+              "caseSensitive": false,
+              "explanation": "Paragraph 2 states: 'The club is led by Mr. Roberts, the school art teacher.'"
+            },
+            {
+              "id": "r-q15",
+              "type": "multiple_choice",
+              "prompt": "What subject did Liam capture in his award-winning photograph?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "A rare tropical bird in a tall tree"
+                },
+                {
+                  "id": "B",
+                  "text": "A honeybee on a yellow sunflower"
+                },
+                {
+                  "id": "C",
+                  "text": "Students walking through the botanical garden"
+                },
+                {
+                  "id": "D",
+                  "text": "The school library building at sunset"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 3 states: 'Liam took a wonderful close-up picture of a honeybee resting on a yellow sunflower.'"
+            },
+            {
+              "id": "r-q16",
+              "type": "true_false_ng",
+              "prompt": "Liam won first place in the regional youth photography contest.",
+              "correctAnswer": "FALSE",
+              "explanation": "Paragraph 3 clarifies that 'Liam won second prize and received a brand-new digital camera!'"
+            },
+            {
+              "id": "r-q17",
+              "type": "multiple_select",
+              "prompt": "Which TWO skills does Mr. Roberts teach club members during their meetings?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Adjusting camera lighting"
+                },
+                {
+                  "id": "B",
+                  "text": "Selling photographs online"
+                },
+                {
+                  "id": "C",
+                  "text": "Editing images using computer software"
+                },
+                {
+                  "id": "D",
+                  "text": "Repairing broken camera lenses"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "Paragraph 2 notes that Mr. Roberts teaches students how to 'adjust camera lighting, choose interesting angles, and edit images using simple computer software'."
+            },
+            {
+              "id": "r-q18",
+              "type": "fill_blank",
+              "prompt": "Next Friday, the photography club will display their work in the school ________.",
+              "acceptedAnswers": [
+                "library"
+              ],
+              "caseSensitive": false,
+              "explanation": "The last sentence states: 'The club is now preparing an exhibition in the school library next Friday...'"
+            }
+          ]
+        },
+        {
+          "id": "r-p4",
+          "title": "Working at a Wildlife Rescue Center",
+          "content": "Elena works as a volunteer at the Silverwood Wildlife Rescue Center every weekend. The center cares for injured, sick, or orphaned wild animals before returning them safely to nature. Currently, the team is looking after three young foxes, two barn owls, and several hedgehogs.\n\nElena's shift starts at 8:30 AM. Her first duty is to prepare food for the animals. The owls eat small pieces of meat, while the hedgehogs receive a special mixture of wet cat food and chopped fruit. Volunteers must be very careful not to make loud noises, as wild animals get easily stressed around humans. After feeding, Elena cleans the wooden cages and checks that all animals have fresh drinking water.\n\nIn the afternoon, the center's veterinarian, Dr. Miller, examines any animals ready for release. Yesterday, Elena helped release a healthy young badger back into the nearby forest. 'Watching an animal run back into the wild is the most rewarding feeling in the world,' Elena says. The center relies entirely on donations from the local community to buy medicine and food.",
+          "questions": [
+            {
+              "id": "r-q19",
+              "type": "multiple_choice",
+              "prompt": "What is the primary goal of the Silverwood Wildlife Rescue Center?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "To sell rescued animals to good pet owners"
+                },
+                {
+                  "id": "B",
+                  "text": "To care for wild animals and return them safely to nature"
+                },
+                {
+                  "id": "C",
+                  "text": "To train wild animals for school performances"
+                },
+                {
+                  "id": "D",
+                  "text": "To breed foxes and owls for local zoos"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 1 states: 'The center cares for injured, sick, or orphaned wild animals before returning them safely to nature.'"
+            },
+            {
+              "id": "r-q20",
+              "type": "fill_blank",
+              "prompt": "Volunteers at the center must avoid making ________ noises to keep the animals calm.",
+              "acceptedAnswers": [
+                "loud"
+              ],
+              "caseSensitive": false,
+              "explanation": "Paragraph 2 explains: 'Volunteers must be very careful not to make loud noises, as wild animals get easily stressed...'"
+            },
+            {
+              "id": "r-q21",
+              "type": "multiple_select",
+              "prompt": "Which TWO tasks does Elena complete during her morning shift?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Preparing food for the animals"
+                },
+                {
+                  "id": "B",
+                  "text": "Performing surgery on injured foxes"
+                },
+                {
+                  "id": "C",
+                  "text": "Cleaning the wooden cages"
+                },
+                {
+                  "id": "D",
+                  "text": "Writing articles for the local newspaper"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "Paragraph 2 describes her morning tasks: 'prepare food for the animals' and 'cleans the wooden cages'."
+            },
+            {
+              "id": "r-q22",
+              "type": "true_false_ng",
+              "prompt": "The Silverwood Wildlife Rescue Center receives government funding every month.",
+              "correctAnswer": "FALSE",
+              "explanation": "The final sentence points out: 'The center relies entirely on donations from the local community to buy medicine and food.'"
+            },
+            {
+              "id": "r-q23",
+              "type": "multiple_choice",
+              "prompt": "Which animal did Elena assist in releasing back into the forest yesterday?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "A young badger"
+                },
+                {
+                  "id": "B",
+                  "text": "A barn owl"
+                },
+                {
+                  "id": "C",
+                  "text": "A wild hedgehog"
+                },
+                {
+                  "id": "D",
+                  "text": "A red fox"
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "Paragraph 3 states: 'Yesterday, Elena helped release a healthy young badger back into the nearby forest.'"
+            },
+            {
+              "id": "r-q24",
+              "type": "true_false_ng",
+              "prompt": "Dr. Miller has worked as a wildlife veterinarian for more than twenty years.",
+              "correctAnswer": "NOT_GIVEN",
+              "explanation": "The passage introduces Dr. Miller as the center's veterinarian, but does not state how many years she has been practicing."
+            }
+          ]
+        },
+        {
+          "id": "r-p5",
+          "title": "A Family Cooking Tradition",
+          "content": "In Marco's family, Sunday dinner is the most important meal of the week. Every Sunday afternoon, three generations—Marco, his parents, and his grandparents—gather in his grandmother Rosa's spacious kitchen to prepare fresh homemade pasta from scratch.\n\nGrandmother Rosa learned how to make pasta from her mother when she was just eight years old in Italy. The recipe requires only three simple ingredients: unbleached flour, fresh eggs, and a pinch of salt. Marco and his sister Sofia measure the flour and crack the eggs into a large bowl, while their father carefully kneads the dough until it is smooth and elastic. After letting the dough rest for thirty minutes under a damp towel, they roll it out thinly using an old wooden rolling pin.\n\nWhile the pasta dough rests, Rosa simmers her famous tomato and basil sauce on the stove. The rich aroma fills the whole house. At 6:00 PM, the family sits down at the long dining table together. They enjoy the warm meal, share stories about their week, and laugh together. Marco says that learning family recipes is about much more than good food—it is about staying connected to his family history and heritage.",
+          "questions": [
+            {
+              "id": "r-q25",
+              "type": "multiple_choice",
+              "prompt": "Where does Marco's family gather to cook dinner every Sunday?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "At a local Italian restaurant"
+                },
+                {
+                  "id": "B",
+                  "text": "In his grandmother Rosa's kitchen"
+                },
+                {
+                  "id": "C",
+                  "text": "In the garden behind Marco's school"
+                },
+                {
+                  "id": "D",
+                  "text": "At Marco's apartment downtown"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 1 states that three generations 'gather in his grandmother Rosa's spacious kitchen to prepare fresh homemade pasta'."
+            },
+            {
+              "id": "r-q26",
+              "type": "multiple_select",
+              "prompt": "Which TWO ingredients are used to make the fresh pasta dough?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Fresh eggs"
+                },
+                {
+                  "id": "B",
+                  "text": "White sugar"
+                },
+                {
+                  "id": "C",
+                  "text": "Unbleached flour"
+                },
+                {
+                  "id": "D",
+                  "text": "Whole milk"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "Paragraph 2 states the recipe requires 'only three simple ingredients: unbleached flour, fresh eggs, and a pinch of salt'."
+            },
+            {
+              "id": "r-q27",
+              "type": "fill_blank",
+              "prompt": "The dough is allowed to rest for thirty minutes underneath a damp ________.",
+              "acceptedAnswers": [
+                "towel",
+                "cloth"
+              ],
+              "caseSensitive": false,
+              "explanation": "Paragraph 2 mentions: 'After letting the dough rest for thirty minutes under a damp towel...'"
+            },
+            {
+              "id": "r-q28",
+              "type": "multiple_choice",
+              "prompt": "What does grandmother Rosa prepare while the pasta dough is resting?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "A fresh green salad with olive oil"
+                },
+                {
+                  "id": "B",
+                  "text": "Her tomato and basil sauce"
+                },
+                {
+                  "id": "C",
+                  "text": "Chocolate cookies for dessert"
+                },
+                {
+                  "id": "D",
+                  "text": "Hot garlic bread in the oven"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 3 states: 'While the pasta dough rests, Rosa simmers her famous tomato and basil sauce on the stove.'"
+            },
+            {
+              "id": "r-q29",
+              "type": "true_false_ng",
+              "prompt": "Grandmother Rosa bought an expensive electric pasta machine last Christmas.",
+              "correctAnswer": "FALSE",
+              "explanation": "Paragraph 2 states they roll the dough 'using an old wooden rolling pin', not an electric machine."
+            },
+            {
+              "id": "r-q30",
+              "type": "true_false_ng",
+              "prompt": "Marco's sister Sofia plans to open her own bakery in Rome next year.",
+              "correctAnswer": "NOT_GIVEN",
+              "explanation": "The text mentions Sofia helping to crack eggs and measure flour, but says nothing about her future career plans."
+            }
+          ]
+        }
+      ]
+    },
+    "listening": {
+      "instructions": "Listen to the five everyday conversations and announcements carefully, then answer questions l-q1 to l-q25.",
+      "parts": [
+        {
+          "id": "l-p1",
+          "title": "Ordering Food at a Café",
+          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p1.wav",
+          "audioConfig": {
+            "scenario": "everyday_dialogue",
+            "accent": "british",
+            "pacing": "slow",
+            "overallStyle": "polite everyday café conversation, slow clear pronunciation for A2 level"
+          },
+          "speakers": [
+            {
+              "name": "Waiter",
+              "gender": "male",
+              "voiceName": "Puck",
+              "style": "welcoming and polite"
+            },
+            {
+              "name": "Customer",
+              "gender": "female",
+              "voiceName": "Aoede",
+              "style": "friendly and clear"
+            }
+          ],
+          "transcript": "Waiter: Good afternoon! Welcome to The Sunny Spoon Café. Are you ready to order?\nCustomer: Yes, please. Can I have a chicken salad, please?\nWaiter: I'm very sorry, we don't have any chicken salad left today. We have a fresh cheese and tomato sandwich, or warm vegetable soup.\nCustomer: Oh, okay. I will have the cheese and tomato sandwich, please. Does it come with chips?\nWaiter: Yes, it comes with hot chips or a small green salad.\nCustomer: A small green salad, please.\nWaiter: Great choice. And what would you like to drink?\nCustomer: I'd like a cold glass of apple juice, and can I also get a slice of chocolate cake for dessert?\nWaiter: Of course! So that is one cheese and tomato sandwich with a green salad, an apple juice, and chocolate cake. That will be twelve dollars and fifty cents altogether, please.\nCustomer: Here is a twenty-dollar note. Thank you!\nWaiter: Thank you. Here is your change: seven dollars and fifty cents. Your order will be ready in five minutes.",
+          "questions": [
+            {
+              "id": "l-q1",
+              "type": "multiple_choice",
+              "prompt": "What main food item does the customer order?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Chicken salad"
+                },
+                {
+                  "id": "B",
+                  "text": "Vegetable soup"
+                },
+                {
+                  "id": "C",
+                  "text": "A cheese and tomato sandwich"
+                },
+                {
+                  "id": "D",
+                  "text": "Fish and chips"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "Because the chicken salad is sold out, the customer says: 'I will have the cheese and tomato sandwich, please.'"
+            },
+            {
+              "id": "l-q2",
+              "type": "fill_blank",
+              "prompt": "The customer orders a cold glass of ________ juice.",
+              "acceptedAnswers": [
+                "apple"
+              ],
+              "caseSensitive": false,
+              "explanation": "The customer says: 'I'd like a cold glass of apple juice'."
+            },
+            {
+              "id": "l-q3",
+              "type": "true_false_ng",
+              "prompt": "The customer decides to have hot chips with the sandwich.",
+              "correctAnswer": "FALSE",
+              "explanation": "When given the choice between chips and salad, the customer explicitly chooses 'A small green salad, please.'"
+            },
+            {
+              "id": "l-q4",
+              "type": "multiple_select",
+              "prompt": "Which TWO sweet or beverage items does the customer order?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Chocolate cake"
+                },
+                {
+                  "id": "B",
+                  "text": "Vanilla ice cream"
+                },
+                {
+                  "id": "C",
+                  "text": "Apple juice"
+                },
+                {
+                  "id": "D",
+                  "text": "Hot black tea"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "The customer orders 'a cold glass of apple juice' and 'a slice of chocolate cake for dessert'."
+            },
+            {
+              "id": "l-q5",
+              "type": "multiple_choice",
+              "prompt": "How much change does the waiter give back to the customer?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "$5.00"
+                },
+                {
+                  "id": "B",
+                  "text": "$7.50"
+                },
+                {
+                  "id": "C",
+                  "text": "$12.50"
+                },
+                {
+                  "id": "D",
+                  "text": "$20.00"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "The waiter says: 'Here is your change: seven dollars and fifty cents.'"
+            }
+          ]
+        },
+        {
+          "id": "l-p2",
+          "title": "A Phone Message About Mark's Birthday Party",
+          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p2.wav",
+          "audioConfig": {
+            "scenario": "everyday_dialogue",
+            "accent": "british",
+            "pacing": "slow",
+            "overallStyle": "friendly telephone voicemail message, distinct and calm"
+          },
+          "speakers": [
+            {
+              "name": "Maria",
+              "gender": "female",
+              "voiceName": "Aoede",
+              "style": "cheerful and conversational"
+            }
+          ],
+          "transcript": "Maria: Hi David, this is Maria! I'm calling about Mark's surprise birthday party this Saturday. The party starts at 7:30 in the evening at Mark's house. His address is 45 Park Road, just opposite the public library. Several of us are buying him a special gift together. We decided to get him a new wristwatch because he lost his old one last month during soccer practice. If you want to contribute, please bring ten dollars. Also, Mark's sister is baking a big strawberry birthday cake, and I am ordering three large pizzas, so could you please bring some cold drinks, like orange juice or lemonade? Don't bring cola because Mark doesn't drink soda. Call me back when you get this message. My new mobile number is 555-8392. See you on Saturday evening!",
+          "questions": [
+            {
+              "id": "l-q6",
+              "type": "multiple_choice",
+              "prompt": "Where is Mark's house located?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Behind the central supermarket"
+                },
+                {
+                  "id": "B",
+                  "text": "Opposite the public library"
+                },
+                {
+                  "id": "C",
+                  "text": "Next to the town train station"
+                },
+                {
+                  "id": "D",
+                  "text": "On Green Street across from the park"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Maria states: 'His address is 45 Park Road, just opposite the public library.'"
+            },
+            {
+              "id": "l-q7",
+              "type": "fill_blank",
+              "prompt": "Mark's friends are buying him a new ________ for his birthday.",
+              "acceptedAnswers": [
+                "wristwatch",
+                "watch"
+              ],
+              "caseSensitive": false,
+              "explanation": "Maria says: 'We decided to get him a new wristwatch because he lost his old one...'"
+            },
+            {
+              "id": "l-q8",
+              "type": "true_false_ng",
+              "prompt": "Maria asks David to bake a birthday cake for the party.",
+              "correctAnswer": "FALSE",
+              "explanation": "Mark's sister is baking the cake; Maria asks David to bring cold drinks."
+            },
+            {
+              "id": "l-q9",
+              "type": "multiple_select",
+              "prompt": "Which TWO things does Maria ask David to bring to the party?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Ten dollars for the gift"
+                },
+                {
+                  "id": "B",
+                  "text": "Three large pizzas"
+                },
+                {
+                  "id": "C",
+                  "text": "Cold drinks like orange juice or lemonade"
+                },
+                {
+                  "id": "D",
+                  "text": "His acoustic guitar"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "Maria asks David: 'please bring ten dollars' and 'could you please bring some cold drinks, like orange juice or lemonade'."
+            },
+            {
+              "id": "l-q10",
+              "type": "multiple_choice",
+              "prompt": "What drink does Maria specifically tell David NOT to bring?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Lemonade"
+                },
+                {
+                  "id": "B",
+                  "text": "Orange juice"
+                },
+                {
+                  "id": "C",
+                  "text": "Cola"
+                },
+                {
+                  "id": "D",
+                  "text": "Mineral water"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "Maria says: 'Don't bring cola because Mark doesn't drink soda.'"
+            }
+          ]
+        },
+        {
+          "id": "l-p3",
+          "title": "Asking for Directions to the Central Library",
+          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p3.wav",
+          "audioConfig": {
+            "scenario": "everyday_dialogue",
+            "accent": "british",
+            "pacing": "slow",
+            "overallStyle": "polite street directions in a British town, clear pacing"
+          },
+          "speakers": [
+            {
+              "name": "Tourist",
+              "gender": "male",
+              "voiceName": "Zephyr",
+              "style": "inquiring and polite"
+            },
+            {
+              "name": "Local Resident",
+              "gender": "female",
+              "voiceName": "Kore",
+              "style": "helpful and articulate"
+            }
+          ],
+          "transcript": "Tourist: Excuse me! Could you please help me? I'm trying to find the Central City Library.\nLocal Resident: Certainly! It's not far from here, about a ten-minute walk. Right now we are on Market Street. Walk straight ahead until you see the post office on your left.\nTourist: Okay, straight ahead to the post office.\nLocal Resident: Yes. At the traffic lights by the post office, turn right onto Victoria Avenue. Walk past the cinema and a big shoe shop. The library is a large modern brick building on the corner of Victoria Avenue and Pine Street, right next to the town hall.\nTourist: Turn right at the post office, go past the cinema, and it's on the corner next to the town hall. Is the library open today?\nLocal Resident: Yes, on weekdays it stays open until 8:00 PM, but today is Saturday, so it closes early at 5:00 PM.\nTourist: It's only 2:30 PM now, so I have plenty of time. Thank you very much for your kindness!\nLocal Resident: You're very welcome. Have a wonderful day in our city!",
+          "questions": [
+            {
+              "id": "l-q11",
+              "type": "multiple_choice",
+              "prompt": "How long does it take to walk from Market Street to the Central Library?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "About 5 minutes"
+                },
+                {
+                  "id": "B",
+                  "text": "About 10 minutes"
+                },
+                {
+                  "id": "C",
+                  "text": "About 25 minutes"
+                },
+                {
+                  "id": "D",
+                  "text": "Nearly an hour"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "The resident says: 'It's not far from here, about a ten-minute walk.'"
+            },
+            {
+              "id": "l-q12",
+              "type": "fill_blank",
+              "prompt": "At the traffic lights next to the post office, the tourist should turn ________ onto Victoria Avenue.",
+              "acceptedAnswers": [
+                "right"
+              ],
+              "caseSensitive": false,
+              "explanation": "The resident instructs: 'At the traffic lights by the post office, turn right onto Victoria Avenue.'"
+            },
+            {
+              "id": "l-q13",
+              "type": "multiple_select",
+              "prompt": "Which TWO buildings does the resident mention on Victoria Avenue before reaching the library?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "The cinema"
+                },
+                {
+                  "id": "B",
+                  "text": "A big shoe shop"
+                },
+                {
+                  "id": "C",
+                  "text": "A train station"
+                },
+                {
+                  "id": "D",
+                  "text": "A sports stadium"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "B"
+              ],
+              "explanation": "The resident says: 'Walk past the cinema and a big shoe shop.'"
+            },
+            {
+              "id": "l-q14",
+              "type": "multiple_choice",
+              "prompt": "What time does the Central Library close on Saturdays?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "2:30 PM"
+                },
+                {
+                  "id": "B",
+                  "text": "5:00 PM"
+                },
+                {
+                  "id": "C",
+                  "text": "8:00 PM"
+                },
+                {
+                  "id": "D",
+                  "text": "9:00 PM"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "The resident explains: 'today is Saturday, so it closes early at 5:00 PM.'"
+            },
+            {
+              "id": "l-q15",
+              "type": "true_false_ng",
+              "prompt": "The Central Library building is located right next to the town hall.",
+              "correctAnswer": "TRUE",
+              "explanation": "The resident states the library is 'right next to the town hall.'"
+            }
+          ]
+        },
+        {
+          "id": "l-p4",
+          "title": "Public Announcement at Grand Central Station",
+          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p4.wav",
+          "audioConfig": {
+            "scenario": "public_announcement",
+            "accent": "british",
+            "pacing": "slow",
+            "overallStyle": "authoritative and clear train station public announcement"
+          },
+          "speakers": [
+            {
+              "name": "Station Announcer",
+              "gender": "female",
+              "voiceName": "Kore",
+              "style": "clear, professional public address announcer"
+            }
+          ],
+          "transcript": "Station Announcer: Attention, passengers waiting on Platform 3. This is an important service announcement for the 10:15 Northline Express train to Cambridge and Ely. Due to urgent track maintenance work near Broxbourne, this train is currently delayed by approximately twenty-five minutes. The revised departure time is now 10:40 AM.\n\nPlease note that due to this platform schedule change, the Cambridge train will now depart from Platform 5 instead of Platform 3. Passengers should use the footbridge or elevator near the ticket office to change platforms safely.\n\nPassengers holding standard tickets may take any earlier stopping service to Stansted Airport. Buffet facilities will be available on coach C of the Cambridge train offering complimentary tea, coffee, and mineral water to apologize for the inconvenience. For further journey updates or refund information, please visit customer assistance in the main hall. Thank you for your patience.",
+          "questions": [
+            {
+              "id": "l-q16",
+              "type": "multiple_choice",
+              "prompt": "What is the reason for the train delay?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Heavy snow on the railway line"
+                },
+                {
+                  "id": "B",
+                  "text": "Urgent track maintenance work"
+                },
+                {
+                  "id": "C",
+                  "text": "A mechanical fault with the engine"
+                },
+                {
+                  "id": "D",
+                  "text": "A shortage of train drivers"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "The announcer states: 'Due to urgent track maintenance work near Broxbourne, this train is currently delayed...'"
+            },
+            {
+              "id": "l-q17",
+              "type": "fill_blank",
+              "prompt": "The delayed train is now scheduled to depart at 10:________ AM.",
+              "acceptedAnswers": [
+                "40"
+              ],
+              "caseSensitive": false,
+              "explanation": "The announcer announces: 'The revised departure time is now 10:40 AM.'"
+            },
+            {
+              "id": "l-q18",
+              "type": "multiple_choice",
+              "prompt": "Which platform will the Cambridge train now depart from?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Platform 2"
+                },
+                {
+                  "id": "B",
+                  "text": "Platform 3"
+                },
+                {
+                  "id": "C",
+                  "text": "Platform 5"
+                },
+                {
+                  "id": "D",
+                  "text": "Platform 7"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "The announcer says: 'the Cambridge train will now depart from Platform 5 instead of Platform 3.'"
+            },
+            {
+              "id": "l-q19",
+              "type": "multiple_select",
+              "prompt": "Which TWO complimentary drinks are offered to passengers in coach C?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Tea"
+                },
+                {
+                  "id": "B",
+                  "text": "Hot chocolate"
+                },
+                {
+                  "id": "C",
+                  "text": "Coffee"
+                },
+                {
+                  "id": "D",
+                  "text": "Orange juice"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "The announcement mentions: 'offering complimentary tea, coffee, and mineral water'."
+            },
+            {
+              "id": "l-q20",
+              "type": "true_false_ng",
+              "prompt": "Passengers must pay an extra five-pound fee to use the elevator to Platform 5.",
+              "correctAnswer": "FALSE",
+              "explanation": "The elevator is free for passengers changing platforms; no fee is mentioned."
+            }
+          ]
+        },
+        {
+          "id": "l-p5",
+          "title": "Planning a Weekend Camping Trip",
+          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p5.wav",
+          "audioConfig": {
+            "scenario": "everyday_dialogue",
+            "accent": "british",
+            "pacing": "slow",
+            "overallStyle": "casual friendly exchange between friends, slow clear pacing"
+          },
+          "speakers": [
+            {
+              "name": "Tom",
+              "gender": "male",
+              "voiceName": "Puck",
+              "style": "enthusiastic and friendly"
+            },
+            {
+              "name": "Hannah",
+              "gender": "female",
+              "voiceName": "Aoede",
+              "style": "organized and helpful"
+            }
+          ],
+          "transcript": "Tom: Hi Hannah! Are you ready for our camping trip to Lake Pine this weekend?\nHannah: Almost, Tom! I've been checking my camping gear. I have a three-person tent and two warm sleeping bags. Do you have a camping stove?\nTom: Yes, my uncle lent me his portable gas stove and a metal cooking pot. What about food? Should we buy groceries before leaving?\nHannah: Definitely. Let's get pasta, tomato sauce, bread, cheese, and some fruit. We should also buy four large bottles of drinking water because the campsite tap water isn't safe for drinking.\nTom: Good idea. What time should we set off on Saturday morning?\nHannah: Traffic on Highway 10 gets very busy after 8:30 AM, so how about I pick you up in my car at 7:00 AM? That way, we can reach the lake by 9:00 AM, set up our tent, and go for a swim before lunch.\nTom: Perfect! Don't forget your raincoat—the weather report said there might be light showers on Sunday morning.\nHannah: Got it. See you at seven on Saturday!",
+          "questions": [
+            {
+              "id": "l-q21",
+              "type": "multiple_choice",
+              "prompt": "Where are Tom and Hannah going for their camping trip?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Greenwood Forest"
+                },
+                {
+                  "id": "B",
+                  "text": "Lake Pine"
+                },
+                {
+                  "id": "C",
+                  "text": "Sunny Beach"
+                },
+                {
+                  "id": "D",
+                  "text": "Rocky Mountain"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Tom asks: 'Are you ready for our camping trip to Lake Pine this weekend?'"
+            },
+            {
+              "id": "l-q22",
+              "type": "fill_blank",
+              "prompt": "Hannah will pick Tom up in her car at ________:00 AM on Saturday.",
+              "acceptedAnswers": [
+                "7",
+                "07",
+                "7:00"
+              ],
+              "caseSensitive": false,
+              "explanation": "Hannah proposes: 'how about I pick you up in my car at 7:00 AM?'"
+            },
+            {
+              "id": "l-q23",
+              "type": "multiple_select",
+              "prompt": "Which TWO pieces of equipment will Tom bring?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "A portable gas stove"
+                },
+                {
+                  "id": "B",
+                  "text": "A three-person tent"
+                },
+                {
+                  "id": "C",
+                  "text": "A metal cooking pot"
+                },
+                {
+                  "id": "D",
+                  "text": "Two warm sleeping bags"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "Tom says: 'my uncle lent me his portable gas stove and a metal cooking pot'. The tent and sleeping bags are brought by Hannah."
+            },
+            {
+              "id": "l-q24",
+              "type": "true_false_ng",
+              "prompt": "The tap water at the campsite is completely safe for drinking.",
+              "correctAnswer": "FALSE",
+              "explanation": "Hannah notes: 'the campsite tap water isn't safe for drinking.'"
+            },
+            {
+              "id": "l-q25",
+              "type": "multiple_choice",
+              "prompt": "What activity do Tom and Hannah plan to do on Saturday before lunch?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Catch fish in the river"
+                },
+                {
+                  "id": "B",
+                  "text": "Go for a swim"
+                },
+                {
+                  "id": "C",
+                  "text": "Climb the rocky hill"
+                },
+                {
+                  "id": "D",
+                  "text": "Rent a small rowing boat"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Hannah says they can 'set up our tent, and go for a swim before lunch.'"
+            }
+          ]
+        }
+      ]
+    },
+    "speaking": {
+      "instructions": "Read the prompts below and prepare your speech notes. Speak clearly and make sure you address all parts of each task.",
+      "tasks": [
+        {
+          "id": "s-t1",
+          "title": "Talk About Your Daily Routine",
+          "prompt": "Describe a typical weekday in your life.\n\nYou should say:\n- What time you usually wake up in the morning\n- What you do during the day (school, work, or hobbies)\n- What you like to do in the evening to relax\nAnd explain what your favorite part of the day is and why.",
+          "rubric": [
+            {
+              "criterion": "Fluency and Coherence",
+              "description": "Can link simple sentences using basic connectors like 'and', 'but', 'then', and 'because' with reasonable ease."
+            },
+            {
+              "criterion": "Lexical Resource",
+              "description": "Uses appropriate basic vocabulary related to daily activities, time, work, and hobbies."
+            },
+            {
+              "criterion": "Grammar Accuracy",
+              "description": "Correctly uses present simple tense and adverbs of frequency (usually, always, sometimes)."
+            }
+          ],
+          "sampleAnswer": "On weekdays, I usually wake up at 7:00 AM. First, I wash my face, brush my teeth, and eat breakfast with my family. At 8:00 AM, I take the bus to school. I attend classes until 4:00 PM. In the evening, I usually do my homework, eat dinner, and then relax by listening to music or chatting with friends. My favorite part of the day is the evening because I can rest and spend time with my family."
+        },
+        {
+          "id": "s-t2",
+          "title": "Describe Your Favorite Season",
+          "prompt": "Talk about your favorite season of the year (spring, summer, autumn, or winter).\n\nYou should say:\n- Which season it is\n- What the weather is usually like during this season\n- What clothes you typically wear\nAnd explain what outdoor or leisure activities you enjoy during this time of year.",
+          "rubric": [
+            {
+              "criterion": "Fluency and Coherence",
+              "description": "Addresses all prompt points clearly in a simple, well-organized manner."
+            },
+            {
+              "criterion": "Lexical Resource",
+              "description": "Uses A2-level vocabulary for weather (sunny, warm, rainy, cold), clothing, and leisure activities."
+            },
+            {
+              "criterion": "Grammar Accuracy",
+              "description": "Uses simple sentence structures, prepositions of time, and verb patterns (like/enjoy + -ing) accurately."
+            }
+          ],
+          "sampleAnswer": "My favorite season is autumn. In my hometown, the weather in autumn is cool, fresh, and slightly windy. The leaves on the trees turn red and yellow, which looks wonderful. During this season, I usually wear comfortable jeans, light sweaters, and sneakers. I really enjoy cycling in the park with my friends and taking photos of the autumn scenery. It is a relaxing and peaceful season."
+        }
+      ]
+    },
+    "writing": {
+      "instructions": "Complete the two writing tasks below. Ensure you meet the minimum word count and address all required bullet points.",
+      "tasks": [
+        {
+          "id": "w-t1",
+          "title": "An Email to an English Friend",
+          "prompt": "You want to invite your English-speaking friend, Alex, to go to the cinema with you this Saturday.\n\nWrite an email to Alex (35–50 words). In your email, you must:\n- Invite Alex to go to the cinema this Saturday\n- Tell Alex which movie you want to watch and why\n- Suggest a meeting time and place before the movie starts",
+          "minWords": 35,
+          "rubric": [
+            {
+              "criterion": "Task Achievement",
+              "description": "Covers all three required bullet points clearly with an appropriate friendly email register."
+            },
+            {
+              "criterion": "Coherence & Cohesion",
+              "description": "Organizes ideas logically using basic cohesive markers (and, because, so) and correct greetings/closings."
+            },
+            {
+              "criterion": "Grammatical & Lexical Accuracy",
+              "description": "Uses basic everyday vocabulary and modal structures for invitations (e.g., 'Would you like to...', 'Let's meet')."
+            }
+          ],
+          "sampleAnswer": "Hi Alex,\n\nHow are you doing? Would you like to go to the cinema with me this Saturday afternoon?\n\nI really want to watch the new animation film called 'Space Adventure'. I heard it is very funny and has exciting visual effects.\n\nThe film starts at 4:30 PM. Let's meet at 4:00 PM outside the coffee shop next to the cinema. Let me know if you can make it!\n\nBest wishes,\nSam"
+        },
+        {
+          "id": "w-t2",
+          "title": "A Memorable Holiday Story",
+          "prompt": "Write a short personal story or paragraph (50–70 words) about a memorable holiday or weekend trip you took in the past.\n\nYou should write about:\n- Where you went and who you went with\n- How you travelled there\n- What exciting activities you did during the trip\n- Why this holiday was so special to you",
+          "minWords": 50,
+          "rubric": [
+            {
+              "criterion": "Task Achievement",
+              "description": "Fully addresses all bullet points and comfortably satisfies the minimum word count of 50 words."
+            },
+            {
+              "criterion": "Coherence & Cohesion",
+              "description": "Sequences past events chronologically using time transitions (last year, on the first day, in the evening, finally)."
+            },
+            {
+              "criterion": "Grammar & Lexicon",
+              "description": "Uses past simple tense accurately for both regular and irregular verbs alongside descriptive adjectives."
+            }
+          ],
+          "sampleAnswer": "Last summer, I went on a memorable holiday to Da Nang with my family. We travelled there by plane from Hanoi and stayed at a lovely hotel near My Khe Beach for four sunny days.\n\nEvery morning, we woke up early to swim in the cool ocean and walked along the golden sand. In the afternoon, we rented bicycles to explore the Marble Mountains and took many beautiful pictures. In the evening, we ate delicious seafood at local restaurants by the sea.\n\nThis holiday was very special to me because the weather was great, the local people were welcoming, and I spent wonderful quality time with my parents and brother."
+        }
+      ]
+    }
+  }
+}

@@ -57,11 +57,44 @@ export interface ReadingSection {
   passages: ReadingPassage[];
 }
 
+export type SpeakerGender = 'female' | 'male' | 'unspecified';
+
+export interface SpeakerConfig {
+  name: string;
+  gender?: SpeakerGender;
+  voiceName?: string;
+  style?: string;
+}
+
+export type ListeningScenario =
+  | 'everyday_dialogue'
+  | 'public_announcement'
+  | 'interview'
+  | 'academic_lecture'
+  | 'group_discussion'
+  | 'news_broadcast';
+
+export type ListeningAccent =
+  | 'british'
+  | 'american'
+  | 'australian'
+  | 'canadian'
+  | 'standard';
+
+export interface ListeningAudioConfig {
+  scenario?: ListeningScenario;
+  accent?: ListeningAccent;
+  pacing?: 'slow' | 'moderate' | 'fast' | 'exam_standard';
+  overallStyle?: string;
+}
+
 export interface ListeningPart {
   id: string;
   title: string;
   audioUrl?: string;
   transcript?: string;
+  audioConfig?: ListeningAudioConfig;
+  speakers?: SpeakerConfig[];
   questions: Question[];
 }
 

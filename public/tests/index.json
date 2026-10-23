@@ -1,28 +1,40 @@
 {
   "tests": [
     {
-      "id": "test-01",
-      "title": "A2 Key English Comprehensive Examination (Cambridge Standard)",
-      "description": "Comprehensive CEFR A2 assessment: Reading (5 passages, 30 questions), Listening (5 parts, 25 questions), Speaking (2 tasks), and Writing (2 tasks).",
-      "file": "/tests/test-01.json"
+      "id": "a2-key-english-test-01",
+      "title": "A2 Key English Comprehensive Examination (CEFR / KET Standard)",
+      "description": "Comprehensive CEFR A2 assessment: Reading (5 passages, 30 questions), Listening (5 real-world scenarios, 25 questions), Speaking (2 tasks), and Writing (2 tasks).",
+      "file": "/tests/a2-key-english-test-01.json"
     },
     {
-      "id": "test-02",
-      "title": "B1 Advanced Level Examination",
-      "description": "A comprehensive B1-level English examination assessing Reading, Listening, Speaking, and Writing.",
-      "file": "/tests/test-02.json"
-    },
-    {
-      "id": "test-03",
-      "title": "C1-Level Comprehensive English Examination (CAE / Academic Standard)",
-      "description": "An advanced C1-level English proficiency examination assessing Reading, Listening, Speaking, and Writing.",
-      "file": "/tests/test-03.json"
-    },
-    {
-      "id": "test-04",
+      "id": "b1-intermediate-english-test-01",
       "title": "B1 Intermediate English Examination (CEFR / PET Standard)",
-      "description": "A comprehensive B1-level English examination assessing Reading, Listening, Speaking, and Writing.",
-      "file": "/tests/test-04.json"
+      "description": "Comprehensive CEFR B1 assessment evaluating Reading, Listening, Speaking, and Writing based on Cambridge Preliminary (PET) standards.",
+      "file": "/tests/b1-intermediate-english-test-01.json"
+    },
+    {
+      "id": "b1-plus-applied-english-test-01",
+      "title": "B1+ Applied English Proficiency Examination (Academic & Practical)",
+      "description": "Comprehensive CEFR B1+ assessment evaluating academic reading (neurobiology), workplace and daily listening dialogues, and practical communicative tasks.",
+      "file": "/tests/b1-plus-applied-english-test-01.json"
+    },
+    {
+      "id": "b2-upper-intermediate-english-test-01",
+      "title": "B2 Upper-Intermediate English Examination (CEFR / FCE Standard)",
+      "description": "Comprehensive CEFR B2 assessment evaluating Reading, Listening, Speaking, and Writing skills at the Cambridge B2 First (FCE) standard.",
+      "file": "/tests/b2-upper-intermediate-english-test-01.json"
+    },
+    {
+      "id": "c1-advanced-academic-test-01",
+      "title": "C1 Advanced Academic English Examination (CEFR / CAE Standard)",
+      "description": "Comprehensive CEFR C1 proficiency examination assessing high-level academic Reading, Listening, Speaking, and formal Writing.",
+      "file": "/tests/c1-advanced-academic-test-01.json"
+    },
+    {
+      "id": "c1-advanced-english-test-01",
+      "title": "C1 Advanced English Examination (CEFR / CAE Standard)",
+      "description": "Comprehensive CEFR C1 assessment evaluating Reading, Listening, Speaking, and Writing skills, focusing on complex academic argumentation, risk governance, and technological ethics.",
+      "file": "/tests/c1-advanced-english-test-01.json"
     }
   ]
 }

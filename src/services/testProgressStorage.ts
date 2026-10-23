@@ -1,4 +1,5 @@
-import type { TestDocument, UserAnswers, TestProgress, SkillSection } from '../types/test';
+import type { TestDocument, UserAnswers, TestProgress } from '../types/test';
+import { saveProgressSummaryAction, deleteProgressSummaryAction } from '@/app/actions/storageActions';
 
 const STORAGE_KEY = 'english_webapp_progress_v1';
 
@@ -57,14 +58,8 @@ export function calculateProgressStats(
     });
   });
 
-  // Speaking
-  test.sections.speaking.tasks.forEach((t) => {
-    totalCount += 1;
-    const ans = answers.speaking[t.id];
-    if (typeof ans === 'string' && ans.trim() !== '') {
-      answeredCount += 1;
-    }
-  });
+  // Speaking (Temporarily disabled - not included in progress calculation)
+
 
   // Writing
   test.sections.writing.tasks.forEach((t) => {
@@ -78,6 +73,26 @@ export function calculateProgressStats(
   return { answeredCount, totalCount };
 }
 
+let syncProgressTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleSyncProgressSummary(progress: TestProgress): void {
+  if (syncProgressTimeout) {
+    clearTimeout(syncProgressTimeout);
+  }
+  syncProgressTimeout = setTimeout(() => {
+    saveProgressSummaryAction({
+      testId: progress.testId,
+      testTitle: progress.testTitle,
+      lastActiveSection: progress.lastActiveSection,
+      updatedAt: progress.updatedAt,
+      answeredCount: progress.answeredCount,
+      totalCount: progress.totalCount,
+    }).catch((err) => {
+      console.error('Failed to sync progress summary to server cookie:', err);
+    });
+  }, 400);
+}
+
 export function saveTestProgress(progress: TestProgress): void {
   if (typeof window === 'undefined') return;
   const current = getStoredProgressList();
@@ -85,12 +100,23 @@ export function saveTestProgress(progress: TestProgress): void {
   const updated = [progress, ...filtered];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   notifyProgressChanged();
+
+  // Keep server-side cookie summary in sync for RSC (debounced & decoupled from render loop)
+  scheduleSyncProgressSummary(progress);
 }
 
 export function deleteTestProgress(testId: string): void {
   if (typeof window === 'undefined') return;
+  if (syncProgressTimeout) {
+    clearTimeout(syncProgressTimeout);
+  }
   const current = getStoredProgressList();
   const updated = current.filter((p) => p.testId !== testId);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   notifyProgressChanged();
+
+  // Keep server-side cookie summary in sync for RSC
+  deleteProgressSummaryAction(testId).catch((err) => {
+    console.error('Failed to delete progress summary from server cookie:', err);
+  });
 }

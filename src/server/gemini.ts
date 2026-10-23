@@ -3,24 +3,19 @@ import { GoogleGenAI } from '@google/genai';
 
 const clientCache = new Map<string, GoogleGenAI>();
 
-export function getGeminiApiKeys(): string[] {
-  const rawKeys = [
-    process.env.GEMINI_API_KEY_1,
-    process.env.GEMINI_API_KEY_2,
-    process.env.GEMINI_API_KEY_3,
-    process.env.GEMINI_API_KEY_4,
-    process.env.GEMINI_API_KEY,
-    // Backwards compatibility with VITE_ prefix if still present
-    process.env.VITE_GEMINI_API_KEY_1,
-    process.env.VITE_GEMINI_API_KEY_2,
-    process.env.VITE_GEMINI_API_KEY_3,
-    process.env.VITE_GEMINI_API_KEY_4,
-    process.env.VITE_GEMINI_API_KEY,
-  ];
+// In-memory key health cooldown tracker (timestamp until key is cooled down)
+const keyCooldownMap = new Map<string, number>();
 
-  const validKeys = rawKeys
-    .map((k) => (typeof k === 'string' ? k.trim() : ''))
-    .filter((k) => k.length > 0 && !k.startsWith('your_gemini_api_key'));
+export function getGeminiApiKeys(): string[] {
+  const validKeys: string[] = [];
+  for (const [key, value] of Object.entries(process.env)) {
+    if (/^GEMINI_API_KEY(_\w+)?$/i.test(key) && typeof value === 'string') {
+      const trimmedVal = value.trim();
+      if (trimmedVal.length > 0 && !trimmedVal.toLowerCase().startsWith('your_gemini_api_key')) {
+        validKeys.push(trimmedVal);
+      }
+    }
+  }
 
   return Array.from(new Set(validKeys));
 }
@@ -47,32 +42,45 @@ function shuffleArray<T>(items: T[]): T[] {
   return copy;
 }
 
+/**
+ * Intelligent Fallback calling only healthy keys.
+ * If a key hits 429 or network errors, it immediately fails over to the next
+ * healthy key without delaying the user HTTP request (Zero-wait Failover).
+ */
 export async function withGeminiClientFallback<T>(
   operation: (client: GoogleGenAI) => Promise<T>
 ): Promise<T> {
-  const keys = getGeminiApiKeys();
-  if (keys.length === 0) {
-    throw new Error('Chưa cấu hình GEMINI_API_KEY_1..4 trong môi trường server.');
+  const allKeys = getGeminiApiKeys();
+  if (allKeys.length === 0) {
+    throw new Error('Chưa cấu hình GEMINI_API_KEY trong môi trường server.');
   }
 
-  const shuffledKeys = shuffleArray(keys);
+  const now = Date.now();
+  // Filter for healthy keys (not in cooldown)
+  const healthyKeys = allKeys.filter((k) => (keyCooldownMap.get(k) || 0) <= now);
+  // Fall back to all keys if all are cooling down
+  const candidateKeys = healthyKeys.length > 0 ? shuffleArray(healthyKeys) : shuffleArray(allKeys);
+
   let lastError: unknown = null;
 
-  for (let i = 0; i < shuffledKeys.length; i++) {
-    const key = shuffledKeys[i];
+  for (let i = 0; i < candidateKeys.length; i++) {
+    const key = candidateKeys[i];
     const client = getOrCreateClient(key);
     try {
-      return await operation(client);
-    } catch (err) {
+      const result = await operation(client);
+      // Key succeeded: remove from cooldown if previously degraded
+      keyCooldownMap.delete(key);
+      return result;
+    } catch (err: unknown) {
       lastError = err;
-      console.warn(
-        `Gemini API key (${i + 1}/${shuffledKeys.length}) gặp lỗi, thử key tiếp theo...`,
-        err
-      );
+      // Immediately place this key in cooldown for 2 minutes to prevent hammering
+      keyCooldownMap.set(key, Date.now() + 2 * 60 * 1000);
+      // Đổi key liền lập tức (0ms delay) để không làm trễ response của user
+      continue;
     }
   }
 
   throw lastError instanceof Error
     ? lastError
-    : new Error('Tất cả Gemini API key đều thất bại.');
+    : new Error('Tất cả API key đều gặp sự cố hoặc đang trong thời gian hạ nhiệt (cooldown).');
 }

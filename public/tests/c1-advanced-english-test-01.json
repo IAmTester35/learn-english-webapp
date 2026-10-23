@@ -1,0 +1,849 @@
+{
+  "schemaVersion": "1.0",
+  "id": "c1-advanced-english-test-01",
+  "title": "C1 Advanced English Examination (CEFR / CAE Standard)",
+  "description": "Comprehensive CEFR C1 assessment evaluating Reading, Listening, Speaking, and Writing skills, focusing on complex academic argumentation, risk governance, and technological ethics.",
+  "sections": {
+    "reading": {
+      "instructions": "Read the three academic passages carefully and answer all questions from r-q1 to r-q18. Pay close attention to implied meaning, authorial stance, and complex argumentation.",
+      "passages": [
+        {
+          "id": "r-p1",
+          "title": "Normal Accidents and the Fallacy of Redundancy in High-Risk Systems",
+          "content": "In the aftermath of any catastrophic industrial or technological failure, public inquiries almost invariably arrive at a comforting conclusion: the disaster was caused by human error or an isolated component malfunction, and the solution lies in adding further layers of automated safety mechanisms. However, half a century of sociological research into complex technological systems suggests that this orthodoxy is deeply flawed. In his seminal work 'Normal Accidents,' sociologist Charles Perrow argued that in systems characterized by both 'interactive complexity' and 'tight coupling,' catastrophic failures are not aberrant anomalies; rather, they are an inevitable, structural property of the system itself.\n\nTo understand Perrow's thesis, one must distinguish between linear and complex interactions. Most manufacturing assembly lines are linear: Step A leads predictably to Step B, and if a machine jams, the downstream consequences are immediately visible and easily isolated. High-risk infrastructures—such as nuclear power plants, chemical processing facilities, and modern financial trading networks—operate quite differently. They exhibit interactive complexity, meaning that single components perform multiple functions simultaneously, and separate subsystems are interconnected through intricate feedback loops. When paired with 'tight coupling'—where processes occur at rapid speeds with virtually no buffer time or physical slack to absorb shocks—minor glitches in two seemingly unrelated subsystems can interact in ways that no human designer or predictive algorithm could ever foresee.\n\nIronically, the engineering community's standard remedy for these vulnerabilities—technological redundancy—frequently exacerbates the exact danger it is meant to mitigate. In theory, installing a backup generator or a secondary cooling loop decreases the probability of total failure to near zero. In practice, redundancy rarely exists in a vacuum. Because adding redundant hardware increases the overall complexity and opacity of the plant, it creates fertile ground for hidden 'common-mode failures.' For instance, two nominally independent cooling systems may inadvertently rely on the same auxiliary electrical bus, occupy the same flood-prone basement, or share a single software protocol. When an external shock compromises that shared foundation, the vaunted defense-in-depth collapses instantaneously.\n\nFurthermore, redundant safety architectures profoundly alter the psychology of the human operators and executives overseeing them. Social scientists refer to this phenomenon as 'risk homeostasis' or the 'Peltzman effect.' When an organization believes its facility is protected by triple-redundant fail-safes, a subtle complacency sets in. Maintenance schedules are stretched, minor sensor anomalies are dismissed as instrument ghosts, and production pressures are allowed to encroach upon safety margins. The safety net, rather than simply catching the system when it falls, actively encourages the operators to walk closer to the edge.\n\nThe implications of Normal Accident Theory are deeply unsettling for modern governance. If certain socio-technical systems are inherently prone to unanticipatable cascade failures regardless of how well they are managed, then engineering ingenuity alone cannot guarantee public safety. Instead of relying on the comforting illusion of absolute technological control, policymakers must confront a far more difficult ethical question: whether the societal benefits of certain tightly coupled technologies truly justify their irreducible catastrophic potential.",
+          "questions": [
+            {
+              "id": "r-q1",
+              "type": "multiple_choice",
+              "prompt": "What is the author's main criticism of standard post-disaster public inquiries in paragraph 1?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "They take too long to publish their findings to the general public."
+                },
+                {
+                  "id": "B",
+                  "text": "They mistakenly treat systemic, inevitable failures as isolated, preventable errors."
+                },
+                {
+                  "id": "C",
+                  "text": "They rely too heavily on sociologists rather than practical mechanical engineers."
+                },
+                {
+                  "id": "D",
+                  "text": "They unfairly blame automated software instead of holding human operators accountable."
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 1 notes that inquiries reach the 'comforting conclusion' of human error or isolated malfunction, whereas Perrow argues that in complex, tightly coupled systems, catastrophic failures are 'an inevitable, structural property of the system itself.'"
+            },
+            {
+              "id": "r-q2",
+              "type": "fill_blank",
+              "prompt": "According to Charles Perrow, systems that combine interactive complexity with ________ coupling are structurally prone to unavoidable accidents.",
+              "acceptedAnswers": [
+                "tight",
+                "tight coupling"
+              ],
+              "caseSensitive": false,
+              "explanation": "Paragraph 1 states: 'in systems characterized by both \"interactive complexity\" and \"tight coupling,\" catastrophic failures are not aberrant anomalies...'"
+            },
+            {
+              "id": "r-q3",
+              "type": "multiple_choice",
+              "prompt": "In paragraph 3, why does the author argue that adding redundant safety systems can be counterproductive?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Backup equipment is usually manufactured from inferior materials to save money."
+                },
+                {
+                  "id": "B",
+                  "text": "It makes the system more opaque and introduces hidden shared points of failure."
+                },
+                {
+                  "id": "C",
+                  "text": "It slows down the speed of linear manufacturing assembly lines."
+                },
+                {
+                  "id": "D",
+                  "text": "Government regulators refuse to inspect secondary backup systems."
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 3 explains that 'adding redundant hardware increases the overall complexity and opacity of the plant' and creates 'common-mode failures' where supposedly independent systems share a hidden foundation."
+            },
+            {
+              "id": "r-q4",
+              "type": "multiple_select",
+              "prompt": "Which TWO behavioral consequences of 'risk homeostasis' are mentioned in paragraph 4?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Treating unexpected sensor warnings as harmless equipment glitches"
+                },
+                {
+                  "id": "B",
+                  "text": "Investing excessive capital into unnecessary keempat-level backup generators"
+                },
+                {
+                  "id": "C",
+                  "text": "Allowing commercial output targets to erode established safety buffers"
+                },
+                {
+                  "id": "D",
+                  "text": "Shutting down facilities prematurely at the first sign of minor wear"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "Paragraph 4 states that complacency leads to 'minor sensor anomalies are dismissed as instrument ghosts' (A) and 'production pressures are allowed to encroach upon safety margins' (C)."
+            },
+            {
+              "id": "r-q5",
+              "type": "true_false_ng",
+              "prompt": "Charles Perrow originally developed Normal Accident Theory while investigating a financial market crash.",
+              "correctAnswer": "NOT_GIVEN",
+              "explanation": "The text mentions financial trading networks as an example of high-risk infrastructure, but does not state what specific event prompted Perrow to develop his theory."
+            },
+            {
+              "id": "r-q6",
+              "type": "true_false_ng",
+              "prompt": "The author concludes that every tightly coupled system can eventually be made completely safe through superior engineering.",
+              "correctAnswer": "FALSE",
+              "explanation": "Paragraph 5 states that 'engineering ingenuity alone cannot guarantee public safety' and refers to 'the comforting illusion of absolute technological control.'"
+            }
+          ]
+        },
+        {
+          "id": "r-p2",
+          "title": "Algorithmic Governance and the Crisis of Epistemic Opacity",
+          "content": "Across the globe, municipal authorities and emergency management agencies are increasingly delegating high-stakes decision-making to predictive artificial intelligence. From forecasting hurricane trajectories and modeling toxic plume dispersion to allocating scarce medical resources during pandemics, deep-learning algorithms process vast streams of heterogeneous sensor data at speeds no human committee could replicate. Proponents hail this shift as the dawn of objective, data-driven governance, purged of human cognitive biases and political hesitation. Yet beneath this veneer of computational infallibility lies a profound democratic dilemma: the problem of 'epistemic opacity.'\n\nUnlike traditional rule-based software, which operates on explicit conditional logic written by human programmers, modern neural networks derive their predictive power by identifying subtle statistical correlations across millions of historical data points. In doing so, they construct internal mathematical representations of reality so intricate that even their own architects cannot fully trace how a specific input yielded a specific output. When an emergency management AI abruptly revises an evacuation radius from five kilometers to eighty kilometers within minutes, it may be responding to a genuine, non-linear interaction between atmospheric wind shear and source emissions—or it may be suffering from 'distributional shift,' wherein real-world conditions deviate so sharply from its training data that its predictions become erratic hallucinations.\n\nIn a crisis, this opacity places human decision-makers in an impossible bind. If officials override the algorithm's worst-case projection and catastrophe ensues, they face severe legal and political culpability for ignoring a state-of-the-art warning system. Conversely, if they blindly obey the machine and order an unpracticed mass evacuation that turns out to be a false alarm, the resulting economic disruption and road casualties are blamed on human gullibility. Faced with this asymmetric liability, bureaucrats almost always succumb to 'automation bias'—the psychological tendency to defer to automated advisories even when contradictory on-the-ground evidence exists. The human remains 'in the loop' nominal only, functioning not as an autonomous moral agent, but as a convenient 'moral crumple zone' designed to absorb public outrage when the socio-technical system fails.\n\nCompounding this accountability vacuum is the way algorithmic authority distorts public communication. Public trust during an unfolding emergency depends not merely on the accuracy of official directives, but on their intelligibility. Citizens are far more willing to comply with disruptive mandates—such as abandoning their homes or ingesting prophylactic medication—when authorities can articulate a coherent causal rationale. When officials can only justify drastic measures by gesturing toward a proprietary 'black-box' model whose parameters are constantly fluctuating in real time, public skepticism festers.\n\nResolving this tension does not require abandoning computational modeling altogether; in complex environmental crises, human intuition alone is manifestly inadequate. Rather, it demands a structural pivot toward 'explainable AI' (XAI) and open-source auditing. Regulatory frameworks must mandate that any algorithm deployed in life-safety infrastructure be capable of generating human-interpretable justifications for its outputs, ensuring that technology serves to illuminate human judgment rather than eclipse it.",
+          "questions": [
+            {
+              "id": "r-q7",
+              "type": "multiple_choice",
+              "prompt": "What does the phrase 'epistemic opacity' in paragraph 1 refer to?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "The deliberate withholding of government safety reports from journalists"
+                },
+                {
+                  "id": "B",
+                  "text": "The inability of humans to understand the internal reasoning behind a neural network's outputs"
+                },
+                {
+                  "id": "C",
+                  "text": "The failure of physical sensors to transmit data through thick smoke or bad weather"
+                },
+                {
+                  "id": "D",
+                  "text": "The refusal of politicians to fund modern emergency management software"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 1 and 2 define 'epistemic opacity' by explaining that neural networks construct internal representations 'so intricate that even their own architects cannot fully trace how a specific input yielded a specific output.'"
+            },
+            {
+              "id": "r-q8",
+              "type": "fill_blank",
+              "prompt": "When real-world crisis conditions differ drastically from an AI's training data, the model may experience ________ shift and produce erratic predictions.",
+              "acceptedAnswers": [
+                "distributional",
+                "a distributional"
+              ],
+              "caseSensitive": false,
+              "explanation": "Paragraph 2 states: '...or it may be suffering from \"distributional shift,\" wherein real-world conditions deviate so sharply from its training data that its predictions become erratic hallucinations.'"
+            },
+            {
+              "id": "r-q9",
+              "type": "multiple_choice",
+              "prompt": "Why does the author describe human operators as a 'moral crumple zone' in paragraph 3?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Because they lack the technical training to repair damaged computer hardware"
+                },
+                {
+                  "id": "B",
+                  "text": "Because they have little real control over the AI's decisions but take the blame when things go wrong"
+                },
+                {
+                  "id": "C",
+                  "text": "Because they consistently act with greater ethical integrity than software developers"
+                },
+                {
+                  "id": "D",
+                  "text": "Because they physically shield infrastructure during industrial accidents"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 3 explains that due to asymmetric liability and automation bias, the human is 'in the loop' nominally only, serving as a 'moral crumple zone' to 'absorb public outrage when the socio-technical system fails.'"
+            },
+            {
+              "id": "r-q10",
+              "type": "true_false_ng",
+              "prompt": "According to paragraph 4, citizens are equally likely to obey emergency orders whether or not authorities explain the underlying reasoning.",
+              "correctAnswer": "FALSE",
+              "explanation": "Paragraph 4 states that public trust depends on 'intelligibility' and citizens are 'far more willing to comply... when authorities can articulate a coherent causal rationale.'"
+            },
+            {
+              "id": "r-q11",
+              "type": "true_false_ng",
+              "prompt": "The European Union has already banned the use of black-box neural networks in nuclear power plants.",
+              "correctAnswer": "NOT_GIVEN",
+              "explanation": "The passage calls for regulatory frameworks to mandate explainable AI (XAI), but does not mention specific legislation or bans by the European Union."
+            },
+            {
+              "id": "r-q12",
+              "type": "multiple_select",
+              "prompt": "Which TWO measures does the author advocate in the final paragraph to resolve the crisis of algorithmic governance?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "A complete return to purely human intuition during environmental disasters"
+                },
+                {
+                  "id": "B",
+                  "text": "The implementation of 'explainable AI' (XAI) capable of providing understandable reasons"
+                },
+                {
+                  "id": "C",
+                  "text": "Open-source auditing of algorithms used in critical life-safety systems"
+                },
+                {
+                  "id": "D",
+                  "text": "Granting legal immunity to private software companies"
+                }
+              ],
+              "correctAnswers": [
+                "B",
+                "C"
+              ],
+              "explanation": "Paragraph 5 advocates 'a structural pivot toward \"explainable AI\" (XAI) and open-source auditing' so algorithms generate 'human-interpretable justifications.'"
+            }
+          ]
+        },
+        {
+          "id": "r-p3",
+          "title": "The Half-Life of Credibility: Institutional Trust and Risk Communication",
+          "content": "When an environmental or industrial catastrophe strikes, two distinct crises unfold simultaneously: the physical contamination of the biosphere and the sociological disintegration of institutional credibility. While engineers and toxicologists understandably fixate on the former, historians of disaster consistently observe that the latter often inflicts the more enduring societal trauma. Physical isotopes eventually decay or can be remediated through topsoil removal; institutional trust, once fractured by perceived deception or incompetence, exhibits a sociological half-life measured in generations.\n\nAt the heart of most institutional communication failures lies a persistent, paternalistic myth held by bureaucratic elites: the belief that the general public is fragile, irrational, and perpetually on the verge of mass panic. Operating under this assumption, corporate operators and state regulators routinely sanitize early crisis bulletins. Anomalous radiation spikes are publicly dismissed as 'sensor malfunctions'; structural breaches are euphemized as 'transient pressure vents'; and worst-case evacuation models are withheld 'to preserve public order.' This strategy of 'reassurance by omission' is ostensibly designed to maintain calm, yet empirical disaster sociology demonstrates that it achieves the exact opposite.\n\nIn reality, contemporary sociological research reveals that genuine mass panic—defined as irrational, antisocial flight—is exceedingly rare during disasters. Instead, citizens typically respond to clear warnings with adaptive, prosocial cooperation, helping vulnerable neighbors and organizing grassroots logistics. What actually triggers chaotic, self-defeating public behavior is not terrifying information, but contradictory information. When residents observe dark plumes on the horizon or detect emergency convoys retreating while official broadcasts insist that containment is intact, an epistemic rupture occurs. Once citizens conclude that authorities are managing perceptions rather than managing the hazard, every subsequent official directive is viewed through a lens of deep cynicism.\n\nThis erosion of trust has immediate, lethal consequences for public health interventions. Consider a scenario where authorities initially instruct a population to shelter indoors, only to reverse course hours later and mandate potassium iodide prophylaxis alongside an eighty-kilometer evacuation. To a public that has not been privy to the evolving meteorological uncertainties or source-term recalculations, such a pivot appears either catastrophically incompetent or maliciously delayed. Consequently, compliance fractures: some residents refuse to evacuate out of distrust, while others flee well beyond the designated hazard zone, paralyzing transport arteries needed by emergency responders.\n\nTo prevent this institutional meltdown, risk communication scholars advocate a paradigm of 'radical transparency of uncertainty.' Rather than projecting an illusion of omniscience through a single, static safety figure, authorities must treat the public as mature epistemic partners. This entails communicating probability ranges—acknowledging what is known, what remains unknown, and how changing variables like wind shear could alter the trajectory of the crisis. Admitting uncertainty in the midst of an emergency requires immense institutional courage, yet it remains the only viable antidote to the corrosive suspicion that turns a physical disaster into a permanent civic catastrophe.",
+          "questions": [
+            {
+              "id": "r-q13",
+              "type": "multiple_choice",
+              "prompt": "Why do authorities frequently withhold worst-case data during the early stages of a disaster, according to paragraph 2?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "They are legally prohibited from releasing unverified sensor data."
+                },
+                {
+                  "id": "B",
+                  "text": "They harbor a paternalistic belief that the public will panic if told the full truth."
+                },
+                {
+                  "id": "C",
+                  "text": "They want to give their own families time to evacuate before roads become congested."
+                },
+                {
+                  "id": "D",
+                  "text": "They lack the communication channels required to reach rural populations quickly."
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Paragraph 2 attributes this behavior to 'a persistent, paternalistic myth held by bureaucratic elites: the belief that the general public is fragile, irrational, and perpetually on the verge of mass panic.'"
+            },
+            {
+              "id": "r-q14",
+              "type": "true_false_ng",
+              "prompt": "Empirical sociological research confirms that people usually behave selfishly and irrationally when given alarming news about a disaster.",
+              "correctAnswer": "FALSE",
+              "explanation": "Paragraph 3 states that 'genuine mass panic... is exceedingly rare during disasters. Instead, citizens typically respond to clear warnings with adaptive, prosocial cooperation.'"
+            },
+            {
+              "id": "r-q15",
+              "type": "multiple_choice",
+              "prompt": "What does the author identify as the true cause of chaotic, non-compliant public behavior during an emergency?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Overly detailed scientific explanations of radiation doses"
+                },
+                {
+                  "id": "B",
+                  "text": "The side effects of taking potassium iodide tablets"
+                },
+                {
+                  "id": "C",
+                  "text": "Contradictions between official reassurances and observable reality"
+                },
+                {
+                  "id": "D",
+                  "text": "The involvement of international inspectors in local affairs"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "Paragraph 3 states: 'What actually triggers chaotic, self-defeating public behavior is not terrifying information, but contradictory information,' such as seeing plumes and retreating convoys while broadcasts claim containment is intact."
+            },
+            {
+              "id": "r-q16",
+              "type": "multiple_select",
+              "prompt": "Which TWO negative outcomes occur when public compliance fractures due to a sudden, unexplained policy reversal (paragraph 4)?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Some residents ignore evacuation orders because they no longer believe authorities."
+                },
+                {
+                  "id": "B",
+                  "text": "Local agricultural workers immediately return to harvesting dairy products."
+                },
+                {
+                  "id": "C",
+                  "text": "People outside the danger zone flee unnecessarily, blocking vital roads for emergency crews."
+                },
+                {
+                  "id": "D",
+                  "text": "Citizens demand that automated AI systems be shut down permanently."
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "C"
+              ],
+              "explanation": "Paragraph 4 notes that 'some residents refuse to evacuate out of distrust' (A), 'while others flee well beyond the designated hazard zone, paralyzing transport arteries needed by emergency responders' (C)."
+            },
+            {
+              "id": "r-q17",
+              "type": "fill_blank",
+              "prompt": "Risk communication scholars recommend a policy of 'radical transparency of ________,' where officials openly share probability ranges and unknown factors.",
+              "acceptedAnswers": [
+                "uncertainty",
+                "uncertainties"
+              ],
+              "caseSensitive": false,
+              "explanation": "Paragraph 5 states: 'risk communication scholars advocate a paradigm of \"radical transparency of uncertainty.\"'"
+            },
+            {
+              "id": "r-q18",
+              "type": "true_false_ng",
+              "prompt": "Removing contaminated topsoil is financially more expensive than compensating dairy farmers for lost livelihoods.",
+              "correctAnswer": "NOT_GIVEN",
+              "explanation": "Paragraph 1 mentions topsoil removal in passing as a way physical isotopes can be remediated, but makes no financial comparison to compensating farmers."
+            }
+          ]
+        }
+      ]
+    },
+    "listening": {
+      "instructions": "You will hear three recordings. Each recording will be played twice. Answer questions l-q1 to l-q18. For C1 level, focus on implied meaning, speaker attitude, and argumentation.",
+      "parts": [
+        {
+          "id": "l-p1",
+          "title": "Facility AI Emergency Sequence - Extended Log",
+          "audioConfig": {
+            "scenario": "public_announcement",
+            "accent": "british",
+            "pacing": "fast",
+            "overallStyle": "urgent synthetic voice, rapidly escalating crisis, overlapping data corrections"
+          },
+          "speakers": [
+            {
+              "name": "Facility AI System",
+              "gender": "female",
+              "voiceName": "Kore",
+              "style": "formal, synthetic, increasingly strained and urgent"
+            }
+          ],
+          "transcript": "[Continuous high-pitched alarm and automated lockdown siren]\nFacility AI System: Critical alert: Reactor power output has critically exceeded safety thresholds. Automatic SCRAM procedure has failed to engage. Control rod insertion incomplete at 43 percent. Core temperature rising beyond design limits at 1,200 degrees Celsius and climbing. Core meltdown is now imminent. All personnel evacuate immediately via Route B. Do not use elevators. Repeat, do not use elevators.\nFacility AI System: Warning. Primary coolant system failure detected in Reactor 2. Coolant pressure has dropped to 22 percent of nominal. Backup cooling systems failed to engage due to loss of external power and failure of diesel generators. Containment vessel pressure at 87 percent and rising rapidly at 3 percent per minute. Hydrogen concentration in containment building now at 4.2 percent, approaching flammability limit.\nFacility AI System: Attention, personnel in Sectors C and D, proceed to decontamination checkpoints 4 and 5. Remove outer protective gear before exiting. Radiation monitoring stations report dose rates of 1.2 sieverts per hour at 500 meters from Reactor 2, and 340 millisieverts per hour at the main gate. Exposure for more than 10 minutes at 500 meters may result in acute radiation sickness and irreversible tissue damage. Potassium iodide distribution is now mandatory.\nFacility AI System: Priority alert: Hydrogen explosion confirmed at Reactor 2 at 02:47. South wall breached, roof structure collapsed. Radiation levels in the reactor building are now immediately lethal, exceeding sensor limits. Incident level reclassified: INES Scale 7, major accident, equivalent to Chernobyl. Structural integrity of primary containment compromised. All personnel must evacuate beyond contamination zone immediately. This is a severe release in progress.\nFacility AI System: Estimated contamination spread radius: 3.7 kilometers. Correction: data conflict detected. Recalculating. <short pause> 9.2 kilometers due to wind shear. Correction: 24.9 kilometers based on revised source term. <short pause> Correction: 45.3 kilometers, incorporating precipitation forecast. Correction: 79.8 kilometers. Final model predicts 79.8 kilometers downwind. Prevailing wind direction: north-east at 35 kilometers per hour, gusting to 50. Iodine prophylaxis is now mandatory for all personnel within 100 kilometers. Emergency services have been notified, but external response is delayed due to infrastructure damage.\nFacility AI System: Final warning. <short pause> Automated facility lockdown will initiate in 60 seconds. Oxygen levels in Sector B will be vented. This is not a drill. Repeat, this is not a drill. Evacuation is no longer optional.",
+          "questions": [
+            {
+              "id": "l-q1",
+              "type": "multiple_choice",
+              "prompt": "Why does the AI specifically mention that the SCRAM procedure failed?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "To explain why the core temperature is still rising despite safety systems"
+                },
+                {
+                  "id": "B",
+                  "text": "To instruct staff how to manually insert control rods"
+                },
+                {
+                  "id": "C",
+                  "text": "To indicate that elevators are still operational"
+                },
+                {
+                  "id": "D",
+                  "text": "To show that radiation levels are within normal limits"
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "SCRAM is the emergency shutdown. Its failure explains why 'Core temperature rising beyond design limits' and meltdown is imminent."
+            },
+            {
+              "id": "l-q2",
+              "type": "true_false_ng",
+              "prompt": "The backup cooling systems failed solely because the primary coolant pressure dropped.",
+              "correctAnswer": "FALSE",
+              "explanation": "AI states backup failed 'due to loss of external power and failure of diesel generators', not just pressure drop."
+            },
+            {
+              "id": "l-q3",
+              "type": "multiple_choice",
+              "prompt": "What does the sequence of corrections from 3.7km to 79.8km imply about the situation?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "The AI is deliberately downplaying the severity"
+                },
+                {
+                  "id": "B",
+                  "text": "Initial sensor data was underestimated and the model is recalculating with new variables"
+                },
+                {
+                  "id": "C",
+                  "text": "The wind direction has completely reversed"
+                },
+                {
+                  "id": "D",
+                  "text": "Personnel have successfully contained the spread"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "AI says 'data conflict detected. Recalculating... incorporating precipitation forecast' indicating real-time model update."
+            },
+            {
+              "id": "l-q4",
+              "type": "fill_blank",
+              "prompt": "Hydrogen concentration reached ________ percent, close to the flammability limit.",
+              "acceptedAnswers": [
+                "4.2",
+                "4.2 percent",
+                "4.2%",
+                "four point two"
+              ],
+              "caseSensitive": false,
+              "explanation": "Transcript: 'Hydrogen concentration in containment building now at 4.2 percent, approaching flammability limit.'"
+            },
+            {
+              "id": "l-q5",
+              "type": "multiple_choice",
+              "prompt": "What is the speaker's implied attitude in the final warning?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Reassuring and calm"
+                },
+                {
+                  "id": "B",
+                  "text": "Tentative and uncertain"
+                },
+                {
+                  "id": "C",
+                  "text": "Absolute urgency and non-negotiability"
+                },
+                {
+                  "id": "D",
+                  "text": "Sarcastic and dismissive"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "'Evacuation is no longer optional' and 'This is not a drill' show absolute urgency."
+            },
+            {
+              "id": "l-q6",
+              "type": "fill_blank",
+              "prompt": "The incident was reclassified to INES Scale 7, described as equivalent to ________.",
+              "acceptedAnswers": [
+                "Chernobyl",
+                "Chernobyl disaster",
+                "the Chernobyl accident"
+              ],
+              "caseSensitive": false,
+              "explanation": "AI says: 'INES Scale 7, major accident, equivalent to Chernobyl.'"
+            }
+          ],
+          "audioUrl": "/tests/audio/c1-advanced-english-test-01-l-p1.wav"
+        },
+        {
+          "id": "l-p2",
+          "title": "News Special Report: Northfield in Context",
+          "audioConfig": {
+            "scenario": "news_broadcast",
+            "accent": "british",
+            "pacing": "fast",
+            "overallStyle": "serious analytical news special, tense but controlled"
+          },
+          "speakers": [
+            {
+              "name": "News Anchor",
+              "gender": "male",
+              "voiceName": "Charon",
+              "style": "authoritative, analytical"
+            },
+            {
+              "name": "Sarah",
+              "gender": "female",
+              "voiceName": "Aoede",
+              "style": "urgent field reporter, slightly breathless"
+            }
+          ],
+          "transcript": "News Anchor: Good evening. At 3:15 PM today, the Office for Nuclear Regulation confirmed what many feared: the incident at Northfield has been provisionally classified as an INES Level 7, placing it alongside Chernobyl and Fukushima as a major accident involving a widespread release of radioactive material. This is a stunning escalation. Just four hours ago, it was a Level 5. To understand how we got here so quickly, we go live to Sarah Jenkins, three kilometers from the plant, who has been forced to fall back twice this afternoon. Sarah, the speed of this reclassification is unprecedented.\nSarah: It is, David, and it reflects a regulatory failure to anticipate a cascade. <breath> I am now at what was supposed to be the outer cordon, but we have just been ordered to retreat to 80 kilometers. Behind me, you can see the convoy from Millbridge, nearly 120,000 residents being moved in an operation the police admit was not rehearsed for a radius of this size. The real story here is not just the hydrogen explosion at 02:47, which we heard and which produced that dark plume, but the data leading up to it. Radiation monitors here jumped from background levels to over 800 millisieverts per hour in under ten minutes. <short pause> That suggests the primary containment was already compromised before the explosion, not by it.\nNews Anchor: That contradicts the operator's earlier statement this morning that containment was intact.\nSarah: Exactly. And that is why the regulator upgraded it. <sigh> Operators initially claimed the 1.2 sieverts per hour reading was a sensor malfunction. It was not. Emergency workers are now distributing potassium iodide, but interviews with residents reveal a deeper issue: many were given no clear information about evacuation routes, and some were told to shelter indoors even as the plume moved north-east at 35 kilometers per hour. <heavy breath> The wind is now the critical factor, it is pushing the release towards agricultural land that supplies 30 percent of the region's dairy. So the long-term question is no longer just health, it is economic viability.\nNews Anchor: Sarah Jenkins, thank you. Extraordinary reporting under extremely difficult conditions.",
+          "questions": [
+            {
+              "id": "l-q7",
+              "type": "multiple_choice",
+              "prompt": "According to the report, why is the rapid reclassification to Level 7 significant?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "It shows regulators were slow to recognize a cascade failure that was already underway"
+                },
+                {
+                  "id": "B",
+                  "text": "It proves the hydrogen explosion was relatively minor"
+                },
+                {
+                  "id": "C",
+                  "text": "It indicates the evacuation was rehearsed and orderly"
+                },
+                {
+                  "id": "D",
+                  "text": "It suggests radiation levels have now returned to normal"
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "Reporter says escalation reflects 'regulatory failure to anticipate a cascade' and that containment was compromised before explosion."
+            },
+            {
+              "id": "l-q8",
+              "type": "true_false_ng",
+              "prompt": "The operator initially dismissed the high radiation reading as a sensor error.",
+              "correctAnswer": "TRUE",
+              "explanation": "Sarah states: 'Operators initially claimed the 1.2 sieverts per hour reading was a sensor malfunction.'"
+            },
+            {
+              "id": "l-q9",
+              "type": "multiple_select",
+              "prompt": "Which TWO systemic problems are highlighted in the field report?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Lack of clear evacuation route information for residents"
+                },
+                {
+                  "id": "B",
+                  "text": "The wind pushing contamination toward vital agricultural areas"
+                },
+                {
+                  "id": "C",
+                  "text": "Successful rehearsal of an 80km evacuation"
+                },
+                {
+                  "id": "D",
+                  "text": "Immediate return to normal dairy production"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "B"
+              ],
+              "explanation": "Report mentions residents given no clear info about routes and wind pushing plume toward dairy land supplying 30% of region's dairy."
+            },
+            {
+              "id": "l-q10",
+              "type": "fill_blank",
+              "prompt": "Monitors jumped to over ________ millisieverts per hour in under ten minutes.",
+              "acceptedAnswers": [
+                "800",
+                "eight hundred",
+                "800 millisieverts",
+                "800 mSv"
+              ],
+              "caseSensitive": false,
+              "explanation": "Transcript: 'Radiation monitors here jumped from background levels to over 800 millisieverts per hour in under ten minutes.'"
+            },
+            {
+              "id": "l-q11",
+              "type": "multiple_choice",
+              "prompt": "What is implied about the operator's morning statement that containment was intact?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "It was accurate and reassuring"
+                },
+                {
+                  "id": "B",
+                  "text": "It was contradicted by subsequent radiation data"
+                },
+                {
+                  "id": "C",
+                  "text": "It was never actually made"
+                },
+                {
+                  "id": "D",
+                  "text": "It was supported by the regulator"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "Anchor says it contradicts earlier statement, and Sarah says primary containment was already compromised before explosion."
+            },
+            {
+              "id": "l-q12",
+              "type": "true_false_ng",
+              "prompt": "The evacuation of 120,000 residents had been thoroughly rehearsed for an 80km radius.",
+              "correctAnswer": "FALSE",
+              "explanation": "Police admit operation 'was not rehearsed for a radius of this size.'"
+            }
+          ],
+          "audioUrl": "/tests/audio/c1-advanced-english-test-01-l-p2.wav"
+        },
+        {
+          "id": "l-p3",
+          "title": "Panel: The Ethics of Fail-Safe Design",
+          "audioConfig": {
+            "scenario": "group_discussion",
+            "accent": "british",
+            "pacing": "fast",
+            "overallStyle": "intellectual, tense academic debate on regulatory ethics"
+          },
+          "speakers": [
+            {
+              "name": "Dr. Evans",
+              "gender": "female",
+              "voiceName": "Leda",
+              "style": "precise, concerned former IAEA inspector"
+            },
+            {
+              "name": "Prof. Malik",
+              "gender": "male",
+              "voiceName": "Algieba",
+              "style": "analytical ethicist, measured but critical"
+            }
+          ],
+          "transcript": "Prof. Malik: Welcome to this emergency colloquium on nuclear safety ethics. Dr. Evans, as a former IAEA inspector, you recently characterized the Northfield disaster as a classic cascade failure. But in an inquiry on safety ethics, isn't 'classic' merely a euphemism for preventable?\nDr. Evans: It is. What we saw at Northfield — loss of external power, diesel generators failing to start, then hydrogen build-up — is precisely the sequence we warned about after Fukushima. <sigh> The industry promised redundant, independent safety systems. Yet here, the backup cooling depended on a shared electrical bus. That is not redundancy, that is an illusion of redundancy. <short pause> The question is why the regulator accepted that design.\nProf. Malik: <throat-clearing> And that brings us to the ethical core. Northfield passed its ten-year safety review last year despite documented concerns about its shared cooling loop. Why? Because retrofitting a truly independent system would have cost an estimated 120 million pounds and required a six-month shutdown. There is a well-documented phenomenon we call regulatory capture, where the regulator, over time, begins to see the world through the operator's eyes — balancing economic viability against a risk they deem hypothetical. Until it is not hypothetical. But turning to the emergency response, critics argue the AI's rapidly shifting evacuation radius caused unnecessary panic.\nDr. Evans: <chuckle> I would argue the opposite. A single, confident, but false reassuring number causes complacency. The AI recalculating from 3.7 to 79.8 kilometers in real-time, incorporating wind shear and source term revisions, is actually more transparent. It is terrifying, yes, but it reflects the inherent uncertainty of a severe release. <short pause> What was unethical was telling residents to shelter indoors while the model already predicted an 80-kilometer plume.\nProf. Malik: Exactly. Potassium iodide saturates the thyroid and blocks iodine-131, but it does nothing for cesium-137, which contaminates soil for decades. <sigh> If containment is not restored within 48 hours, we are not just talking about acute exposure, we are talking about a long-term exclusion zone, the loss of agricultural livelihoods, and intergenerational health monitoring. The priority now cannot be saving the reactor, which is lost, but preserving the containment structure and, crucially, public trust. <short pause> And trust, once contaminated, has a half-life far longer than any isotope.\nDr. Evans: A sobering conclusion, Professor Malik, but one our institutions must urgently confront.",
+          "questions": [
+            {
+              "id": "l-q13",
+              "type": "multiple_choice",
+              "prompt": "What does Dr. Evans imply by calling redundancy an 'illusion of redundancy'?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "Backup systems existed on paper but shared a common point of failure"
+                },
+                {
+                  "id": "B",
+                  "text": "There were no backup systems at all"
+                },
+                {
+                  "id": "C",
+                  "text": "Backup systems worked perfectly"
+                },
+                {
+                  "id": "D",
+                  "text": "Redundancy is unnecessary in modern reactors"
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "She says backup cooling depended on a shared electrical bus, so not truly independent."
+            },
+            {
+              "id": "l-q14",
+              "type": "multiple_select",
+              "prompt": "According to Prof. Malik, which TWO factors contribute to regulatory capture?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "The high financial cost and operational downtime of retrofitting"
+                },
+                {
+                  "id": "B",
+                  "text": "The regulator adopting the operator's perspective on risk"
+                },
+                {
+                  "id": "C",
+                  "text": "The use of potassium iodide as a perfect solution"
+                },
+                {
+                  "id": "D",
+                  "text": "The complete absence of safety reviews"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "B"
+              ],
+              "explanation": "He cites 120 million pounds and six-month shutdown cost, and defines capture as regulator seeing world through operator's eyes."
+            },
+            {
+              "id": "l-q15",
+              "type": "true_false_ng",
+              "prompt": "Dr. Evans believes the AI should have given a single fixed evacuation radius to avoid panic.",
+              "correctAnswer": "FALSE",
+              "explanation": "She argues opposite: recalculating is more transparent and honest than a single false reassuring number."
+            },
+            {
+              "id": "l-q16",
+              "type": "multiple_choice",
+              "prompt": "Why does Prof. Malik mention cesium-137?",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "To show potassium iodide is not a complete protection against long-term contamination"
+                },
+                {
+                  "id": "B",
+                  "text": "To prove iodine tablets are unnecessary"
+                },
+                {
+                  "id": "C",
+                  "text": "To explain why the reactor can still be saved"
+                },
+                {
+                  "id": "D",
+                  "text": "To argue that agricultural land is safe"
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "He says iodide blocks iodine-131 but does nothing for cesium-137 which contaminates soil for decades."
+            },
+            {
+              "id": "l-q17",
+              "type": "fill_blank",
+              "prompt": "The panel suggests the true long-term loss, beyond the reactor itself, is public ________.",
+              "acceptedAnswers": [
+                "trust",
+                "public trust"
+              ],
+              "caseSensitive": false,
+              "explanation": "Prof. Malik: 'preserving the containment structure and, crucially, public trust. And trust, once contaminated, has a half-life far longer than any isotope.'"
+            },
+            {
+              "id": "l-q18",
+              "type": "true_false_ng",
+              "prompt": "Both panelists agree that saving Reactor 2 itself should still be the primary objective.",
+              "correctAnswer": "FALSE",
+              "explanation": "Both state priority is containment structure, not saving reactor which is lost."
+            }
+          ],
+          "audioUrl": "/tests/audio/c1-advanced-english-test-01-l-p3.wav"
+        }
+      ]
+    },
+    "speaking": {
+      "instructions": "Read the advanced speaking tasks carefully and prepare your responses according to the C1 assessment rubrics, focusing on abstract argumentation, nuance, and lexical precision.",
+      "tasks": [
+        {
+          "id": "s-t1",
+          "title": "Task 1: Long Turn Presentation (Transparency vs. Stability in Crisis Management)",
+          "prompt": "Deliver a structured 2-minute presentation addressing the following question:\n\n'When a major technological or environmental crisis occurs, should authorities release raw, real-time predictive data to the public immediately, or should they withhold figures until the data has been verified to prevent public panic?'\n\nYou should:\n- Weigh the ethical and practical risks of both complete transparency and paternalistic caution\n- Discuss how contradictory or shifting official statements affect long-term institutional trust\n- Formulate and defend your own nuanced position on how uncertainty should be communicated.",
+          "rubric": [
+            {
+              "criterion": "Fluency and Coherence",
+              "description": "Sustains a sophisticated, well-structured argument over 2 minutes with effortless flow, using advanced discourse markers ('Conversely', 'Be that as it may', 'By the same token')."
+            },
+            {
+              "criterion": "Lexical Resource",
+              "description": "Demonstrates command of C1/C2 vocabulary related to governance, risk, and epistemology (e.g., 'paternalistic', 'complacency', 'credibility', 'prophylactic', 'accountability')."
+            },
+            {
+              "criterion": "Grammatical Range and Accuracy",
+              "description": "Uses complex syntax accurately, including mixed conditionals, inversions ('Were authorities to conceal...'), passive structures, and cleft sentences."
+            },
+            {
+              "criterion": "Pronunciation",
+              "description": "Uses varied intonation, pitch, and strategic pausing to emphasize rhetorical contrasts and maintain listener engagement."
+            }
+          ],
+          "sampleAnswer": "The question of how much raw information authorities ought to disclose during an unfolding catastrophe strikes at the very heart of democratic governance. Historically, emergency planners have leaned toward paternalistic caution, operating on the assumption that releasing unverified, worst-case projections will inevitably trigger mass hysteria and gridlock. From a purely logistical standpoint, one can see the temptation: if a predictive model jumps erratically from a three-kilometer to an eighty-kilometer hazard zone, broadcasting every calculation might overwhelm transport networks before responders can establish cordons.\n\nHowever, this instinct to sanitize reality carries a far deadlier risk. As recent industrial disasters demonstrate, offering a single, falsely reassuring figure fosters fatal complacency, leading citizens to shelter in place when they should be evacuating. Even more damaging is the long-term erosion of institutional credibility. When observable reality—such as an explosion or retreating police convoys—contradicts official assurances that containment is intact, public trust evaporates instantaneously. And once the public suspects a cover-up, they stop complying with vital health directives altogether.\n\nTherefore, I firmly believe authorities must reject paternalistic censorship in favor of transparent uncertainty. Rather than withholding data until it is neat and conclusive, officials should release real-time projections alongside clear explanations of the variables—such as wind shear or sensor conflicts—driving those revisions. Treating citizens as rational adults capable of grasping probability is the only way to preserve both human life and civic trust."
+        },
+        {
+          "id": "s-t2",
+          "title": "Task 2: Abstract & Ethical Discussion (Regulation, Cost, and Catastrophic Risk)",
+          "prompt": "Engage in an in-depth discussion exploring the ethical and economic dilemmas of regulating high-risk industries (such as nuclear energy, aviation, or artificial intelligence):\n\n1. Why does 'regulatory capture' occur, and how can oversight bodies remain truly independent from the industries they regulate?\n2. At what point does the financial cost of retrofitting safety systems (e.g., spending hundreds of millions of pounds to guard against a rare cascade failure) become unjustifiable, or should human safety always carry an infinite price tag?\n3. Should executives and regulators face criminal liability when a 'hypothetical' risk they chose to tolerate materializes into a real disaster?",
+          "rubric": [
+            {
+              "criterion": "Fluency and Coherence",
+              "description": "Handles abstract, philosophical, and policy-oriented concepts with ease, synthesizing multiple perspectives without noticeable searching for words."
+            },
+            {
+              "criterion": "Lexical Resource",
+              "description": "Deploys idiomatic and domain-specific collocations naturally ('regulatory capture', 'cost-benefit analysis', 'conflict of interest', 'criminal negligence', 'systemic vulnerability')."
+            },
+            {
+              "criterion": "Grammatical Range and Accuracy",
+              "description": "Consistently maintains high grammatical accuracy across complex clause structures, modality of obligation and hindsight ('ought to have foreseen'), and subjunctive forms."
+            },
+            {
+              "criterion": "Pronunciation",
+              "description": "Articulates complex multisyllabic words clearly and uses natural stress timing to convey authority and analytical precision."
+            }
+          ],
+          "sampleAnswer": "Addressing the first issue, regulatory capture is an insidious phenomenon because it rarely involves outright bribery; rather, it stems from intellectual and professional proximity. Specialized regulators often recruit their inspectors from the very industries they oversee, meaning both sides share the same technical worldview and economic assumptions. Over time, regulators begin to sympathize with the operator's financial pressures—such as avoiding a costly six-month shutdown—and convince themselves that a shared cooling loop represents a merely hypothetical risk. To prevent this, oversight bodies need mandatory rotation of personnel, independent public funding, and external auditing by international panels like the IAEA.\n\nRegarding the second question, while politicians love to claim that human life is priceless, every engineering project involves an implicit cost-benefit trade-off. If we demanded absolute zero risk, no airplane would ever take off and no hospital would ever open. Nevertheless, in tightly coupled systems capable of causing intergenerational contamination—like a Level 7 nuclear release—standard economic discounting breaks down. Spending a hundred and twenty million pounds on true redundancy is trivial compared to the multibillion-pound loss of an entire agricultural region.\n\nFinally, on the question of criminal liability, if an inquiry proves that executives and regulators knowingly signed off on a flawed design to protect short-term profitability despite documented warnings, financial fines are wholly inadequate. Imposing personal criminal liability for gross negligence is the only deterrent strong enough to ensure that boardroom decisions prioritize public survival over quarterly balance sheets."
+        }
+      ]
+    },
+    "writing": {
+      "instructions": "Complete both C1 writing tasks in the spaces provided. Adhere to the target word count of 220–260 words per task, using an advanced academic or formal register appropriate for the specified audience.",
+      "tasks": [
+        {
+          "id": "w-t1",
+          "title": "Task 1: Discursive Essay on High-Risk Infrastructure and Governance",
+          "prompt": "Your university seminar has been debating how governments should manage critical high-risk infrastructure (such as nuclear power plants, chemical facilities, and automated grids). Your professor has asked you to write a discursive essay evaluating which two measures are most crucial for preventing catastrophic failures.\n\nWrite an essay discussing TWO of the following measures in the notes below:\n1. Enforcing strict regulatory independence and mandatory hardware redundancy\n2. Investing in real-time AI predictive modeling and automated fail-safes\n3. Ensuring transparent public risk communication and large-scale emergency rehearsals\n\nYou must explain which ONE of the two chosen measures you consider more fundamental, providing persuasive reasons to support your argument.\n\nWrite your essay in 220–260 words in an appropriate academic style.",
+          "minWords": 220,
+          "rubric": [
+            {
+              "criterion": "Content / Task Achievement",
+              "description": "Thoroughly evaluates two of the three listed measures and persuasively argues which one is more fundamental, within the 220–260 word range."
+            },
+            {
+              "criterion": "Communicative Achievement",
+              "description": "Maintains a sophisticated, objective, and authoritative academic register throughout, effectively persuading an educated reader."
+            },
+            {
+              "criterion": "Organization",
+              "description": "Exhibits seamless cohesion and logical progression across introduction, comparative body paragraphs, and a decisive conclusion."
+            },
+            {
+              "criterion": "Language",
+              "description": "Demonstrates C1 mastery of complex grammar (inversions, participle clauses, nominalization) and precise lexis ('regulatory capture', 'redundancy', 'mitigation', 'catastrophic')."
+            }
+          ],
+          "sampleAnswer": "The governance of high-risk infrastructure—ranging from nuclear reactors to chemical processing plants—presents modern society with an acute dilemma: how to harness immense technological power without succumbing to catastrophic cascade failures. While numerous safeguards have been proposed, enforcing strict regulatory independence alongside genuine hardware redundancy, and ensuring transparent public emergency preparedness, stand out as the most vital pillars of risk governance.\n\nFirst and foremost, robust regulatory oversight is essential to counteract the commercial pressures that erode safety margins. Left to self-regulate, operators frequently succumb to cost-cutting, settling for an 'illusion of redundancy' where backup systems share vulnerable electrical buses or cooling loops to avoid expensive retrofitting shutdowns. Only an autonomous regulator, insulated from regulatory capture, can compel companies to invest in truly independent fail-safe architectures before a hypothetical vulnerability turns lethal.\n\nEqually significant, however, is transparent risk communication coupled with realistic emergency rehearsals. Even the most sophisticated engineering cannot guarantee absolute immunity against unforeseen compound disasters. When containment fails, human survival depends on rapid, orderly evacuation. Withholding worst-case plume projections to prevent panic invariably backfires, destroying institutional credibility and leaving ratusan of thousands of residents stranded without rehearsed escape routes.\n\nWeighing both imperatives, enforcing strict regulatory independence and physical redundancy is undeniably the more fundamental measure. Whereas emergency preparedness merely mitigates the aftermath of a disaster once containment is lost, rigorous, uncompromised engineering oversight prevents the cascade failure from occurring in the first place. Ultimately, protecting both the biosphere and public trust begins at the blueprint stage."
+        },
+        {
+          "id": "w-t2",
+          "title": "Task 2: Formal Proposal for Municipal Emergency Preparedness Reform",
+          "prompt": "Following the severe industrial accident in the neighboring district of Northfield, your regional council has commissioned a review of local emergency preparedness. As a senior advisor on the Civil Contingency Committee, you have been asked to write a formal proposal outlining how your municipality can upgrade its crisis response framework.\n\nIn your proposal, you should:\n- Briefly identify the current weaknesses in local emergency readiness exposed by recent events\n- Propose specific improvements regarding public warning systems and evacuation logistics\n- Explain how these measures will safeguard both public health and long-term regional stability.\n\nWrite your proposal in 220–260 words in an appropriate formal style, using clear headings.",
+          "minWords": 220,
+          "rubric": [
+            {
+              "criterion": "Content / Task Achievement",
+              "description": "Identifies current readiness gaps, proposes concrete logistical and communication reforms, and justifies their long-term value within 220–260 words."
+            },
+            {
+              "criterion": "Communicative Achievement",
+              "description": "Adopts the conventions of a formal policy proposal (clear headings, impersonal tone, persuasive and forward-looking recommendations)."
+            },
+            {
+              "criterion": "Organization",
+              "description": "Structured clearly with an introduction/purpose, distinct sectioned headings, and a concluding justification."
+            },
+            {
+              "criterion": "Language",
+              "description": "Utilizes advanced administrative and policy vocabulary ('contingency', 'prophylaxis', 'dissemination', 'inter-agency coordination') and varied modal/subjunctive structures."
+            }
+          ],
+          "sampleAnswer": "Proposal: Modernizing Municipal Civil Contingency and Evacuation Protocols\n\nIntroduction\nThe recent Level 7 incident at Northfield has exposed critical vulnerabilities in regional disaster readiness. Specifically, the chaotic displacement of 120,000 residents demonstrated that existing contingency plans are wholly inadequate for rapid-onset cascade failures. This proposal outlines three urgent reforms to fortify our municipality's crisis response framework.\n\nCurrent Deficiencies\nAt present, our municipality's emergency drills only simulate localized incidents within a five-kilometer radius. Furthermore, communication protocols rely on delayed press briefings rather than real-time data sharing, which risks creating contradictory messaging—such as advising residents to shelter indoors while toxic plumes advance toward agricultural zones.\n\nRecommended Interventions\n1. Transparent Algorithmic Alerting: We must integrate our civil warning network directly with environmental monitoring stations. Rather than withholding shifting projections, automated mobile alerts should communicate real-time hazard radii alongside clear directional evacuation routes.\n2. Extended-Radius Logistics and Prophylaxis: The council should pre-position potassium iodide stockpiles at neighborhood schools and pharmacies rather than central depots. Additionally, annual evacuation rehearsals must be expanded to cover an eighty-kilometer perimeter, incorporating dedicated contraflow highway lanes.\n\nLong-Term Justification\nWhile implementing these logistical upgrades requires substantial municipal expenditure, the cost of inaction is immeasurable. Proactive transparency and rehearsed mobility will not only prevent acute radiation exposure during the critical first hours of an emergency, but will also preserve institutional credibility—ensuring that our community remains resilient and cooperative under extreme pressure."
+        }
+      ]
+    }
+  }
+}

@@ -21,6 +21,11 @@ import {
 } from '@/services/testProgressStorage';
 import { gradeWritingTaskWithServer } from '@/services/aiApi';
 import { useNavigationGuard } from './NavigationGuard';
+import {
+  ListeningAudioProvider,
+  ListeningAudioPlayer,
+  StickyListeningMiniPlayer,
+} from './ListeningAudioPlayer';
 
 type SkillTab = 'reading' | 'listening' | 'speaking' | 'writing';
 
@@ -30,19 +35,40 @@ interface TestRunnerViewProps {
   initialSection?: SkillTab;
 }
 
-const SKILL_TABS: SkillTab[] = ['reading', 'listening', 'speaking', 'writing'];
+const SKILL_TABS: SkillTab[] = ['reading', 'listening', 'writing', 'speaking'];
+const ACTIVE_SKILL_TABS: SkillTab[] = ['reading', 'listening', 'writing'];
 const TAB_LABELS: Record<SkillTab, string> = {
   reading: '1. Reading',
   listening: '2. Listening',
-  speaking: '3. Speaking',
-  writing: '4. Writing',
+  writing: '3. Writing',
+  speaking: '4. Speaking',
 };
+
+export function formatSectionTitle(prefix: string, index: number, rawTitle?: string): string {
+  const trimmed = (rawTitle || '').trim();
+  const cleaned = trimmed
+    .replace(
+      new RegExp(
+        `^(?:${prefix}|Passage|Part|Task|Section|Topic|Conversation)\\s*\\d*\\s*[:\\-–—.]?\\s*`,
+        'i'
+      ),
+      ''
+    )
+    .trim();
+
+  if (cleaned) {
+    return `${prefix} ${index}: ${cleaned}`;
+  }
+  return trimmed || `${prefix} ${index}`;
+}
 
 export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled, initialSection }) => {
   const router = useRouter();
   const { setIsTestInProgress } = useNavigationGuard();
 
-  const [activeTab, setActiveTab] = useState<SkillTab>(initialSection || 'reading');
+  const [activeTab, setActiveTab] = useState<SkillTab>(
+    initialSection === 'speaking' ? 'reading' : initialSection || 'reading'
+  );
   const [answers, setAnswers] = useState<UserAnswers>({
     reading: {},
     listening: {},
@@ -54,6 +80,24 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
   const [lastSavedNotice, setLastSavedNotice] = useState<string>('');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Pre-calculate sequential 1-based question numbers for clean UI display
+  const questionNumberMap = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    let rCount = 1;
+    test.sections.reading?.passages?.forEach((p) => {
+      p.questions?.forEach((q) => {
+        map[q.id] = rCount++;
+      });
+    });
+    let lCount = 1;
+    test.sections.listening?.parts?.forEach((part) => {
+      part.questions?.forEach((q) => {
+        map[q.id] = lCount++;
+      });
+    });
+    return map;
+  }, [test]);
+
   // Restore saved progress on mount & initialize navigation guard
   useEffect(() => {
     setIsTestInProgress(true);
@@ -61,17 +105,18 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
 
     if (existing) {
       setAnswers(existing.answers);
-      if (initialSection) {
+      if (initialSection && initialSection !== 'speaking') {
         setActiveTab(initialSection);
       } else {
-        setActiveTab(existing.lastActiveSection);
-        window.history.replaceState(null, '', `/test/${test.id}/${existing.lastActiveSection}`);
+        const targetSection = existing.lastActiveSection === 'speaking' ? 'reading' : existing.lastActiveSection;
+        setActiveTab(targetSection);
+        window.history.replaceState(null, '', `/test/${test.id}/${targetSection}`);
       }
       setLastSavedNotice(
         `Đã khôi phục tiến độ lưu lúc ${new Date(existing.updatedAt).toLocaleTimeString('vi-VN')}`
       );
     } else {
-      if (!initialSection) {
+      if (!initialSection || initialSection === 'speaking') {
         window.history.replaceState(null, '', `/test/${test.id}/reading`);
       }
     }
@@ -87,10 +132,12 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
   // Handle browser back/forward buttons (popstate)
   useEffect(() => {
     const handlePopState = () => {
-      const parts = window.location.pathname.split('/');
-      const section = parts[parts.length - 1] as SkillTab;
-      if (SKILL_TABS.includes(section)) {
-        setActiveTab(section);
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      const lastPart = parts[parts.length - 1] as SkillTab;
+      if (SKILL_TABS.includes(lastPart)) {
+        setActiveTab(lastPart);
+      } else {
+        setActiveTab('reading');
       }
     };
     window.addEventListener('popstate', handlePopState);
@@ -112,13 +159,17 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
     setLastSavedNotice(`Đã lưu nội bộ lúc ${new Date(now).toLocaleTimeString('vi-VN')}`);
   };
 
-  const currentTabIndex = SKILL_TABS.indexOf(activeTab);
-  const hasNextTab = currentTabIndex < SKILL_TABS.length - 1;
-  const nextTab = hasNextTab ? SKILL_TABS[currentTabIndex + 1] : null;
-  const hasPrevTab = currentTabIndex > 0;
-  const prevTab = hasPrevTab ? SKILL_TABS[currentTabIndex - 1] : null;
+  const currentFlowIndex = ACTIVE_SKILL_TABS.indexOf(activeTab);
+  const hasNextTab = currentFlowIndex >= 0 && currentFlowIndex < ACTIVE_SKILL_TABS.length - 1;
+  const nextTab = hasNextTab ? ACTIVE_SKILL_TABS[currentFlowIndex + 1] : null;
+  const hasPrevTab = currentFlowIndex > 0;
+  const prevTab = hasPrevTab ? ACTIVE_SKILL_TABS[currentFlowIndex - 1] : null;
 
   const handleGoToTab = (tab: SkillTab) => {
+    if (tab === 'speaking') {
+      alert('Phần thi Speaking hiện đang được phát triển (Coming Soon). Vui lòng hoàn thành các phần thi Reading, Listening và Writing!');
+      return;
+    }
     setActiveTab(tab);
     window.history.replaceState(null, '', `/test/${test.id}/${tab}`);
     persistDraft(answers, tab);
@@ -126,17 +177,15 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
   };
 
   const handleSingleAnswerChange = (section: 'reading' | 'listening', qId: string, value: string) => {
-    setAnswers((prev) => {
-      const updated: UserAnswers = {
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [qId]: value,
-        },
-      };
-      persistDraft(updated, activeTab);
-      return updated;
-    });
+    const updated: UserAnswers = {
+      ...answers,
+      [section]: {
+        ...answers[section],
+        [qId]: value,
+      },
+    };
+    setAnswers(updated);
+    persistDraft(updated, activeTab);
   };
 
   const handleMultipleSelectChange = (
@@ -144,50 +193,44 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
     qId: string,
     optionId: string
   ) => {
-    setAnswers((prev) => {
-      const currentList = (prev[section][qId] as string[]) || [];
-      const exists = currentList.includes(optionId);
-      const updatedList = exists
-        ? currentList.filter((item) => item !== optionId)
-        : [...currentList, optionId];
-      const updated: UserAnswers = {
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [qId]: updatedList,
-        },
-      };
-      persistDraft(updated, activeTab);
-      return updated;
-    });
+    const currentList = (answers[section][qId] as string[]) || [];
+    const exists = currentList.includes(optionId);
+    const updatedList = exists
+      ? currentList.filter((item) => item !== optionId)
+      : [...currentList, optionId];
+    const updated: UserAnswers = {
+      ...answers,
+      [section]: {
+        ...answers[section],
+        [qId]: updatedList,
+      },
+    };
+    setAnswers(updated);
+    persistDraft(updated, activeTab);
   };
 
   const handleSpeakingChange = (taskId: string, text: string) => {
-    setAnswers((prev) => {
-      const updated: UserAnswers = {
-        ...prev,
-        speaking: {
-          ...prev.speaking,
-          [taskId]: text,
-        },
-      };
-      persistDraft(updated, activeTab);
-      return updated;
-    });
+    const updated: UserAnswers = {
+      ...answers,
+      speaking: {
+        ...answers.speaking,
+        [taskId]: text,
+      },
+    };
+    setAnswers(updated);
+    persistDraft(updated, activeTab);
   };
 
   const handleWritingChange = (taskId: string, text: string) => {
-    setAnswers((prev) => {
-      const updated: UserAnswers = {
-        ...prev,
-        writing: {
-          ...prev.writing,
-          [taskId]: text,
-        },
-      };
-      persistDraft(updated, activeTab);
-      return updated;
-    });
+    const updated: UserAnswers = {
+      ...answers,
+      writing: {
+        ...answers.writing,
+        [taskId]: text,
+      },
+    };
+    setAnswers(updated);
+    persistDraft(updated, activeTab);
   };
 
   const stopAudio = () => {
@@ -283,6 +326,7 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
 
   const renderQuestion = (q: Question, section: 'reading' | 'listening') => {
     const rawVal = answers[section][q.id];
+    const qNumber = questionNumberMap[q.id] || 1;
 
     switch (q.type) {
       case 'multiple_choice': {
@@ -291,7 +335,7 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
         return (
           <fieldset key={q.id} className="border-2 border-black p-4 space-y-3 bg-[#fffdf5]">
             <legend className="font-bold text-sm px-2 border-2 border-black bg-[#f4eed9] text-black">
-              Câu hỏi: {mcq.id}
+              Câu hỏi {qNumber}
             </legend>
             <p className="font-semibold text-black">{mcq.prompt}</p>
             <div className="space-y-2 pt-1">
@@ -327,7 +371,7 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
         return (
           <fieldset key={q.id} className="border-2 border-black p-4 space-y-3 bg-[#fffdf5]">
             <legend className="font-bold text-sm px-2 border-2 border-black bg-[#f4eed9] text-black">
-              Câu hỏi: {msq.id} (Chọn nhiều đáp án)
+              Câu hỏi {qNumber} (Chọn nhiều đáp án)
             </legend>
             <p className="font-semibold text-black">{msq.prompt}</p>
             <div className="space-y-2 pt-1">
@@ -366,7 +410,7 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
         return (
           <fieldset key={q.id} className="border-2 border-black p-4 space-y-3 bg-[#fffdf5]">
             <legend className="font-bold text-sm px-2 border-2 border-black bg-[#f4eed9] text-black">
-              Câu hỏi: {fbq.id} (Điền từ vào chỗ trống)
+              Câu hỏi {qNumber} (Điền từ vào chỗ trống)
             </legend>
             <label htmlFor={`input_${q.id}`} className="block font-semibold text-black">
               {fbq.prompt}
@@ -392,7 +436,7 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
         return (
           <fieldset key={q.id} className="border-2 border-black p-4 space-y-3 bg-[#fffdf5]">
             <legend className="font-bold text-sm px-2 border-2 border-black bg-[#f4eed9] text-black">
-              Câu hỏi: {tfq.id} (True / False / Not Given)
+              Câu hỏi {qNumber} (True / False / Not Given)
             </legend>
             <p className="font-semibold text-black">{tfq.prompt}</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
@@ -428,15 +472,15 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
   );
 
   return (
-    <main className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+    <main className="max-w-5xl mx-auto p-3 sm:p-4 md:p-6 space-y-6 w-full min-w-0 overflow-x-hidden">
       {/* Test Title Bar */}
-      <div className="border-2 border-black p-4 bg-[#fffdf5] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-        <div className="space-y-1">
+      <div className="border-2 border-black p-4 bg-[#fffdf5] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-full min-w-0">
+        <div className="space-y-1 min-w-0 max-w-full">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-mono font-bold px-2 py-0.5 border-2 border-black bg-[#f4eed9] inline-block">
+            <span className="text-xs font-mono font-bold px-2 py-0.5 border-2 border-black bg-[#f4eed9] inline-block break-all max-w-full">
               {test.id}
             </span>
-            <span className="text-xs font-mono font-bold px-2 py-0.5 border-2 border-black bg-black text-[#fffdf5]">
+            <span className="text-xs font-mono font-bold px-2 py-0.5 border-2 border-black bg-black text-[#fffdf5] shrink-0">
               Tiến độ: {progressStats.answeredCount}/{progressStats.totalCount} ({progressPercent}%)
             </span>
             {lastSavedNotice && (
@@ -445,11 +489,11 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
               </span>
             )}
           </div>
-          <h2 className="text-xl font-black mt-1 text-black">{test.title}</h2>
-          <p className="text-xs font-medium text-neutral-800">{test.description}</p>
+          <h2 className="text-lg sm:text-xl font-black mt-1 text-black break-words">{test.title}</h2>
+          <p className="text-xs font-medium text-neutral-800 break-words">{test.description}</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           <button
             type="button"
             onClick={handlePauseAndExit}
@@ -487,6 +531,7 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
       >
         {SKILL_TABS.map((tab) => {
           const isActive = activeTab === tab;
+          const isSpeaking = tab === 'speaking';
           return (
             <button
               key={tab}
@@ -496,10 +541,19 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
               id={`tab-${tab}`}
               type="button"
               onClick={() => handleGoToTab(tab)}
-              className={`py-3 px-4 text-center font-bold border-2 border-black transition-colors cursor-pointer ${isActive ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-[#f4eed9]'
+              className={`py-2.5 sm:py-3 px-2 sm:px-4 text-center font-bold border-2 border-black transition-colors cursor-pointer relative ${isActive
+                  ? 'bg-black text-[#fffdf5]'
+                  : isSpeaking
+                    ? 'bg-[#fcf8ed] text-neutral-600 hover:bg-[#f4eed9]'
+                    : 'bg-[#fffdf5] text-black hover:bg-[#f4eed9]'
                 }`}
             >
-              {TAB_LABELS[tab]}
+              <span>{TAB_LABELS[tab]}</span>
+              {isSpeaking && (
+                <span className="block text-[10px] font-mono font-bold px-1.5 py-0.2 mt-0.5 border border-black bg-[#f4eed9] text-black w-max mx-auto">
+                  Coming soon
+                </span>
+              )}
             </button>
           );
         })}
@@ -523,7 +577,7 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
               <div key={passage.id} className="space-y-6">
                 <article className="border-2 border-black p-5 bg-[#fffdf5] space-y-3">
                   <h3 className="text-lg font-black border-b-2 border-black pb-2 text-black">
-                    Passage {pIndex + 1}: {passage.title}
+                    {formatSectionTitle('Passage', pIndex + 1, passage.title)}
                   </h3>
                   <div className="text-black leading-relaxed whitespace-pre-line text-sm md:text-base font-serif">
                     {passage.content}
@@ -543,98 +597,44 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
 
         {/* LISTENING PANEL */}
         {activeTab === 'listening' && (
-          <div
-            id="panel-listening"
-            role="tabpanel"
-            aria-labelledby="tab-listening"
-            className="space-y-6"
+          <ListeningAudioProvider
+            parts={test.sections.listening.parts}
+            isCurrentTab={activeTab === 'listening'}
           >
-            <div className="p-3.5 border-2 border-black bg-[#f4eed9] text-sm font-semibold text-black">
-              <strong>Hướng dẫn:</strong> {test.sections.listening.instructions}
-            </div>
-
-            {test.sections.listening.parts.map((part, pIndex) => (
-              <div key={part.id} className="space-y-6">
-                <article className="border-2 border-black p-5 bg-[#fffdf5] space-y-4">
-                  <h3 className="text-lg font-black border-b-2 border-black pb-2 text-black">
-                    Part {pIndex + 1}: {part.title}
-                  </h3>
-
-                  <div className="p-4 border-2 border-black bg-[#fcf8ed] space-y-3">
-                    <p className="text-sm font-bold text-black">Trình phát Audio:</p>
-                    {part.audioUrl && (
-                      <audio
-                        controls
-                        className="w-full"
-                        aria-label={`Âm thanh cho ${part.title}`}
-                        src={part.audioUrl}
-                      >
-                        Trình duyệt không hỗ trợ thẻ audio.
-                      </audio>
-                    )}
-
-                  </div>
-                </article>
-
-                <div className="space-y-4">
-                  <h4 className="font-bold text-sm text-black uppercase tracking-wide">
-                    Câu hỏi cho phần nghe {pIndex + 1}:
-                  </h4>
-                  {part.questions.map((q) => renderQuestion(q, 'listening'))}
-                </div>
+            <div
+              id="panel-listening"
+              role="tabpanel"
+              aria-labelledby="tab-listening"
+              className="space-y-6"
+            >
+              <div className="p-3.5 border-2 border-black bg-[#f4eed9] text-sm font-semibold text-black">
+                <strong>Hướng dẫn:</strong> {test.sections.listening.instructions}
               </div>
-            ))}
-          </div>
-        )}
 
-        {/* SPEAKING PANEL */}
-        {activeTab === 'speaking' && (
-          <div
-            id="panel-speaking"
-            role="tabpanel"
-            aria-labelledby="tab-speaking"
-            className="space-y-6"
-          >
-            <div className="p-3.5 border-2 border-black bg-[#f4eed9] text-sm font-semibold text-black">
-              <strong>Hướng dẫn:</strong> {test.sections.speaking.instructions}
+              {/* Sticky Mini-Player xuất hiện khi cuộn xuống làm câu hỏi */}
+              <StickyListeningMiniPlayer />
+
+              {test.sections.listening.parts.map((part, pIndex) => (
+                <div key={part.id} className="space-y-6">
+                  <article className="border-2 border-black p-5 bg-[#fffdf5] space-y-4">
+                    <h3 className="text-lg font-black border-b-2 border-black pb-2 text-black">
+                      {formatSectionTitle('Part', pIndex + 1, part.title)}
+                    </h3>
+
+                    {/* Trình phát âm thanh Neo-brutalism có sóng âm và scrubber mượt */}
+                    <ListeningAudioPlayer part={part} partIndex={pIndex} />
+                  </article>
+
+                  <div className="space-y-4">
+                    <h4 className="font-bold text-sm text-black uppercase tracking-wide">
+                      Câu hỏi cho phần nghe {pIndex + 1}:
+                    </h4>
+                    {part.questions.map((q) => renderQuestion(q, 'listening'))}
+                  </div>
+                </div>
+              ))}
             </div>
-
-            {test.sections.speaking.tasks.map((task, tIndex) => {
-              const currentNotes = answers.speaking[task.id] || '';
-              return (
-                <article key={task.id} className="border-2 border-black p-5 bg-[#fffdf5] space-y-4">
-                  <h3 className="text-lg font-black border-b-2 border-black pb-2 text-black">
-                    Task {tIndex + 1}: {task.title}
-                  </h3>
-
-                  <div className="p-4 border-2 border-black bg-[#f4eed9] whitespace-pre-line text-sm md:text-base font-semibold text-black">
-                    {task.prompt}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      htmlFor={`speaking_notes_${task.id}`}
-                      className="block font-bold text-sm text-black"
-                    >
-                      Dàn ý / Ghi chú câu trả lời của bạn:
-                    </label>
-                    <textarea
-                      id={`speaking_notes_${task.id}`}
-                      rows={8}
-                      value={currentNotes}
-                      placeholder="Ghi chú các luận điểm chính, từ vựng và câu trả lời của bạn tại đây..."
-                      onChange={(e) => handleSpeakingChange(task.id, e.target.value)}
-                      className="w-full p-3 border-2 border-black font-sans text-sm focus-visible:outline-2 bg-[#fcf8ed] text-black"
-                    ></textarea>
-                    <div className="flex justify-between text-xs text-neutral-800 font-mono font-bold">
-                      <span>Độ dài: {currentNotes.length} ký tự</span>
-                      <span>(Sẽ lưu để tự đối chiếu rubric sau khi nộp)</span>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+          </ListeningAudioProvider>
         )}
 
         {/* WRITING PANEL */}
@@ -657,7 +657,7 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
               return (
                 <article key={task.id} className="border-2 border-black p-5 bg-[#fffdf5] space-y-4">
                   <h3 className="text-lg font-black border-b-2 border-black pb-2 text-black">
-                    Task {tIndex + 1}: {task.title}
+                    {formatSectionTitle('Task', tIndex + 1, task.title)}
                   </h3>
 
                   <div className="p-4 border-2 border-black bg-[#f4eed9] whitespace-pre-line text-sm md:text-base font-semibold text-black">
@@ -701,10 +701,37 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
             })}
           </div>
         )}
+
+        {/* SPEAKING PANEL (COMING SOON) */}
+        {activeTab === 'speaking' && (
+          <div
+            id="panel-speaking"
+            role="tabpanel"
+            aria-labelledby="tab-speaking"
+            className="border-2 border-black p-8 text-center bg-[#fffdf5] space-y-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+          >
+            <span className="text-xs font-mono font-bold px-2 py-1 border-2 border-black bg-[#f4eed9] inline-block">
+              COMING SOON
+            </span>
+            <h3 className="text-xl font-black text-black">Phần thi Speaking đang được hoàn thiện</h3>
+            <p className="text-sm font-semibold text-neutral-800 max-w-lg mx-auto leading-relaxed">
+              Tính năng ghi âm giọng nói và chấm điểm tự động cho kỹ năng Speaking đang trong quá trình phát triển và sẽ sớm ra mắt. Bạn vui lòng hoàn thành 3 kỹ năng Reading, Listening và Writing.
+            </p>
+            <div>
+              <button
+                type="button"
+                onClick={() => handleGoToTab('writing')}
+                className="px-6 py-2.5 bg-black text-[#fffdf5] text-sm font-black border-2 border-black hover:bg-[#fffdf5] hover:text-black transition-colors cursor-pointer"
+              >
+                ← Quay lại phần Writing
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bottom Action Footer */}
-      <footer className="border-2 border-black p-4 bg-[#fffdf5] flex flex-col md:flex-row items-center justify-between gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+      <footer className="border-2 border-black p-4 bg-[#fffdf5] flex flex-col md:flex-row items-center justify-between gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-full min-w-0">
         <div className="flex items-center gap-3 w-full md:w-auto">
           {hasPrevTab && prevTab && (
             <button
@@ -717,7 +744,7 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
             </button>
           )}
           <span className="text-xs text-black font-mono font-bold">
-            Phần {currentTabIndex + 1}/4: {TAB_LABELS[activeTab]}
+            Phần {currentFlowIndex >= 0 ? currentFlowIndex + 1 : 1}/3: {TAB_LABELS[activeTab]}
           </span>
         </div>
 
@@ -755,6 +782,17 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
           )}
         </div>
       </footer>
+
+      {/* Floating Quick Action Button on Mobile */}
+      <button
+        type="button"
+        onClick={() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })}
+        className="fixed bottom-6 right-4 z-40 md:hidden px-3 py-2 bg-[#f4eed9] text-black font-black text-xs border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer flex items-center gap-1"
+        title="Cuộn xuống cuối bài thi"
+      >
+        <span>↓</span>
+        <span>Cuối bài</span>
+      </button>
     </main>
   );
 };
