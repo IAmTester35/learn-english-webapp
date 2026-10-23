@@ -469,7 +469,7 @@
               "explanation": "AI says: 'INES Scale 7, major accident, equivalent to Chernobyl.'"
             }
           ],
-          "audioUrl": "/tests/audio/c1-advanced-english-test-01-l-p1.wav"
+          "audioUrl": "/tests/audio/c1-advanced-english-test-01-l-p1.mp3"
         },
         {
           "id": "l-p2",
@@ -602,7 +602,7 @@
               "explanation": "Police admit operation 'was not rehearsed for a radius of this size.'"
             }
           ],
-          "audioUrl": "/tests/audio/c1-advanced-english-test-01-l-p2.wav"
+          "audioUrl": "/tests/audio/c1-advanced-english-test-01-l-p2.mp3"
         },
         {
           "id": "l-p3",
@@ -733,7 +733,7 @@
               "explanation": "Both state priority is containment structure, not saving reactor which is lost."
             }
           ],
-          "audioUrl": "/tests/audio/c1-advanced-english-test-01-l-p3.wav"
+          "audioUrl": "/tests/audio/c1-advanced-english-test-01-l-p3.mp3"
         }
       ]
     },

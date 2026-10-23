@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { TestAttempt } from '@/types/test';
 import { updateDeferredReview, deleteAttempt } from '@/services/attemptStorage';
 import { gradeWritingTaskWithServer } from '@/services/aiApi';
+import { countWordsOrCharacters, isCjkText } from '@/domain/grader';
 
 interface ResultsHistoryViewProps {
   attempts: TestAttempt[];
@@ -281,7 +282,7 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                   <span className="text-xs font-mono font-bold px-2 py-0.5 border-2 border-black bg-[#f4eed9] inline-block break-all max-w-full">
                     {currentAttempt.testId}
                   </span>
-                  <h3 id="summary-heading" className="text-lg sm:text-xl font-black mt-1 text-black break-words">
+                  <h3 id="summary-heading" className="text-lg sm:text-xl font-black mt-1 text-black wrap-break-word">
                     {currentAttempt.testTitle}
                   </h3>
                   <p className="text-xs font-semibold text-neutral-800">
@@ -323,8 +324,8 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                     {writingScore10 !== null
                       ? `${writingScore10}/10 (AI chấm)`
                       : isAutoGrading
-                      ? 'Đang tự động chấm bằng AI...'
-                      : 'Chờ chấm AI'}
+                        ? 'Đang tự động chấm bằng AI...'
+                        : 'Chờ chấm AI'}
                   </p>
                   <p className="text-[11px] text-neutral-600 font-sans">Speaking: Tạm khóa (không tính vào điểm)</p>
                 </div>
@@ -391,8 +392,8 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                     {reviewedWriting.length > 0
                       ? reviewedWriting.map((r) => r.score || 'ĐÃ CHẤM').join(' | ')
                       : isAutoGrading
-                      ? 'Đang chấm...'
-                      : 'Chưa có điểm'}
+                        ? 'Đang chấm...'
+                        : 'Chưa có điểm'}
                   </span>
                 </div>
 
@@ -464,11 +465,10 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                           type="button"
                           onClick={() => scrollToQuestion(res.questionId)}
                           title={`Câu R${idx + 1}: ${res.isCorrect ? 'ĐÚNG' : 'CHƯA ĐÚNG'}`}
-                          className={`min-w-9 h-9 px-2 border-2 border-black text-xs font-black font-mono cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-0.5 ${
-                            res.isCorrect
+                          className={`min-w-9 h-9 px-2 border-2 border-black text-xs font-black font-mono cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-0.5 ${res.isCorrect
                               ? 'bg-emerald-600 text-white hover:bg-emerald-700'
                               : 'bg-red-600 text-white hover:bg-red-700'
-                          }`}
+                            }`}
                         >
                           <span>R{idx + 1}</span>
                         </button>
@@ -496,11 +496,10 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                           type="button"
                           onClick={() => scrollToQuestion(res.questionId)}
                           title={`Câu L${idx + 1}: ${res.isCorrect ? 'ĐÚNG' : 'CHƯA ĐÚNG'}`}
-                          className={`min-w-9 h-9 px-2 border-2 border-black text-xs font-black font-mono cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-0.5 ${
-                            res.isCorrect
+                          className={`min-w-9 h-9 px-2 border-2 border-black text-xs font-black font-mono cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-0.5 ${res.isCorrect
                               ? 'bg-emerald-600 text-white hover:bg-emerald-700'
                               : 'bg-red-600 text-white hover:bg-red-700'
-                          }`}
+                            }`}
                         >
                           <span>L{idx + 1}</span>
                         </button>
@@ -530,22 +529,20 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                     <div
                       key={res.questionId}
                       id={`q-res-${res.questionId}`}
-                      className={`border-2 border-black p-4 space-y-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all scroll-mt-20 sm:scroll-mt-24 ${
-                        isCorrect
+                      className={`border-2 border-black p-4 space-y-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all scroll-mt-20 sm:scroll-mt-24 ${isCorrect
                           ? 'bg-[#f6fbf7] border-l-8 border-l-emerald-600'
                           : 'bg-[#fff8f8] border-l-8 border-l-red-600'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs font-mono font-black text-black">
                           Câu #{idx + 1} ({res.questionId} • {res.type})
                         </span>
                         <span
-                          className={`text-xs px-2.5 py-0.5 border-2 border-black font-black font-mono flex items-center gap-1 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${
-                            isCorrect
+                          className={`text-xs px-2.5 py-0.5 border-2 border-black font-black font-mono flex items-center gap-1 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${isCorrect
                               ? 'bg-emerald-600 text-white'
                               : 'bg-red-600 text-white'
-                          }`}
+                            }`}
                         >
                           {isCorrect ? '✓ ĐÚNG' : '✕ CHƯA ĐÚNG'}
                         </span>
@@ -610,22 +607,20 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                     <div
                       key={res.questionId}
                       id={`q-res-${res.questionId}`}
-                      className={`border-2 border-black p-4 space-y-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all scroll-mt-20 sm:scroll-mt-24 ${
-                        isCorrect
+                      className={`border-2 border-black p-4 space-y-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all scroll-mt-20 sm:scroll-mt-24 ${isCorrect
                           ? 'bg-[#f6fbf7] border-l-8 border-l-emerald-600'
                           : 'bg-[#fff8f8] border-l-8 border-l-red-600'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs font-mono font-black text-black">
                           Câu #{idx + 1} ({res.questionId} • {res.type})
                         </span>
                         <span
-                          className={`text-xs px-2.5 py-0.5 border-2 border-black font-black font-mono flex items-center gap-1 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${
-                            isCorrect
+                          className={`text-xs px-2.5 py-0.5 border-2 border-black font-black font-mono flex items-center gap-1 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${isCorrect
                               ? 'bg-emerald-600 text-white'
                               : 'bg-red-600 text-white'
-                          }`}
+                            }`}
                         >
                           {isCorrect ? '✓ ĐÚNG' : '✕ CHƯA ĐÚNG'}
                         </span>
@@ -671,210 +666,211 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
               </div>
             </section>
 
-          {/* SECTION 3: WRITING DEFERRED REVIEW */}
-          <section aria-labelledby="writing-results-heading" className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-black pb-2">
-              <h3 id="writing-results-heading" className="text-lg font-black text-black">
-                3. Kết quả chấm bài Writing (AI Gemini 3.8 Flash theo Rubric)
-              </h3>
-              <button
-                type="button"
-                onClick={handleRegradeAllWriting}
-                disabled={isRegradingAllWriting}
-                className="px-3.5 py-1.5 bg-[#f4eed9] text-black font-black text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
-                title="Gọi AI Gemini chấm lại toàn bộ các task Writing"
-              >
-                {isRegradingAllWriting ? (
-                  <>
-                    <span className="inline-block animate-spin">⟳</span>
-                    <span>Đang chấm lại tất cả...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>✦</span>
-                    <span>Chấm lại tất cả bài Writing bằng AI</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              {currentAttempt.writingReviews.map((rev) => {
-                const currentScore = String(scoringFormState[rev.taskId]?.score ?? rev.score ?? '');
-                const currentNotes = scoringFormState[rev.taskId]?.notes ?? rev.notes ?? '';
-                const wordCount = rev.userText.trim() ? rev.userText.trim().split(/\s+/).length : 0;
-
-                return (
-                  <article key={rev.taskId} className="border-2 border-black p-5 bg-[#fffdf5] space-y-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h4 className="font-black text-base text-black">{rev.title}</h4>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => handleRegradeWriting(rev.taskId, rev.userText)}
-                          disabled={regradingMap[rev.taskId]}
-                          className="px-3 py-1 bg-[#f4eed9] text-black font-black text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
-                          title="Gọi AI Gemini chấm lại bài viết này"
-                        >
-                          {regradingMap[rev.taskId] ? (
-                            <>
-                              <span className="inline-block animate-spin">⟳</span>
-                              <span>Đang chấm lại...</span>
-                            </>
-                          ) : (
-                            <>
-                              <span>✦</span>
-                              <span>Chấm lại bài này bằng AI</span>
-                            </>
-                          )}
-                        </button>
-                        <span
-                          className={`text-xs px-2 py-0.5 border-2 font-mono font-bold ${
-                            rev.status === 'reviewed' ? 'bg-black text-[#fffdf5] border-black' : 'bg-[#f4eed9] text-black border-black'
-                          }`}
-                        >
-                          {rev.status === 'reviewed'
-                            ? `[ĐÃ CHẤM${rev.score ? `: ${rev.score}` : ''}]`
-                            : '[CHỜ CHẤM]'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="text-xs text-black bg-[#f4eed9] p-3 border-2 border-black whitespace-pre-line font-medium">
-                      <strong className="block mb-1 uppercase font-mono font-bold">Đề bài:</strong> {rev.prompt}
-                    </div>
-
-                    {/* User response */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide text-black">
-                        <span>Bài viết của bạn:</span>
-                        <span className="font-mono">Số từ: {wordCount}</span>
-                      </div>
-                      <div className="p-4 border-2 border-black bg-[#fcf8ed] text-sm whitespace-pre-line leading-relaxed font-serif text-black">
-                        {rev.userText || '(Bạn chưa viết bài luận nào khi làm bài)'}
-                      </div>
-                    </div>
-
-                    {/* Rubric Table */}
-                    <div className="space-y-2">
-                      <p className="text-xs font-bold uppercase tracking-wide text-black">
-                        Tiêu chí chấm bài (Rubric quy định trong JSON):
-                      </p>
-                      <div className="border-2 border-black overflow-x-auto">
-                        <table className="w-full text-left text-xs border-collapse">
-                          <thead>
-                            <tr className="bg-[#f4eed9] border-b-2 border-black">
-                              <th className="p-2.5 border-r-2 border-black font-black text-black">Tiêu chí</th>
-                              <th className="p-2.5 font-black text-black">Yêu cầu đạt được</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {rev.rubric.map((r, rIdx) => (
-                              <tr key={rIdx} className="border-b border-black">
-                                <td className="p-2.5 border-r-2 border-black font-bold whitespace-nowrap text-black">
-                                  {r.criterion}
-                                </td>
-                                <td className="p-2.5 text-neutral-900 font-medium">{r.description}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    {/* Sample Answer */}
-                    {rev.sampleAnswer && (
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold uppercase tracking-wide text-black">Bài viết mẫu tham khảo:</p>
-                        <div className="p-3 border-2 border-black bg-[#f4eed9] text-xs italic leading-relaxed whitespace-pre-line text-black">
-                          {rev.sampleAnswer}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Self-grading form */}
-                    <div className="border-t-2 border-black pt-4 space-y-3 bg-[#fcf8ed] p-4 border-2">
-                      <h5 className="text-sm font-black text-black">Đánh giá & Ghi chú chấm bài:</h5>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div>
-                          <label
-                            htmlFor={`writing_score_${rev.taskId}`}
-                            className="block text-xs font-bold mb-1 text-black"
-                          >
-                            Điểm đánh giá (VD: 8.0 hoặc 85/100):
-                          </label>
-                          <input
-                            id={`writing_score_${rev.taskId}`}
-                            type="text"
-                            value={currentScore}
-                            placeholder="Nhập điểm..."
-                            onChange={(e) => handleScoreChange(rev.taskId, 'score', e.target.value)}
-                            className="w-full p-2 border-2 border-black text-sm bg-[#fffdf5] font-semibold text-black focus-visible:outline-2"
-                          />
-                        </div>
-
-                        <div className="sm:col-span-2">
-                          <label
-                            htmlFor={`writing_notes_${rev.taskId}`}
-                            className="block text-xs font-bold mb-1 text-black"
-                          >
-                            Nhận xét chi tiết (AI / Ghi chú):
-                          </label>
-                          <textarea
-                            id={`writing_notes_${rev.taskId}`}
-                            rows={6}
-                            value={currentNotes}
-                            placeholder="Ghi chú nhận xét của bạn..."
-                            onChange={(e) => handleScoreChange(rev.taskId, 'notes', e.target.value)}
-                            className="w-full p-2 border-2 border-black text-sm bg-[#fffdf5] font-semibold text-black focus-visible:outline-2 whitespace-pre-line"
-                          />
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleSaveReview(currentAttempt.id, 'writing', rev.taskId)}
-                        className="px-4 py-2 bg-black text-[#fffdf5] font-bold text-xs border-2 border-black hover:bg-[#fffdf5] hover:text-black transition-colors cursor-pointer"
-                      >
-                        Lưu đánh giá Writing
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* SECTION 4: SPEAKING (DISABLED / COMING SOON) */}
-          <section aria-labelledby="speaking-results-heading" className="space-y-4">
-            <h3 id="speaking-results-heading" className="text-lg font-black border-b-2 border-black pb-1 text-black flex items-center justify-between">
-              <span>4. Bài thi Speaking</span>
-              <span className="text-xs font-mono font-bold px-2 py-0.5 border border-black bg-[#f4eed9]">TẠM KHÓA</span>
-            </h3>
-
-            <div className="border-2 border-black p-6 sm:p-8 bg-[#fffdf5] text-center space-y-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <span className="inline-block text-xs font-mono font-bold px-2.5 py-1 border-2 border-black bg-[#f4eed9] text-black">
-                COMING SOON
-              </span>
-              <h4 className="text-base sm:text-lg font-black text-black">
-                Kỹ năng Speaking hiện chưa mở xem kết quả
-              </h4>
-              <p className="text-xs sm:text-sm font-semibold text-neutral-700 max-w-lg mx-auto leading-relaxed">
-                Hệ thống đang tích hợp AI nhận diện giọng nói và tiêu chí chấm phát âm. Nội dung bài Speaking tạm thời được ẩn và sẽ được kích hoạt trong bản cập nhật tới.
-              </p>
-              <div className="pt-2">
+            {/* SECTION 3: WRITING DEFERRED REVIEW */}
+            <section aria-labelledby="writing-results-heading" className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-black pb-2">
+                <h3 id="writing-results-heading" className="text-lg font-black text-black">
+                  3. Kết quả chấm bài Writing (AI Gemini 3.8 Flash theo Rubric)
+                </h3>
                 <button
                   type="button"
-                  onClick={() => alert('Tính năng xem chi tiết và đối chiếu bài thi Speaking đang được phát triển (Coming Soon)!')}
-                  className="px-4 py-2 border-2 border-black bg-[#fcf8ed] text-black text-xs font-bold hover:bg-black hover:text-[#fffdf5] transition-colors cursor-pointer"
+                  onClick={handleRegradeAllWriting}
+                  disabled={isRegradingAllWriting}
+                  className="px-3.5 py-1.5 bg-[#f4eed9] text-black font-black text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
+                  title="Gọi AI Gemini chấm lại toàn bộ các task Writing"
                 >
-                  Chi tiết kỹ năng Speaking (Coming soon)
+                  {isRegradingAllWriting ? (
+                    <>
+                      <span className="inline-block animate-spin">⟳</span>
+                      <span>Đang chấm lại tất cả...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>✦</span>
+                      <span>Chấm lại tất cả bài Writing bằng AI</span>
+                    </>
+                  )}
                 </button>
               </div>
-            </div>
-          </section>
-        </div>
-      );
+
+              <div className="space-y-6">
+                {currentAttempt.writingReviews.map((rev) => {
+                  const currentScore = String(scoringFormState[rev.taskId]?.score ?? rev.score ?? '');
+                  const currentNotes = scoringFormState[rev.taskId]?.notes ?? rev.notes ?? '';
+                  const isCjk = isCjkText(rev.prompt + rev.userText);
+                  const wordCount = countWordsOrCharacters(rev.userText);
+                  const unitLabel = isCjk ? 'chữ' : 'từ';
+
+                  return (
+                    <article key={rev.taskId} className="border-2 border-black p-5 bg-[#fffdf5] space-y-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h4 className="font-black text-base text-black">{rev.title}</h4>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => handleRegradeWriting(rev.taskId, rev.userText)}
+                            disabled={regradingMap[rev.taskId]}
+                            className="px-3 py-1 bg-[#f4eed9] text-black font-black text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                            title="Gọi AI Gemini chấm lại bài viết này"
+                          >
+                            {regradingMap[rev.taskId] ? (
+                              <>
+                                <span className="inline-block animate-spin">⟳</span>
+                                <span>Đang chấm lại...</span>
+                              </>
+                            ) : (
+                              <>
+                                <span>✦</span>
+                                <span>Chấm lại bài này bằng AI</span>
+                              </>
+                            )}
+                          </button>
+                          <span
+                            className={`text-xs px-2 py-0.5 border-2 font-mono font-bold ${rev.status === 'reviewed' ? 'bg-black text-[#fffdf5] border-black' : 'bg-[#f4eed9] text-black border-black'
+                              }`}
+                          >
+                            {rev.status === 'reviewed'
+                              ? `[ĐÃ CHẤM${rev.score ? `: ${rev.score}` : ''}]`
+                              : '[CHỜ CHẤM]'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-black bg-[#f4eed9] p-3 border-2 border-black whitespace-pre-line font-medium">
+                        <strong className="block mb-1 uppercase font-mono font-bold">Đề bài:</strong> {rev.prompt}
+                      </div>
+
+                      {/* User response */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide text-black">
+                          <span>Bài viết của bạn:</span>
+                          <span className="font-mono">Số {unitLabel}: {wordCount}</span>
+                        </div>
+                        <div className="p-4 border-2 border-black bg-[#fcf8ed] text-sm whitespace-pre-line leading-relaxed font-serif text-black">
+                          {rev.userText || '(Bạn chưa viết bài luận nào khi làm bài)'}
+                        </div>
+                      </div>
+
+                      {/* Rubric Table */}
+                      <div className="space-y-2">
+                        <p className="text-xs font-bold uppercase tracking-wide text-black">
+                          Tiêu chí chấm bài (Rubric quy định trong JSON):
+                        </p>
+                        <div className="border-2 border-black overflow-x-auto">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                              <tr className="bg-[#f4eed9] border-b-2 border-black">
+                                <th className="p-2.5 border-r-2 border-black font-black text-black">Tiêu chí</th>
+                                <th className="p-2.5 font-black text-black">Yêu cầu đạt được</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {rev.rubric.map((r, rIdx) => (
+                                <tr key={rIdx} className="border-b border-black">
+                                  <td className="p-2.5 border-r-2 border-black font-bold whitespace-nowrap text-black">
+                                    {r.criterion}
+                                  </td>
+                                  <td className="p-2.5 text-neutral-900 font-medium">{r.description}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* Sample Answer */}
+                      {rev.sampleAnswer && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold uppercase tracking-wide text-black">Bài viết mẫu tham khảo:</p>
+                          <div className="p-3 border-2 border-black bg-[#f4eed9] text-xs italic leading-relaxed whitespace-pre-line text-black">
+                            {rev.sampleAnswer}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Self-grading form */}
+                      <div className="border-t-2 border-black pt-4 space-y-3 bg-[#fcf8ed] p-4 border-2">
+                        <h5 className="text-sm font-black text-black">Đánh giá & Ghi chú chấm bài:</h5>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div>
+                            <label
+                              htmlFor={`writing_score_${rev.taskId}`}
+                              className="block text-xs font-bold mb-1 text-black"
+                            >
+                              Điểm đánh giá (VD: 8.0 hoặc 85/100):
+                            </label>
+                            <input
+                              id={`writing_score_${rev.taskId}`}
+                              type="text"
+                              value={currentScore}
+                              placeholder="Nhập điểm..."
+                              onChange={(e) => handleScoreChange(rev.taskId, 'score', e.target.value)}
+                              className="w-full p-2 border-2 border-black text-sm bg-[#fffdf5] font-semibold text-black focus-visible:outline-2"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-2">
+                            <label
+                              htmlFor={`writing_notes_${rev.taskId}`}
+                              className="block text-xs font-bold mb-1 text-black"
+                            >
+                              Nhận xét chi tiết (AI / Ghi chú):
+                            </label>
+                            <textarea
+                              id={`writing_notes_${rev.taskId}`}
+                              rows={6}
+                              value={currentNotes}
+                              placeholder="Ghi chú nhận xét của bạn..."
+                              onChange={(e) => handleScoreChange(rev.taskId, 'notes', e.target.value)}
+                              className="w-full p-2 border-2 border-black text-sm bg-[#fffdf5] font-semibold text-black focus-visible:outline-2 whitespace-pre-line"
+                            />
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleSaveReview(currentAttempt.id, 'writing', rev.taskId)}
+                          className="px-4 py-2 bg-black text-[#fffdf5] font-bold text-xs border-2 border-black hover:bg-[#fffdf5] hover:text-black transition-colors cursor-pointer"
+                        >
+                          Lưu đánh giá Writing
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* SECTION 4: SPEAKING (DISABLED / COMING SOON) */}
+            <section aria-labelledby="speaking-results-heading" className="space-y-4">
+              <h3 id="speaking-results-heading" className="text-lg font-black border-b-2 border-black pb-1 text-black flex items-center justify-between">
+                <span>4. Bài thi Speaking</span>
+                <span className="text-xs font-mono font-bold px-2 py-0.5 border border-black bg-[#f4eed9]">TẠM KHÓA</span>
+              </h3>
+
+              <div className="border-2 border-black p-6 sm:p-8 bg-[#fffdf5] text-center space-y-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <span className="inline-block text-xs font-mono font-bold px-2.5 py-1 border-2 border-black bg-[#f4eed9] text-black">
+                  COMING SOON
+                </span>
+                <h4 className="text-base sm:text-lg font-black text-black">
+                  Kỹ năng Speaking hiện chưa mở xem kết quả
+                </h4>
+                <p className="text-xs sm:text-sm font-semibold text-neutral-700 max-w-lg mx-auto leading-relaxed">
+                  Hệ thống đang tích hợp AI nhận diện giọng nói và tiêu chí chấm phát âm. Nội dung bài Speaking tạm thời được ẩn và sẽ được kích hoạt trong bản cập nhật tới.
+                </p>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => alert('Tính năng xem chi tiết và đối chiếu bài thi Speaking đang được phát triển (Coming Soon)!')}
+                    className="px-4 py-2 border-2 border-black bg-[#fcf8ed] text-black text-xs font-bold hover:bg-black hover:text-[#fffdf5] transition-colors cursor-pointer"
+                  >
+                    Chi tiết kỹ năng Speaking (Coming soon)
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+        );
       })()}
     </main>
   );

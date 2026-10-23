@@ -11,7 +11,7 @@ import type {
   FillBlankQuestion,
   TrueFalseNgQuestion,
 } from '@/types/test';
-import { gradeTestAttempt } from '@/domain/grader';
+import { gradeTestAttempt, countWordsOrCharacters, isCjkText } from '@/domain/grader';
 import { saveNewAttempt } from '@/services/attemptStorage';
 import {
   getProgressByTestId,
@@ -489,8 +489,8 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
               </span>
             )}
           </div>
-          <h2 className="text-lg sm:text-xl font-black mt-1 text-black break-words">{test.title}</h2>
-          <p className="text-xs font-medium text-neutral-800 break-words">{test.description}</p>
+          <h2 className="text-lg sm:text-xl font-black mt-1 text-black wrap-break-word">{test.title}</h2>
+          <p className="text-xs font-medium text-neutral-800 wrap-break-word">{test.description}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
@@ -542,10 +542,10 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
               type="button"
               onClick={() => handleGoToTab(tab)}
               className={`py-2.5 sm:py-3 px-2 sm:px-4 text-center font-bold border-2 border-black transition-colors cursor-pointer relative ${isActive
-                  ? 'bg-black text-[#fffdf5]'
-                  : isSpeaking
-                    ? 'bg-[#fcf8ed] text-neutral-600 hover:bg-[#f4eed9]'
-                    : 'bg-[#fffdf5] text-black hover:bg-[#f4eed9]'
+                ? 'bg-black text-[#fffdf5]'
+                : isSpeaking
+                  ? 'bg-[#fcf8ed] text-neutral-600 hover:bg-[#f4eed9]'
+                  : 'bg-[#fffdf5] text-black hover:bg-[#f4eed9]'
                 }`}
             >
               <span>{TAB_LABELS[tab]}</span>
@@ -651,8 +651,10 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
 
             {test.sections.writing.tasks.map((task, tIndex) => {
               const currentText = answers.writing[task.id] || '';
-              const wordCount = currentText.trim() ? currentText.trim().split(/\s+/).length : 0;
+              const isCjk = isCjkText(task.prompt + currentText);
+              const wordCount = countWordsOrCharacters(currentText);
               const minWords = task.minWords || 0;
+              const unitLabel = isCjk ? 'chữ' : 'từ';
 
               return (
                 <article key={task.id} className="border-2 border-black p-5 bg-[#fffdf5] space-y-4">
@@ -673,7 +675,7 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
                         Bài làm của bạn:
                       </label>
                       <div className="text-xs font-mono font-bold">
-                        <span>Số từ: {wordCount}</span>
+                        <span>Số {unitLabel}: {wordCount}</span>
                         {minWords > 0 && (
                           <span
                             className={`ml-2 px-2 py-0.5 border-2 border-black ${wordCount >= minWords
@@ -681,7 +683,7 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
                               : 'bg-[#f4eed9] text-black'
                               }`}
                           >
-                            Tối thiểu: {minWords} từ
+                            Tối thiểu: {minWords} {unitLabel}
                           </span>
                         )}
                       </div>

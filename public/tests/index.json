@@ -35,6 +35,18 @@
       "title": "C1 Advanced English Examination (CEFR / CAE Standard)",
       "description": "Comprehensive CEFR C1 assessment evaluating Reading, Listening, Speaking, and Writing skills, focusing on complex academic argumentation, risk governance, and technological ethics.",
       "file": "/tests/c1-advanced-english-test-01.json"
+    },
+    {
+      "id": "hsk2-elementary-chinese-test-01",
+      "title": "HSK 2 级初级汉语综合能力考试",
+      "description": "全面评估 HSK 2 级水平（掌握约 300 常用词）考生的阅读、听力、口语和书写四项语言技能，适用于初级汉语学习者。",
+      "file": "/tests/hsk2-elementary-chinese-test-01.json"
+    },
+    {
+      "id": "hsk2-elementary-chinese-test-02",
+      "title": "HSK 2 级初级汉语综合能力考试",
+      "description": "全面评估 HSK 2 级水平（掌握约 300 常用词）考生的阅读、听力、口语和书写四项语言技能，适合已学习汉语约 100–200 学时的初级学习者，重点考察日常生活话题中的理解与表达能力。",
+      "file": "/tests/hsk2-elementary-chinese-test-02.json"
     }
   ]
 }

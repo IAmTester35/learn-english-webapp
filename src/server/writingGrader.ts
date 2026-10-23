@@ -2,6 +2,7 @@ import 'server-only';
 import { ThinkingLevel, Type } from '@google/genai';
 import type { RubricItem } from '../types/test';
 import { withGeminiClientFallback } from './gemini';
+import { countWordsOrCharacters, isCjkText } from '../domain/grader';
 
 const WRITING_GRADER_MODEL = 'gemini-3.8-flash';
 
@@ -25,20 +26,24 @@ export async function gradeSingleWritingTaskWithAi(params: {
     };
   }
 
-  const wordCount = trimmedAnswer.split(/\s+/).length;
+  const wordCount = countWordsOrCharacters(trimmedAnswer);
+  const isCjk = isCjkText(params.prompt + trimmedAnswer);
+  const langLabel = isCjk ? 'tiếng Trung' : 'tiếng Anh';
+  const unitLabel = isCjk ? 'chữ' : 'từ';
+
   const rubricText = params.rubric
     .map((r, idx) => `${idx + 1}. ${r.criterion}: ${r.description}`)
     .join('\n');
 
   const evaluationPrompt = [
-    'Bạn là giám khảo chấm thi Writing tiếng Anh khách quan và chính xác.',
+    `Bạn là giám khảo chấm thi Writing ${langLabel} khách quan và chính xác.`,
     'Hãy chấm bài viết của thí sinh dựa trên Đề bài (Prompt) và Tiêu chí chấm điểm (Rubric) dưới đây theo thang điểm 10 (cho phép điểm lẻ tới 0.5, ví dụ: 7.5).',
     '',
     `### Tiêu đề: ${params.title}`,
     `### Đề bài (Prompt):\n${params.prompt}`,
     params.minWords
-      ? `### Số từ tối thiểu yêu cầu: ${params.minWords} từ (Bài làm hiện tại: ${wordCount} từ)`
-      : `### Số từ bài làm: ${wordCount} từ`,
+      ? `### Số ${unitLabel} tối thiểu yêu cầu: ${params.minWords} ${unitLabel} (Bài làm hiện tại: ${wordCount} ${unitLabel})`
+      : `### Số ${unitLabel} bài làm: ${wordCount} ${unitLabel}`,
     `### Tiêu chí chấm điểm (Rubric):\n${rubricText}`,
     `### Bài làm của thí sinh (User Response):\n${trimmedAnswer}`,
     '',

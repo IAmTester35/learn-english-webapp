@@ -1,0 +1,979 @@
+{
+  "schemaVersion": "1.0",
+  "id": "hsk2-elementary-chinese-test-02",
+  "title": "HSK 2 级初级汉语综合能力考试",
+  "description": "全面评估 HSK 2 级水平（掌握约 300 常用词）考生的阅读、听力、口语和书写四项语言技能，适合已学习汉语约 100–200 学时的初级学习者，重点考察日常生活话题中的理解与表达能力。",
+  "sections": {
+    "reading": {
+      "instructions": "请仔细阅读下面的短文或对话，回答 r-q1 到 r-q20 的问题。",
+      "passages": [
+        {
+          "id": "r-p1",
+          "title": "我的周末",
+          "content": "我叫王明，今年十九岁，是一个学生。我家在上海，现在在北京学习。星期六我不上课，常常八点起床，吃了早饭以后去公园跑步。\n\n下午我有时候和朋友去商店买东西，有时候在家看电影。晚上我给妈妈打电话，告诉她我这一周的生活。我觉得周末过得很快。",
+          "questions": [
+            {
+              "id": "r-q1",
+              "type": "multiple_choice",
+              "prompt": "王明现在在哪儿学习？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "上海"
+                },
+                {
+                  "id": "B",
+                  "text": "北京"
+                },
+                {
+                  "id": "C",
+                  "text": "公园"
+                },
+                {
+                  "id": "D",
+                  "text": "商店"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "第一段写道：“我家在上海，现在在北京学习。”所以他现在在北京学习，选 B。"
+            },
+            {
+              "id": "r-q2",
+              "type": "multiple_choice",
+              "prompt": "星期六早上，王明常常做什么？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "去商店买东西"
+                },
+                {
+                  "id": "B",
+                  "text": "在家看电影"
+                },
+                {
+                  "id": "C",
+                  "text": "去公园跑步"
+                },
+                {
+                  "id": "D",
+                  "text": "给妈妈打电话"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "第一段说：“常常八点起床，吃了早饭以后去公园跑步。”所以选 C。"
+            },
+            {
+              "id": "r-q3",
+              "type": "true_false_ng",
+              "prompt": "王明的家在北京。",
+              "correctAnswer": "FALSE",
+              "explanation": "文中说“我家在上海，现在在北京学习”，说明他的家在上海，不在北京，故陈述错误。"
+            },
+            {
+              "id": "r-q4",
+              "type": "fill_blank",
+              "prompt": "王明今年________岁。",
+              "acceptedAnswers": [
+                "十九",
+                "19"
+              ],
+              "caseSensitive": false,
+              "explanation": "文章开头写道：“我叫王明，今年十九岁。”"
+            },
+            {
+              "id": "r-q5",
+              "type": "multiple_select",
+              "prompt": "下午王明有时候做哪两件事？（请选择两个正确答案）",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "和朋友去商店买东西"
+                },
+                {
+                  "id": "B",
+                  "text": "在家看电影"
+                },
+                {
+                  "id": "C",
+                  "text": "去公园跑步"
+                },
+                {
+                  "id": "D",
+                  "text": "给妈妈打电话"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "B"
+              ],
+              "explanation": "第二段写道：“下午我有时候和朋友去商店买东西，有时候在家看电影。”跑步是早上，打电话是晚上，所以选 A 和 B。"
+            }
+          ]
+        },
+        {
+          "id": "r-p2",
+          "title": "你怎么了？",
+          "content": "小林：你怎么了？看起来不太好。\n小王：我昨天晚上开始头疼，今天早上还发烧了。\n小林：你去医院了吗？\n小王：还没有。我想吃点儿药，休息一下。\n小林：不行，你应该去医院看看医生。我下午没有课，可以陪你去。\n小王：谢谢你！那我们两点出发吧，下午医院的人不太多。",
+          "questions": [
+            {
+              "id": "r-q6",
+              "type": "multiple_choice",
+              "prompt": "小王哪儿不舒服？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "头疼，还发烧"
+                },
+                {
+                  "id": "B",
+                  "text": "肚子疼"
+                },
+                {
+                  "id": "C",
+                  "text": "眼睛疼"
+                },
+                {
+                  "id": "D",
+                  "text": "腿疼"
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "小王说：“我昨天晚上开始头疼，今天早上还发烧了。”所以选 A。"
+            },
+            {
+              "id": "r-q7",
+              "type": "true_false_ng",
+              "prompt": "小王已经去医院了。",
+              "correctAnswer": "FALSE",
+              "explanation": "小林问“你去医院了吗？”，小王回答“还没有”，说明他还没去医院，故陈述错误。"
+            },
+            {
+              "id": "r-q8",
+              "type": "multiple_choice",
+              "prompt": "小林为什么可以陪小王去医院？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "他下午没有课"
+                },
+                {
+                  "id": "B",
+                  "text": "他今天不上班"
+                },
+                {
+                  "id": "C",
+                  "text": "医院很近"
+                },
+                {
+                  "id": "D",
+                  "text": "他也不舒服"
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "小林说：“我下午没有课，可以陪你去。”所以选 A。"
+            },
+            {
+              "id": "r-q9",
+              "type": "fill_blank",
+              "prompt": "他们打算________点出发。",
+              "acceptedAnswers": [
+                "两",
+                "二",
+                "2"
+              ],
+              "caseSensitive": false,
+              "explanation": "小王说：“那我们两点出发吧。”"
+            },
+            {
+              "id": "r-q10",
+              "type": "true_false_ng",
+              "prompt": "小林觉得小王应该多喝水。",
+              "correctAnswer": "NOT_GIVEN",
+              "explanation": "小林只说小王“应该去医院看看医生”，对话中没有提到多喝水，故为“没提到”。"
+            }
+          ]
+        },
+        {
+          "id": "r-p3",
+          "title": "我们的新家",
+          "content": "我们新买了一个小房子，在学校旁边，走路五分钟就到。房子不大，有两个房间。我和妹妹住大的，爸爸妈妈住小的。\n\n厨房里有一个冰箱，我们周末常常在家做饭。妈妈做的鱼最好吃。房子的窗户很大，早上太阳从窗户外面照进来，房间里很漂亮。我很喜欢这个新家，可是我的狗不喜欢，因为它不能出去玩儿。",
+          "questions": [
+            {
+              "id": "r-q11",
+              "type": "multiple_choice",
+              "prompt": "新房子在哪儿？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "学校旁边"
+                },
+                {
+                  "id": "B",
+                  "text": "公司旁边"
+                },
+                {
+                  "id": "C",
+                  "text": "公园旁边"
+                },
+                {
+                  "id": "D",
+                  "text": "商店旁边"
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "第一段写道：“我们新买了一个小房子，在学校旁边。”所以选 A。"
+            },
+            {
+              "id": "r-q12",
+              "type": "fill_blank",
+              "prompt": "从新房子走路到学校要________分钟。",
+              "acceptedAnswers": [
+                "五",
+                "5"
+              ],
+              "caseSensitive": false,
+              "explanation": "文中写道：“走路五分钟就到。”"
+            },
+            {
+              "id": "r-q13",
+              "type": "multiple_select",
+              "prompt": "哪两个人住大房间？（请选择两个正确答案）",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "我"
+                },
+                {
+                  "id": "B",
+                  "text": "妹妹"
+                },
+                {
+                  "id": "C",
+                  "text": "爸爸"
+                },
+                {
+                  "id": "D",
+                  "text": "妈妈"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "B"
+              ],
+              "explanation": "第一段说：“我和妹妹住大的，爸爸妈妈住小的。”所以住大房间的是“我”和妹妹，选 A 和 B。"
+            },
+            {
+              "id": "r-q14",
+              "type": "multiple_choice",
+              "prompt": "谁做的鱼最好吃？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "爸爸"
+                },
+                {
+                  "id": "B",
+                  "text": "妈妈"
+                },
+                {
+                  "id": "C",
+                  "text": "妹妹"
+                },
+                {
+                  "id": "D",
+                  "text": "我"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "第二段写道：“妈妈做的鱼最好吃。”所以选 B。"
+            },
+            {
+              "id": "r-q15",
+              "type": "true_false_ng",
+              "prompt": "“我”的狗很喜欢新家。",
+              "correctAnswer": "FALSE",
+              "explanation": "文章最后说：“我的狗不喜欢，因为它不能出去玩儿。”所以狗不喜欢新家，故陈述错误。"
+            }
+          ]
+        },
+        {
+          "id": "r-p4",
+          "title": "妈妈的生日",
+          "content": "下个星期是妈妈的生日。我想给她买一件红色的衣服，因为妈妈最喜欢红色。\n\n星期六上午，我和姐姐去了一家大商店。那儿的衣服很多，也很漂亮，但是太贵了，一件要六百块。我们又去了两家商店，最后在一家小店里买到了一件三百块的。姐姐说妈妈一定会很高兴。回家的路上，我们还买了一个蛋糕。",
+          "questions": [
+            {
+              "id": "r-q16",
+              "type": "multiple_choice",
+              "prompt": "下个星期是谁的生日？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "姐姐"
+                },
+                {
+                  "id": "B",
+                  "text": "妈妈"
+                },
+                {
+                  "id": "C",
+                  "text": "“我”"
+                },
+                {
+                  "id": "D",
+                  "text": "爸爸"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "文章第一句写道：“下个星期是妈妈的生日。”所以选 B。"
+            },
+            {
+              "id": "r-q17",
+              "type": "multiple_choice",
+              "prompt": "“我”为什么想买红色的衣服？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "红色的最便宜"
+                },
+                {
+                  "id": "B",
+                  "text": "妈妈最喜欢红色"
+                },
+                {
+                  "id": "C",
+                  "text": "姐姐喜欢红色"
+                },
+                {
+                  "id": "D",
+                  "text": "商店只有红色的"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "第一段写道：“我想给她买一件红色的衣服，因为妈妈最喜欢红色。”所以选 B。"
+            },
+            {
+              "id": "r-q18",
+              "type": "fill_blank",
+              "prompt": "大商店的衣服一件要________块。",
+              "acceptedAnswers": [
+                "六百",
+                "600"
+              ],
+              "caseSensitive": false,
+              "explanation": "第二段写道：“但是太贵了，一件要六百块。”"
+            },
+            {
+              "id": "r-q19",
+              "type": "true_false_ng",
+              "prompt": "小店里的衣服比大商店里的便宜。",
+              "correctAnswer": "TRUE",
+              "explanation": "大商店的衣服一件六百块，小店里买到的是三百块的，所以小店里的衣服更便宜，故陈述正确。"
+            },
+            {
+              "id": "r-q20",
+              "type": "multiple_choice",
+              "prompt": "回家的路上，他们还买了什么？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "一个蛋糕"
+                },
+                {
+                  "id": "B",
+                  "text": "一瓶水"
+                },
+                {
+                  "id": "C",
+                  "text": "一本书"
+                },
+                {
+                  "id": "D",
+                  "text": "一双鞋"
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "最后一句写道：“回家的路上，我们还买了一个蛋糕。”所以选 A。"
+            }
+          ]
+        }
+      ]
+    },
+    "listening": {
+      "instructions": "听录音，回答 l-q1 到 l-q20 的问题。每段录音播放两遍。",
+      "parts": [
+        {
+          "id": "l-p1",
+          "title": "在饭馆点菜",
+          "audioConfig": {
+            "scenario": "everyday_dialogue",
+            "pacing": "slow",
+            "overallStyle": "标准普通话，语速较慢，发音清晰，日常生活语调，适合 HSK 2 级考生"
+          },
+          "speakers": [
+            {
+              "name": "FuWuyuan",
+              "gender": "female",
+              "voiceName": "Leda",
+              "style": "热情、礼貌、语速适中"
+            },
+            {
+              "name": "KeRen",
+              "gender": "male",
+              "voiceName": "Puck",
+              "style": "自然、平静"
+            }
+          ],
+          "transcript": "FuWuyuan: 您好，请问几位？\nKeRen: 三位。我们想坐在窗户旁边，可以吗？\nFuWuyuan: 可以，请这边走。这是菜单，您想吃什么？\nKeRen: 我要一个宫保鸡丁，一个西红柿鸡蛋汤。你们这儿有米饭吗？\nFuWuyuan: 有，米饭一碗两块钱。您要几碗？\nKeRen: 三碗。再来一瓶水，不要冰的。<chuckle>\nFuWuyuan: 好的，请稍等。",
+          "questions": [
+            {
+              "id": "l-q1",
+              "type": "multiple_choice",
+              "prompt": "他们一共有几个人？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "两个"
+                },
+                {
+                  "id": "B",
+                  "text": "三个"
+                },
+                {
+                  "id": "C",
+                  "text": "四个"
+                },
+                {
+                  "id": "D",
+                  "text": "五个"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "服务员问“请问几位？”，客人回答：“三位。”所以一共三个人，选 B。"
+            },
+            {
+              "id": "l-q2",
+              "type": "multiple_choice",
+              "prompt": "客人想坐在哪儿？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "门口"
+                },
+                {
+                  "id": "B",
+                  "text": "窗户旁边"
+                },
+                {
+                  "id": "C",
+                  "text": "外面"
+                },
+                {
+                  "id": "D",
+                  "text": "厨房旁边"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "客人说：“我们想坐在窗户旁边，可以吗？”所以选 B。"
+            },
+            {
+              "id": "l-q3",
+              "type": "fill_blank",
+              "prompt": "米饭一碗________块钱。",
+              "acceptedAnswers": [
+                "两",
+                "二",
+                "2"
+              ],
+              "caseSensitive": false,
+              "explanation": "服务员说：“米饭一碗两块钱。”"
+            },
+            {
+              "id": "l-q4",
+              "type": "multiple_select",
+              "prompt": "客人点了哪两个菜？（请选择两个正确答案）",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "宫保鸡丁"
+                },
+                {
+                  "id": "B",
+                  "text": "西红柿鸡蛋汤"
+                },
+                {
+                  "id": "C",
+                  "text": "面条"
+                },
+                {
+                  "id": "D",
+                  "text": "鱼"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "B"
+              ],
+              "explanation": "客人说：“我要一个宫保鸡丁，一个西红柿鸡蛋汤。”没有点面条和鱼，所以选 A 和 B。"
+            },
+            {
+              "id": "l-q5",
+              "type": "true_false_ng",
+              "prompt": "客人要一瓶冰水。",
+              "correctAnswer": "FALSE",
+              "explanation": "客人说：“再来一瓶水，不要冰的。”所以客人不要冰水，故陈述错误。"
+            }
+          ],
+          "audioUrl": "/tests/audio/hsk2-elementary-chinese-test-02-l-p1.mp3"
+        },
+        {
+          "id": "l-p2",
+          "title": "一起看电影",
+          "audioConfig": {
+            "scenario": "everyday_dialogue",
+            "pacing": "slow",
+            "overallStyle": "标准普通话，语速较慢，朋友之间轻松自然的电话交谈，适合 HSK 2 级考生"
+          },
+          "speakers": [
+            {
+              "name": "LiMing",
+              "gender": "male",
+              "voiceName": "Puck",
+              "style": "热情、友好"
+            },
+            {
+              "name": "XiaoHong",
+              "gender": "female",
+              "voiceName": "Aoede",
+              "style": "自然、开心"
+            }
+          ],
+          "transcript": "LiMing: 喂，小红，我是李明。明天晚上你有时间吗？\nXiaoHong: 有啊，怎么了？\nLiMing: 我有两张电影票，电影七点开始，你想去看吗？\nXiaoHong: 太好了！我最喜欢看电影。我们在哪儿见面？\nLiMing: 六点半在电影院门口见，好吗？\nXiaoHong: 好的。<laugh> 不过我明天下午要去看爷爷，你不要太早给我打电话。\nLiMing: 没问题，明天见！",
+          "questions": [
+            {
+              "id": "l-q6",
+              "type": "multiple_choice",
+              "prompt": "李明为什么给小红打电话？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "请她吃饭"
+                },
+                {
+                  "id": "B",
+                  "text": "请她看电影"
+                },
+                {
+                  "id": "C",
+                  "text": "问她作业"
+                },
+                {
+                  "id": "D",
+                  "text": "请她去医院"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "李明说：“我有两张电影票，电影七点开始，你想去看吗？”所以他是请小红看电影，选 B。"
+            },
+            {
+              "id": "l-q7",
+              "type": "fill_blank",
+              "prompt": "电影________点开始。",
+              "acceptedAnswers": [
+                "七",
+                "7"
+              ],
+              "caseSensitive": false,
+              "explanation": "李明说：“电影七点开始。”"
+            },
+            {
+              "id": "l-q8",
+              "type": "multiple_choice",
+              "prompt": "他们几点在哪儿见面？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "六点半，电影院门口"
+                },
+                {
+                  "id": "B",
+                  "text": "七点，学校门口"
+                },
+                {
+                  "id": "C",
+                  "text": "六点，小红家"
+                },
+                {
+                  "id": "D",
+                  "text": "七点半，商店"
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "李明说：“六点半在电影院门口见，好吗？”小红回答“好的”，所以选 A。"
+            },
+            {
+              "id": "l-q9",
+              "type": "true_false_ng",
+              "prompt": "小红明天下午要去看爷爷。",
+              "correctAnswer": "TRUE",
+              "explanation": "小红说：“我明天下午要去看爷爷。”故陈述正确。"
+            },
+            {
+              "id": "l-q10",
+              "type": "true_false_ng",
+              "prompt": "李明已经吃了晚饭。",
+              "correctAnswer": "NOT_GIVEN",
+              "explanation": "对话中没有提到李明是否吃了晚饭，故为“没提到”。"
+            }
+          ],
+          "audioUrl": "/tests/audio/hsk2-elementary-chinese-test-02-l-p2.mp3"
+        },
+        {
+          "id": "l-p3",
+          "title": "火车站广播",
+          "audioConfig": {
+            "scenario": "public_announcement",
+            "pacing": "slow",
+            "overallStyle": "标准普通话，车站广播语气，语速较慢，吐字清晰、端庄，适合 HSK 2 级考生"
+          },
+          "speakers": [
+            {
+              "name": "Announcer",
+              "gender": "female",
+              "voiceName": "Kore",
+              "style": "端庄、正式、吐字清晰"
+            }
+          ],
+          "transcript": "Announcer: 各位旅客请注意：去上海的火车现在开始检票，请到三号检票口上车。这趟火车今天晚了十分钟，八点四十出发。外面下雨了，请大家带好雨伞，不要把行李放在门口。上车以后，您可以在座位上休息。谢谢大家！",
+          "questions": [
+            {
+              "id": "l-q11",
+              "type": "multiple_choice",
+              "prompt": "这是在哪儿听到的广播？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "飞机场"
+                },
+                {
+                  "id": "B",
+                  "text": "火车站"
+                },
+                {
+                  "id": "C",
+                  "text": "医院"
+                },
+                {
+                  "id": "D",
+                  "text": "学校"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "广播说：“去上海的火车现在开始检票，请到三号检票口上车。”这是火车站的广播，选 B。"
+            },
+            {
+              "id": "l-q12",
+              "type": "fill_blank",
+              "prompt": "请旅客到________号检票口上车。",
+              "acceptedAnswers": [
+                "三",
+                "3"
+              ],
+              "caseSensitive": false,
+              "explanation": "广播说：“请到三号检票口上车。”"
+            },
+            {
+              "id": "l-q13",
+              "type": "multiple_choice",
+              "prompt": "这趟火车几点出发？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "八点"
+                },
+                {
+                  "id": "B",
+                  "text": "八点十分"
+                },
+                {
+                  "id": "C",
+                  "text": "八点四十"
+                },
+                {
+                  "id": "D",
+                  "text": "九点"
+                }
+              ],
+              "correctAnswer": "C",
+              "explanation": "广播说：“这趟火车今天晚了十分钟，八点四十出发。”所以选 C。"
+            },
+            {
+              "id": "l-q14",
+              "type": "true_false_ng",
+              "prompt": "今天外面在下雨。",
+              "correctAnswer": "TRUE",
+              "explanation": "广播说：“外面下雨了，请大家带好雨伞。”故陈述正确。"
+            },
+            {
+              "id": "l-q15",
+              "type": "multiple_select",
+              "prompt": "广播提醒旅客做哪两件事？（请选择两个正确答案）",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "带好雨伞"
+                },
+                {
+                  "id": "B",
+                  "text": "不要把行李放在门口"
+                },
+                {
+                  "id": "C",
+                  "text": "现在去买票"
+                },
+                {
+                  "id": "D",
+                  "text": "给家人打电话"
+                }
+              ],
+              "correctAnswers": [
+                "A",
+                "B"
+              ],
+              "explanation": "广播说：“请大家带好雨伞，不要把行李放在门口。”没有提到买票和打电话，所以选 A 和 B。"
+            }
+          ],
+          "audioUrl": "/tests/audio/hsk2-elementary-chinese-test-02-l-p3.mp3"
+        },
+        {
+          "id": "l-p4",
+          "title": "没带书的学生",
+          "audioConfig": {
+            "scenario": "everyday_dialogue",
+            "pacing": "slow",
+            "overallStyle": "标准普通话，语速较慢，老师温和耐心，学生有点不好意思，适合 HSK 2 级考生"
+          },
+          "speakers": [
+            {
+              "name": "Teacher",
+              "gender": "female",
+              "voiceName": "Autonoe",
+              "style": "温暖、亲切、有耐心"
+            },
+            {
+              "name": "Xiaoming",
+              "gender": "male",
+              "voiceName": "Puck",
+              "style": "有点不好意思、自然"
+            }
+          ],
+          "transcript": "Teacher: 小明，你今天怎么没有带书？\nXiaoming: 对不起，老师。我昨天晚上看足球比赛看得太晚，今天早上起床晚了，忘了带书。<sigh>\nTeacher: 足球比赛好看吗？\nXiaoming: 好看，我喜欢的队也踢得很好。可是我今天很累。\nTeacher: 你要早点儿睡觉。今天你先看小王的书，下午回家拿书，好吗？\nXiaoming: 好的，老师，谢谢您。我明天一定带来。",
+          "questions": [
+            {
+              "id": "l-q16",
+              "type": "multiple_choice",
+              "prompt": "小明今天没有带什么？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "书"
+                },
+                {
+                  "id": "B",
+                  "text": "手机"
+                },
+                {
+                  "id": "C",
+                  "text": "雨伞"
+                },
+                {
+                  "id": "D",
+                  "text": "水"
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "老师问：“你今天怎么没有带书？”小明回答“忘了带书”，所以选 A。"
+            },
+            {
+              "id": "l-q17",
+              "type": "multiple_choice",
+              "prompt": "小明今天为什么起床晚了？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "他生病了"
+                },
+                {
+                  "id": "B",
+                  "text": "他昨天晚上看足球比赛看得很晚"
+                },
+                {
+                  "id": "C",
+                  "text": "他的作业太多"
+                },
+                {
+                  "id": "D",
+                  "text": "路上的车太多"
+                }
+              ],
+              "correctAnswer": "B",
+              "explanation": "小明说：“我昨天晚上看足球比赛看得太晚，今天早上起床晚了。”所以选 B。"
+            },
+            {
+              "id": "l-q18",
+              "type": "true_false_ng",
+              "prompt": "小明喜欢的足球队踢得不好。",
+              "correctAnswer": "FALSE",
+              "explanation": "小明说：“我喜欢的队也踢得很好。”所以陈述错误。"
+            },
+            {
+              "id": "l-q19",
+              "type": "fill_blank",
+              "prompt": "老师说小明应该早点儿________。",
+              "acceptedAnswers": [
+                "睡觉",
+                "睡",
+                "睡觉了"
+              ],
+              "caseSensitive": false,
+              "explanation": "老师说：“你要早点儿睡觉。”"
+            },
+            {
+              "id": "l-q20",
+              "type": "multiple_choice",
+              "prompt": "下午小明要做什么？",
+              "options": [
+                {
+                  "id": "A",
+                  "text": "回家拿书"
+                },
+                {
+                  "id": "B",
+                  "text": "去商店"
+                },
+                {
+                  "id": "C",
+                  "text": "踢足球"
+                },
+                {
+                  "id": "D",
+                  "text": "找小王"
+                }
+              ],
+              "correctAnswer": "A",
+              "explanation": "老师说：“今天你先看小王的书，下午回家拿书，好吗？”小明回答“好的”，所以选 A。"
+            }
+          ],
+          "audioUrl": "/tests/audio/hsk2-elementary-chinese-test-02-l-p4.mp3"
+        }
+      ]
+    },
+    "speaking": {
+      "instructions": "请仔细阅读题目要求，准备 1 分钟后作答。请使用标准普通话，声音清楚，语速适中。每个任务回答时间约 1–2 分钟。",
+      "tasks": [
+        {
+          "id": "s-t1",
+          "title": "任务一：个人情况介绍",
+          "prompt": "请用汉语介绍你自己。你可以谈谈：\n- 你的名字、年龄和国家\n- 你的家人（有几口人，他们做什么工作）\n- 你的工作或学习情况\n- 你喜欢做什么，为什么学习汉语",
+          "rubric": [
+            {
+              "criterion": "语音与声调",
+              "description": "声母、韵母发音基本准确；四个声调清楚；能正确读出轻声和“一、不”的变调。"
+            },
+            {
+              "criterion": "词汇运用",
+              "description": "能准确使用 HSK 2 级常用词语（如“家人、工作、喜欢、因为”）；没有明显的用词错误。"
+            },
+            {
+              "criterion": "语法与句式规范",
+              "description": "语序正确；能正确使用“在、都、也、因为……所以……”等基本结构，句子完整。"
+            },
+            {
+              "criterion": "表达流利度与内容完整",
+              "description": "回答提示中的四个要点；语句连贯，停顿自然，没有过多重复或长时间沉默。"
+            }
+          ],
+          "sampleAnswer": "大家好，我叫阮文安，今年二十岁，是越南人。我家有四口人，爸爸、妈妈、一个妹妹和我。爸爸在公司工作，妈妈是老师，妹妹还在上中学。我是大学生，在河内学习。我喜欢踢足球，也喜欢看电影。我学习汉语是因为我想去中国旅游，还想认识很多中国朋友。谢谢大家！"
+        },
+        {
+          "id": "s-t2",
+          "title": "任务二：日常叙事——上个周末",
+          "prompt": "请说一说你上个周末做了什么。你可以谈谈：\n- 你周末去了哪儿，和谁一起去\n- 你们做了什么（可以用“先……然后……”）\n- 你觉得周末过得怎么样，为什么",
+          "rubric": [
+            {
+              "criterion": "内容完整性",
+              "description": "回答提示中的三个要点：地点和同伴、活动过程、感受和原因。"
+            },
+            {
+              "criterion": "时间顺序与连接",
+              "description": "能按时间顺序叙述，正确使用“先……然后……、后来、最后”等连接词。"
+            },
+            {
+              "criterion": "词汇与语法",
+              "description": "能正确使用“了、过、在、跟……一起”等，句子完整，无明显语序错误。"
+            },
+            {
+              "criterion": "语音语调与流利度",
+              "description": "发音和声调清楚，语速适中，语调自然，表达连贯。"
+            }
+          ],
+          "sampleAnswer": "上个周末天气很好，我和朋友一起去了公园。我们先在公园里走了一会儿，然后租了一辆自行车，骑了一个小时。中午我们在公园旁边的饭馆吃了面条，很好吃。下午我们回家休息，晚上我还看了一个电影。这个周末过得很开心，因为我和好朋友在一起，玩儿得很高兴。"
+        }
+      ]
+    },
+    "writing": {
+      "instructions": "请在答题区域内完成以下两项书写任务。注意汉字书写工整，标点符号正确，不要用拼音代替汉字。",
+      "tasks": [
+        {
+          "id": "w-t1",
+          "title": "任务一：留言条",
+          "prompt": "你的朋友小李邀请你星期六下午一起去打篮球，但是你要陪妈妈去医院看奶奶，不能去。请你给他写一张留言条（30–50 个汉字）：\n- 说明不能去的原因\n- 表示歉意\n- 提出另一个时间一起去",
+          "minWords": 30,
+          "rubric": [
+            {
+              "criterion": "格式与任务完成",
+              "description": "有称呼、正文、署名和日期；完整写出原因、道歉和新的约定时间。"
+            },
+            {
+              "criterion": "汉字书写",
+              "description": "汉字书写正确，没有错别字，没有用拼音代替汉字。"
+            },
+            {
+              "criterion": "词汇与语法",
+              "description": "语言得体，句子正确；能使用“对不起、因为、……好吗”等表达。"
+            },
+            {
+              "criterion": "标点符号",
+              "description": "正确使用中文全角的冒号、逗号、句号和问号。"
+            }
+          ],
+          "sampleAnswer": "小李：\n对不起，星期六我不能和你去打篮球了，因为我要陪妈妈去医院看奶奶。我们星期日下午去，好吗？\n小明\n十月二十日"
+        },
+        {
+          "id": "w-t2",
+          "title": "任务二：看图写短文",
+          "prompt": "请根据下面四幅图的内容，写一个小故事（60–80 个汉字）：\n图一：星期六早上，外面下雨了。\n图二：小红去公共汽车站，她没有带雨伞。\n图三：一个男孩走过来，把雨伞借给了她。\n图四：小红笑着对男孩说“谢谢”。",
+          "minWords": 60,
+          "rubric": [
+            {
+              "criterion": "内容与字数",
+              "description": "四幅图的内容都写到了；字数达到 60 字以上；故事完整，有开头和结尾。"
+            },
+            {
+              "criterion": "顺序与连接",
+              "description": "按图画顺序叙述，正确使用“这时候、后来”等连接词，前后连贯。"
+            },
+            {
+              "criterion": "词汇与语法",
+              "description": "能正确使用“了、着、把”等；用词正确，没有明显的病句。"
+            },
+            {
+              "criterion": "汉字与标点",
+              "description": "汉字书写正确，无错别字；正确使用中文全角标点。"
+            }
+          ],
+          "sampleAnswer": "星期六早上，外面下雨了。小红去公共汽车站，可是她没有带雨伞。这时候，一个男孩走过来，把雨伞借给了她。小红很高兴，笑着对他说：“谢谢你！”后来他们成了好朋友。"
+        }
+      ]
+    }
+  }
+}

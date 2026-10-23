@@ -13,6 +13,7 @@ import type {
   TestCatalog,
 } from '@/types/test';
 import { validateTestDocument } from '@/domain/validator';
+import { countWordsOrCharacters } from '@/domain/grader';
 import { SAMPLE_TEST_TEMPLATE } from '@/services/testTemplate';
 
 // --- Clean SVG Icons (Zero Emojis) ---
@@ -119,8 +120,7 @@ export function replaceIdInJsonText(originalJson: string, oldId: string, newId: 
 }
 
 function countWords(str?: string): number {
-  if (!str) return 0;
-  return str.trim().split(/\s+/).filter(Boolean).length;
+  return countWordsOrCharacters(str);
 }
 
 function getQuestionTypeLabel(type: string): string {
@@ -704,11 +704,6 @@ export const TestAuthoringView: React.FC = () => {
 
             {/* Editor Footer: Save Action Bar */}
             <div className="border-t-2 border-black p-4 bg-[#fffdf5] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-neutral-700">
-                <span className="w-2 h-2 rounded-full bg-neutral-600 inline-block"></span>
-                <span>Bảo vệ dữ liệu: Không ghi đè đề thi đã tồn tại ID trên hệ thống.</span>
-              </div>
-
               <button
                 type="button"
                 onClick={handleSave}
@@ -887,8 +882,8 @@ export const TestAuthoringView: React.FC = () => {
                         type="button"
                         onClick={() => setActivePreviewTab(tab.id)}
                         className={`px-2.5 py-1.5 font-bold transition-colors cursor-pointer border-2 shrink-0 ${activePreviewTab === tab.id
-                            ? 'bg-black text-[#fffdf5] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
-                            : 'bg-[#fffdf5] text-black border-transparent hover:border-black hover:bg-[#f4eed9]'
+                          ? 'bg-black text-[#fffdf5] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                          : 'bg-[#fffdf5] text-black border-transparent hover:border-black hover:bg-[#f4eed9]'
                           }`}
                       >
                         {tab.label}
@@ -1417,8 +1412,8 @@ const QuestionReviewCard: React.FC<{
                 <div
                   key={opt.id}
                   className={`p-1.5 border flex items-center justify-between gap-2 text-xs transition-colors ${isCorrect
-                      ? 'bg-emerald-50 border-emerald-700 text-emerald-950 font-bold'
-                      : 'bg-[#fffdf5] border-neutral-300 text-neutral-800'
+                    ? 'bg-emerald-50 border-emerald-700 text-emerald-950 font-bold'
+                    : 'bg-[#fffdf5] border-neutral-300 text-neutral-800'
                     }`}
                 >
                   <div className="flex items-center gap-2">
@@ -1444,8 +1439,8 @@ const QuestionReviewCard: React.FC<{
                 <div
                   key={opt.id}
                   className={`p-1.5 border flex items-center justify-between gap-2 text-xs transition-colors ${isCorrect
-                      ? 'bg-emerald-50 border-emerald-700 text-emerald-950 font-bold'
-                      : 'bg-[#fffdf5] border-neutral-300 text-neutral-800'
+                    ? 'bg-emerald-50 border-emerald-700 text-emerald-950 font-bold'
+                    : 'bg-[#fffdf5] border-neutral-300 text-neutral-800'
                     }`}
                 >
                   <div className="flex items-center gap-2">
@@ -1494,8 +1489,8 @@ const QuestionReviewCard: React.FC<{
                 <div
                   key={choice}
                   className={`px-3 py-1 border text-center font-bold ${isCorrect
-                      ? 'bg-emerald-600 text-[#fffdf5] border-black font-black'
-                      : 'bg-[#fffdf5] text-neutral-700 border-neutral-300'
+                    ? 'bg-emerald-600 text-[#fffdf5] border-black font-black'
+                    : 'bg-[#fffdf5] text-neutral-700 border-neutral-300'
                     }`}
                 >
                   {choice}

@@ -565,7 +565,7 @@
         {
           "id": "l-p1",
           "title": "Ordering Food at a Café",
-          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p1.wav",
+          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p1.mp3",
           "audioConfig": {
             "scenario": "everyday_dialogue",
             "accent": "british",
@@ -688,7 +688,7 @@
         {
           "id": "l-p2",
           "title": "A Phone Message About Mark's Birthday Party",
-          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p2.wav",
+          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p2.mp3",
           "audioConfig": {
             "scenario": "everyday_dialogue",
             "accent": "british",
@@ -806,7 +806,7 @@
         {
           "id": "l-p3",
           "title": "Asking for Directions to the Central Library",
-          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p3.wav",
+          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p3.mp3",
           "audioConfig": {
             "scenario": "everyday_dialogue",
             "accent": "british",
@@ -929,7 +929,7 @@
         {
           "id": "l-p4",
           "title": "Public Announcement at Grand Central Station",
-          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p4.wav",
+          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p4.mp3",
           "audioConfig": {
             "scenario": "public_announcement",
             "accent": "british",
@@ -1046,7 +1046,7 @@
         {
           "id": "l-p5",
           "title": "Planning a Weekend Camping Trip",
-          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p5.wav",
+          "audioUrl": "/tests/audio/a2-key-english-test-01-l-p5.mp3",
           "audioConfig": {
             "scenario": "everyday_dialogue",
             "accent": "british",

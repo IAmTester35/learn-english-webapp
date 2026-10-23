@@ -12,6 +12,28 @@ function normalizeText(text: string): string {
   return text.trim().replace(/\s+/g, ' ');
 }
 
+/**
+ * Accurately counts words for Latin-based languages and characters for CJK (Chinese, Japanese, Korean) languages.
+ * For mixed texts, sums CJK characters and whitespace-separated non-CJK words.
+ */
+export function countWordsOrCharacters(text?: string): number {
+  if (!text) return 0;
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+  // CJK Unified Ideographs, Extension A, Hiragana, Katakana, Hangul
+  const cjkMatches = trimmed.match(/[\u4e00-\u9fff\u3400-\u4dbf\u3040-\u30ff\uac00-\ud7af]/g);
+  const cjkCount = cjkMatches ? cjkMatches.length : 0;
+  // Strip CJK characters and count remaining words separated by whitespace
+  const nonCjk = trimmed.replace(/[\u4e00-\u9fff\u3400-\u4dbf\u3040-\u30ff\uac00-\ud7af]/g, ' ').trim();
+  const nonCjkWords = nonCjk ? nonCjk.split(/\s+/).filter(Boolean).length : 0;
+  return cjkCount + nonCjkWords;
+}
+
+export function isCjkText(text?: string): boolean {
+  if (!text) return false;
+  return /[\u4e00-\u9fff\u3400-\u4dbf\u3040-\u30ff\uac00-\ud7af]/.test(text);
+}
+
 export function gradeQuestion(question: Question, rawUserAnswer: string | string[] | undefined): QuestionResult {
   const userAnswer = rawUserAnswer ?? (question.type === 'multiple_select' ? [] : '');
 

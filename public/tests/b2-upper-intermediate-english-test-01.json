@@ -444,7 +444,7 @@
               "explanation": "Marcus says the client support department struggled initially to organize coverage, but does not mention whether clients actually complained."
             }
           ],
-          "audioUrl": "/tests/audio/b2-upper-intermediate-english-test-01-l-p1.wav"
+          "audioUrl": "/tests/audio/b2-upper-intermediate-english-test-01-l-p1.mp3"
         },
         {
           "id": "l-p2",
@@ -546,7 +546,7 @@
               "explanation": "The professor states: 'Compared to conventional buildings of similar size in Harare, the Eastgate Centre consumes roughly thirty-five percent less energy overall.'"
             }
           ],
-          "audioUrl": "/tests/audio/b2-upper-intermediate-english-test-01-l-p2.wav"
+          "audioUrl": "/tests/audio/b2-upper-intermediate-english-test-01-l-p2.mp3"
         },
         {
           "id": "l-p3",
@@ -676,7 +676,7 @@
               "explanation": "Elena says: 'Given that the town council gave us a generous grant last month, I think entry should be completely free...'"
             }
           ],
-          "audioUrl": "/tests/audio/b2-upper-intermediate-english-test-01-l-p3.wav"
+          "audioUrl": "/tests/audio/b2-upper-intermediate-english-test-01-l-p3.mp3"
         }
       ]
     },

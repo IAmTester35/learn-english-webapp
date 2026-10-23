@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 import { GoogleGenAI } from '@google/genai';
 import {
   buildListeningTtsRequest,
@@ -17,6 +18,44 @@ const TESTS_DIR = path.join(ROOT_DIR, 'public', 'tests');
 const AUDIO_DIR = path.join(TESTS_DIR, 'audio');
 const TEMP_MD_PATH = path.join(ROOT_DIR, 'temp.md');
 const HEALTH_FILE_PATH = path.join(ROOT_DIR, '.gemini_key_health.json');
+const ARCHIVE_AUDIO_DIR = path.join(ROOT_DIR, 'archive', 'audio');
+
+const HAS_FFMPEG = (() => {
+  try {
+    const res = spawnSync('ffmpeg', ['-version'], { stdio: 'ignore' });
+    return res.status === 0;
+  } catch {
+    return false;
+  }
+})();
+
+function saveAudioBytes(rawWavBytes: Uint8Array, outputPath: string): void {
+  // Tự động sao lưu bản WAV raw vào thư mục archive/audio/ cục bộ
+  try {
+    fs.mkdirSync(ARCHIVE_AUDIO_DIR, { recursive: true });
+    const wavArchiveName = path.basename(outputPath).replace(/\.mp3$/i, '.wav');
+    fs.writeFileSync(path.join(ARCHIVE_AUDIO_DIR, wavArchiveName), rawWavBytes);
+  } catch {
+    // Không làm gián đoạn nếu ghi archive gặp lỗi
+  }
+
+  if (outputPath.endsWith('.mp3') && HAS_FFMPEG) {
+    const tempWav = outputPath + '.tmp.wav';
+    fs.writeFileSync(tempWav, rawWavBytes);
+    const proc = spawnSync('ffmpeg', ['-y', '-i', tempWav, '-b:a', '96k', '-ar', '24000', outputPath], {
+      stdio: 'ignore',
+    });
+    try {
+      fs.unlinkSync(tempWav);
+    } catch {
+      // ignore
+    }
+    if (proc.status === 0 && fs.existsSync(outputPath)) {
+      return;
+    }
+  }
+  fs.writeFileSync(outputPath, rawWavBytes);
+}
 
 // Rate limit & Retry Configuration
 // Đã loại bỏ hoàn toàn thời gian chờ 5 phút: chỉ thử 1m (lần 1) và 3m (lần 2).
@@ -370,7 +409,7 @@ async function runDedicatedWorker(
         const { bytes } = combineAudioPartsToWavBytes(parts);
 
         // Incremental save: Ghi file âm thanh & cập nhật file JSON ngay lập tức
-        fs.writeFileSync(task.audioDiskPath, bytes);
+        saveAudioBytes(bytes, task.audioDiskPath);
         await updateTestJsonWithAudioUrl(task.filePath, task.part.id, task.publicAudioUrl);
 
         inFlightSet.delete(task.id);
@@ -525,16 +564,24 @@ async function main() {
         continue;
       }
 
-      const audioFileName = `${fileBase}-${part.id}.wav`;
+      const audioExt = HAS_FFMPEG ? 'mp3' : 'wav';
+      const audioFileName = `${fileBase}-${part.id}.${audioExt}`;
       const audioDiskPath = path.join(AUDIO_DIR, audioFileName);
       const publicAudioUrl = `/tests/audio/${audioFileName}`;
 
-      const fileExists =
-        fs.existsSync(audioDiskPath) && fs.statSync(audioDiskPath).size > 44;
+      const mp3Path = path.join(AUDIO_DIR, `${fileBase}-${part.id}.mp3`);
+      const wavPath = path.join(AUDIO_DIR, `${fileBase}-${part.id}.wav`);
+      const existingDiskPath = fs.existsSync(mp3Path)
+        ? mp3Path
+        : fs.existsSync(wavPath)
+        ? wavPath
+        : undefined;
+      const fileExists = existingDiskPath && fs.statSync(existingDiskPath).size > 44;
 
       if (fileExists && !force) {
-        if (part.audioUrl !== publicAudioUrl) {
-          await updateTestJsonWithAudioUrl(filePath, part.id, publicAudioUrl);
+        const existingPublicUrl = `/tests/audio/${path.basename(existingDiskPath!)}`;
+        if (part.audioUrl !== existingPublicUrl) {
+          await updateTestJsonWithAudioUrl(filePath, part.id, existingPublicUrl);
         }
         continue;
       }

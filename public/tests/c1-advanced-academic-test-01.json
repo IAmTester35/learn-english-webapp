@@ -304,7 +304,7 @@
         {
           "id": "l-p1",
           "title": "Part 1: Corporate Merger Post-Mortem",
-          "audioUrl": "/tests/audio/c1-advanced-academic-test-01-l-p1.wav",
+          "audioUrl": "/tests/audio/c1-advanced-academic-test-01-l-p1.mp3",
           "transcript": "Female Executive: Looking back at the Q3 acquisition of NexaTech, the financial press has been quick to blame our valuation model, suggesting we overpaid by twenty percent. Honestly, the balance sheet projections were rock solid—their recurring revenue stream has actually exceeded our baseline forecast.\nMale Director: Agreed. And contrary to what the board initially feared, integrating their cloud infrastructure with our legacy servers went off without a hitch. Where we really dropped the ball was underestimating the friction between their flat, autonomous engineering culture and our hierarchical compliance protocols. We've lost four of their lead architects in six months—not because of compensation packages, which we topped up generously, but because they felt stifled by our multi-tiered sign-off process.\nFemale Executive: Precisely. If we want to salvage the R&D pipeline before Q1, we need to ring-fence their product division and grant them operational autonomy, rather than forcing them into our standard corporate mold.",
           "questions": [
             {
@@ -348,7 +348,7 @@
         {
           "id": "l-p2",
           "title": "Part 2: Museum Conservation Ethics",
-          "audioUrl": "/tests/audio/c1-advanced-academic-test-01-l-p2.wav",
+          "audioUrl": "/tests/audio/c1-advanced-academic-test-01-l-p2.mp3",
           "transcript": "Curator: When we acquired this seventeenth-century Flemish tapestry, the temptation was to commission a full structural re-weaving of the frayed lower border. After all, sponsors love dramatic 'before-and-after' transformations. However, contemporary conservation doctrine leans heavily toward minimal intervention and strict reversibility. Previous nineteenth-century restorations on this piece used synthetic aniline dyes that have since oxidized into a harsh purple, distorting the original indigo palette. While we could chemically strip those nineteenth-century repairs, doing so risks weakening the brittle silk weft threads. Instead, we've opted for a non-invasive approach: stabilizing the loose warp threads with ultra-fine conservation netting and using calibrated LED projection mapping during exhibitions to visually reconstruct the faded colors without physically altering a single fiber.",
           "questions": [
             {
@@ -388,7 +388,7 @@
         {
           "id": "l-p3",
           "title": "Part 3: Academic Peer-Review Dispute",
-          "audioUrl": "/tests/audio/c1-advanced-academic-test-01-l-p3.wav",
+          "audioUrl": "/tests/audio/c1-advanced-academic-test-01-l-p3.mp3",
           "transcript": "Dr. Aris: I just read the referee reports from the Journal of Neuro-Linguistics on our bilingual aphasia manuscript. Referee One was overwhelmingly constructive—just asked us to clarify our demographic exclusion criteria. Referee Two, on the other hand, is demanding a complete re-analysis using Bayesian hierarchical modeling instead of our standard mixed-effects regression.\nDr. Chen: Let me guess—Referee Two also suggested citing three recent papers on Bayesian neurolinguistics, all authored by the same lab?\nDr. Aris: Spot on. Still, as irritating as coercive citation is, we shouldn't dismiss the methodological critique out of hand. Our sample size in the late-bilingual cohort is admittedly small—only fourteen participants—and frequentist mixed-effects models can produce inflated Type I error rates with sparse data.\nDr. Chen: Fair point. If we run a supplementary Bayesian sensitivity analysis and put it in the appendix, we can satisfy the editor's rigor requirements without scrapping our primary framework or rewriting the entire results section.",
           "questions": [
             {
@@ -446,7 +446,7 @@
         {
           "id": "l-p4",
           "title": "Part 4: Deep-Sea Polymetallic Nodule Mining",
-          "audioUrl": "/tests/audio/c1-advanced-academic-test-01-l-p4.wav",
+          "audioUrl": "/tests/audio/c1-advanced-academic-test-01-l-p4.mp3",
           "transcript": "Lecturer: Proponents of deep-sea mining in the Clarion-Clipperton Zone often frame the extraction of polymetallic nodules as the lesser of two evils. Terrestrial mining for cobalt, nickel, and manganese—essential for electric vehicle batteries—is undeniably linked to tropical deforestation, toxic tailings dams, and severe human rights abuses. By contrast, four thousand meters beneath the Pacific, nodules sit loosely on the abyssal plain, seemingly waiting to be vacuumed up with zero human displacement and a fraction of the carbon footprint.\n\nYet marine biologists warn that this 'barren desert' narrative is fundamentally flawed. The abyssal plain is a hyper-stable ecosystem where sediment accumulates at a rate of just one millimeter per millennium. Collector vehicles not only obliterate sessile fauna that depend on the nodules themselves as hard substrate, but also generate massive benthic sediment plumes. These suspended particulate clouds can drift for hundreds of kilometers, smothering filter-feeding organisms and introducing heavy metals into mid-water food webs that ultimately intersect with commercial tuna fisheries.",
           "questions": [
             {
@@ -493,7 +493,7 @@
         {
           "id": "l-p5",
           "title": "Part 5: Algorithmic Pricing and Tacit Collusion",
-          "audioUrl": "/tests/audio/c1-advanced-academic-test-01-l-p5.wav",
+          "audioUrl": "/tests/audio/c1-advanced-academic-test-01-l-p5.mp3",
           "transcript": "Legal Analyst: Traditional antitrust law is built around the concept of a 'meeting of the minds'—explicit communication between competitors to fix prices, whether in a smoke-filled room or via encrypted emails. Today, however, autonomous reinforcement-learning algorithms used by competing e-commerce platforms and hotel chains are giving rise to 'tacit algorithmic collusion'. Even when software engineers program pricing bots solely to maximize long-term profit without any instruction to collude, these algorithms independently learn through millions of pricing iterations that undercutting a rival triggers a mutually destructive price war. Consequently, the bots converge on supra-competitive prices and punish deviations instantaneously. Because no human executive ever agreed to fix prices, prosecuting this under existing cartel statutes is virtually impossible, forcing regulators to consider shifting liability onto firms for the foreseeable anti-competitive outcomes of their code.",
           "questions": [
             {

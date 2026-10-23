@@ -13,17 +13,53 @@ interface TestCatalogContainerProps {
   initialAttemptList: TestAttemptSummary[];
 }
 
-type LevelFilter = 'all' | 'A2' | 'B1' | 'B2' | 'C1';
-type StatusFilter = 'all' | 'in_progress' | 'completed' | 'not_started';
-type ViewMode = 'grid' | 'list';
+export type LanguageFilter = 'all' | 'en' | 'zh';
+export type LevelFilter = string;
+export type StatusFilter = 'all' | 'in_progress' | 'completed' | 'not_started';
+export type ViewMode = 'grid' | 'list';
 
-function extractLevel(test: TestCatalogItem): 'A2' | 'B1' | 'B2' | 'C1' | 'Other' {
+export interface TestLanguageInfo {
+  language: 'en' | 'zh';
+  label: string;
+  flag: string;
+  level: string;
+}
+
+export function getTestLanguageInfo(test: TestCatalogItem): TestLanguageInfo {
+  const isChinese =
+    test.id.toLowerCase().startsWith('hsk') ||
+    /[\u4e00-\u9fa5]/.test(test.title) ||
+    /[\u4e00-\u9fa5]/.test(test.description);
+
+  if (isChinese) {
+    const combined = (test.id + ' ' + test.title + ' ' + test.description).toUpperCase();
+    let level = 'HSK';
+    const hskMatch = combined.match(/HSK[\s_-]*([1-6])|([1-6])\s*级/i);
+    if (hskMatch) {
+      level = `HSK ${hskMatch[1] || hskMatch[2]}`;
+    }
+    return {
+      language: 'zh',
+      label: 'Tiếng Trung',
+      flag: '🇨🇳',
+      level,
+    };
+  }
+
+  // English
   const combined = (test.id + ' ' + test.title + ' ' + test.description).toUpperCase();
-  if (combined.includes('A2') || combined.includes('KEY')) return 'A2';
-  if (combined.includes('B2') || combined.includes('FCE') || combined.includes('FIRST')) return 'B2';
-  if (combined.includes('B1') || combined.includes('PET') || combined.includes('INTERMEDIATE')) return 'B1';
-  if (combined.includes('C1') || combined.includes('CAE') || combined.includes('ADVANCED')) return 'C1';
-  return 'Other';
+  let level = 'CEFR';
+  if (combined.includes('A2') || combined.includes('KEY')) level = 'A2';
+  else if (combined.includes('B2') || combined.includes('FCE') || combined.includes('FIRST')) level = 'B2';
+  else if (combined.includes('B1') || combined.includes('PET') || combined.includes('INTERMEDIATE')) level = 'B1';
+  else if (combined.includes('C1') || combined.includes('CAE') || combined.includes('ADVANCED')) level = 'C1';
+
+  return {
+    language: 'en',
+    label: 'Tiếng Anh',
+    flag: '🇬🇧',
+    level,
+  };
 }
 
 export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
@@ -31,6 +67,7 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
   initialProgressList,
   initialAttemptList,
 }) => {
+  const [languageFilter, setLanguageFilter] = useState<LanguageFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [levelFilter, setLevelFilter] = useState<LevelFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -47,6 +84,18 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
   // Safe hydration: use server initial lists on first render, switch to client state after mount
   const progressList = isMounted ? clientProgress : initialProgressList;
   const attemptsList = isMounted ? clientAttempts : initialAttemptList;
+
+  // Language counts
+  const counts = useMemo(() => {
+    let en = 0;
+    let zh = 0;
+    for (const t of tests) {
+      const info = getTestLanguageInfo(t);
+      if (info.language === 'en') en++;
+      else if (info.language === 'zh') zh++;
+    }
+    return { all: tests.length, en, zh };
+  }, [tests]);
 
   // Index maps
   const progressMap = useMemo(() => {
@@ -69,7 +118,6 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
     attemptsList.forEach((att) => {
       if (!map.has(att.testId)) {
         if ('scores' in att) {
-          // Full attempt from client
           map.set(att.testId, {
             id: att.id,
             testId: att.testId,
@@ -79,7 +127,6 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
             listeningScore: `${att.scores.listening.correctCount}/${att.scores.listening.totalCount}`,
           });
         } else {
-          // Summary from server
           map.set(att.testId, att as TestAttemptSummary);
         }
       }
@@ -87,10 +134,32 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
     return map;
   }, [attemptsList]);
 
+  // Contextual Level Filter options
+  const availableLevels = useMemo(() => {
+    if (languageFilter === 'en') {
+      return ['all', 'A2', 'B1', 'B2', 'C1'];
+    }
+    if (languageFilter === 'zh') {
+      return ['all', 'HSK 1', 'HSK 2', 'HSK 3', 'HSK 4', 'HSK 5', 'HSK 6'];
+    }
+    return ['all', 'A2', 'B1', 'B2', 'C1', 'HSK 2'];
+  }, [languageFilter]);
+
+  const handleLanguageChange = (lang: LanguageFilter) => {
+    setLanguageFilter(lang);
+    setLevelFilter('all');
+  };
+
   // Filter tests
   const filteredTests = useMemo(() => {
     let result = [...tests];
 
+    // 1. Language Filter
+    if (languageFilter !== 'all') {
+      result = result.filter((t) => getTestLanguageInfo(t).language === languageFilter);
+    }
+
+    // 2. Search Query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter(
@@ -101,10 +170,12 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
       );
     }
 
+    // 3. Level Filter
     if (levelFilter !== 'all') {
-      result = result.filter((t) => extractLevel(t) === levelFilter);
+      result = result.filter((t) => getTestLanguageInfo(t).level === levelFilter);
     }
 
+    // 4. Status Filter
     if (statusFilter === 'in_progress') {
       result = result.filter((t) => progressMap.has(t.id));
     } else if (statusFilter === 'completed') {
@@ -115,9 +186,10 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
 
     result.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
     return result;
-  }, [tests, searchQuery, levelFilter, statusFilter, progressMap, attemptMap]);
+  }, [tests, languageFilter, searchQuery, levelFilter, statusFilter, progressMap, attemptMap]);
 
   const handleResetFilters = () => {
+    setLanguageFilter('all');
     setSearchQuery('');
     setLevelFilter('all');
     setStatusFilter('all');
@@ -125,7 +197,45 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Search and Filters Toolbar */}
+      {/* 1. Primary Language Segmented Tabs */}
+      <section aria-label="Lựa chọn ngôn ngữ bài thi" className="w-full">
+        <div className="flex border-2 border-black bg-[#f4eed9] p-1 gap-1.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex-wrap sm:flex-nowrap">
+          {[
+            { id: 'all', label: 'Tất cả ngôn ngữ', count: counts.all, flag: '🌐' },
+            { id: 'en', label: 'Tiếng Anh (CEFR)', count: counts.en, flag: '🇬🇧' },
+            { id: 'zh', label: 'Tiếng Trung (HSK)', count: counts.zh, flag: '🇨🇳' },
+          ].map((tab) => {
+            const isActive = languageFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleLanguageChange(tab.id as LanguageFilter)}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 font-black text-xs sm:text-sm border-2 transition-all cursor-pointer select-none ${
+                  isActive
+                    ? 'bg-black text-[#fffdf5] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] -translate-y-0.5'
+                    : 'bg-[#fffdf5] text-black border-transparent hover:border-black hover:bg-[#fffcf0]'
+                }`}
+                aria-pressed={isActive}
+              >
+                <span className="text-base sm:text-lg shrink-0">{tab.flag}</span>
+                <span className="truncate">{tab.label}</span>
+                <span
+                  className={`font-mono text-xs px-2 py-0.5 border shrink-0 ${
+                    isActive
+                      ? 'border-[#fffdf5] bg-neutral-800 text-[#fffdf5]'
+                      : 'border-black bg-[#f4eed9] text-black'
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 2. Search and Contextual Filters Toolbar */}
       <section
         role="search"
         aria-label="Tìm kiếm và lọc đề thi"
@@ -141,7 +251,13 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="🔍 Tìm kiếm đề thi theo tên, mã đề (a2-key-01), trình độ (A2, B1, B2, C1)..."
+              placeholder={
+                languageFilter === 'zh'
+                  ? '🔍 Tìm kiếm đề thi HSK theo tên, mã đề (hsk2-test-01), chủ đề...'
+                  : languageFilter === 'en'
+                  ? '🔍 Tìm kiếm đề thi Tiếng Anh theo tên, mã đề (a2-key-01), trình độ (B1, B2)...'
+                  : '🔍 Tìm kiếm đề thi theo tên, mã đề, trình độ (A2, B1, B2, C1, HSK)...'
+              }
               className="w-full px-3.5 py-2.5 border-2 border-black bg-[#fcf8ed] text-black font-semibold text-sm placeholder:text-neutral-700 placeholder:font-normal focus-visible:outline-2"
             />
             {searchQuery && (
@@ -187,8 +303,10 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
         {/* Filter Pills */}
         <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-black text-xs">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="font-bold font-mono text-black">Trình độ:</span>
-            {(['all', 'A2', 'B1', 'B2', 'C1'] as LevelFilter[]).map((level) => (
+            <span className="font-bold font-mono text-black">
+              {languageFilter === 'zh' ? 'Cấp độ HSK:' : languageFilter === 'en' ? 'Trình độ CEFR:' : 'Trình độ:'}
+            </span>
+            {availableLevels.map((level) => (
               <button
                 key={level}
                 type="button"
@@ -209,7 +327,7 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
             <span className="font-bold font-mono text-black">Tiến độ:</span>
             {[
               { id: 'all', label: 'Tất cả' },
-              { id: 'in_progress', label: `Đang làm dở (${progressMap.size})` },
+              { id: 'in_progress', label: `Đang làm (${progressMap.size})` },
               { id: 'completed', label: `Đã nộp (${attemptMap.size})` },
               { id: 'not_started', label: 'Chưa làm' },
             ].map((st) => (
@@ -227,7 +345,7 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
             ))}
           </div>
 
-          {(searchQuery || levelFilter !== 'all' || statusFilter !== 'all') && (
+          {(searchQuery || levelFilter !== 'all' || statusFilter !== 'all' || languageFilter !== 'all') && (
             <button
               type="button"
               onClick={handleResetFilters}
@@ -243,6 +361,11 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
       <div className="flex items-center justify-between text-xs font-bold font-mono text-black" aria-live="polite">
         <span>
           Hiển thị <strong className="text-sm underline">{filteredTests.length}</strong> / {tests.length} bài thi
+          {languageFilter !== 'all' && (
+            <span className="ml-1 text-neutral-800">
+              ({languageFilter === 'zh' ? '🇨🇳 Tiếng Trung' : '🇬🇧 Tiếng Anh'})
+            </span>
+          )}
         </span>
         {searchQuery && (
           <span className="text-neutral-800">
@@ -263,7 +386,7 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
               Không tìm thấy đề thi nào phù hợp với điều kiện tìm kiếm.
             </p>
             <p className="text-xs text-neutral-800">
-              Hãy thử tìm kiếm với từ khóa khác hoặc bấm nút đặt lại bộ lọc bên dưới.
+              Hãy thử chọn tab ngôn ngữ khác hoặc bấm nút đặt lại bộ lọc bên dưới.
             </p>
             <button
               type="button"
@@ -276,7 +399,7 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {filteredTests.map((test) => {
-              const level = extractLevel(test);
+              const langInfo = getTestLanguageInfo(test);
               const initialProg = progressMap.get(test.id);
               const initialStat = attemptMap.get(test.id);
 
@@ -291,12 +414,17 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
                 >
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 font-mono text-xs">
-                        <span className="font-bold px-2 py-0.5 border-2 border-black bg-[#f4eed9]">
-                          {test.id}
+                      <div className="flex items-center gap-1.5 font-mono text-xs flex-wrap">
+                        {/* Language & Level Badges */}
+                        <span className="font-bold px-2 py-0.5 border-2 border-black bg-[#f4eed9] text-black flex items-center gap-1 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                          <span>{langInfo.flag}</span>
+                          <span>{langInfo.label}</span>
                         </span>
                         <span className="font-bold px-2 py-0.5 border-2 border-black bg-black text-[#fffdf5]">
-                          {level}
+                          {langInfo.level}
+                        </span>
+                        <span className="font-bold px-1.5 py-0.5 border border-neutral-400 bg-neutral-100 text-neutral-800 text-[11px]">
+                          {test.id}
                         </span>
                       </div>
                       <TestCardProgressIsland
@@ -339,7 +467,7 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
         ) : (
           <div className="border-2 border-black divide-y-2 divide-black bg-[#fffdf5] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             {filteredTests.map((test) => {
-              const level = extractLevel(test);
+              const langInfo = getTestLanguageInfo(test);
               const initialProg = progressMap.get(test.id);
               const initialStat = attemptMap.get(test.id);
 
@@ -352,11 +480,15 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
                 >
                   <div className="space-y-1.5 flex-1 min-w-0">
                     <div className="flex items-center gap-2 font-mono text-xs flex-wrap">
-                      <span className="font-bold px-2 py-0.5 border border-black bg-[#f4eed9]">
-                        {test.id}
+                      <span className="font-bold px-2 py-0.5 border border-black bg-[#f4eed9] text-black flex items-center gap-1">
+                        <span>{langInfo.flag}</span>
+                        <span>{langInfo.label}</span>
                       </span>
                       <span className="font-bold px-2 py-0.5 border border-black bg-black text-[#fffdf5]">
-                        {level}
+                        {langInfo.level}
+                      </span>
+                      <span className="font-bold px-1.5 py-0.5 border border-neutral-400 bg-neutral-100 text-neutral-800 text-[11px]">
+                        {test.id}
                       </span>
                       <TestCardProgressIsland
                         testId={test.id}

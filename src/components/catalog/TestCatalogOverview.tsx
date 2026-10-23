@@ -19,7 +19,7 @@ export const TestCatalogOverview: React.FC<TestCatalogOverviewProps> = ({ totalT
           <div className="flex items-center gap-2 flex-wrap">
             <span className="w-3.5 h-3.5 bg-black inline-block shrink-0"></span>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight text-black">
-              Kho Đề Thi Tiếng Anh 4 Kỹ Năng
+              Hệ Thống Khảo Thí Ngoại Ngữ
             </h2>
             <span className="font-mono text-xs font-bold px-2 py-0.5 border-2 border-black bg-[#f4eed9]">
               {totalTests} đề thi khả dụng
@@ -27,7 +27,7 @@ export const TestCatalogOverview: React.FC<TestCatalogOverviewProps> = ({ totalT
           </div>
 
           <p className="text-xs sm:text-sm font-semibold text-neutral-800 leading-relaxed">
-            Hệ thống đánh giá năng lực ngoại ngữ chuẩn hóa theo khung tham chiếu Châu Âu (CEFR) & Cambridge (A2, B1, B2, C1). Tích hợp phát audio tự động và chấm bài Writing thông minh bằng AI.
+            Nền tảng đánh giá năng lực ngoại ngữ chuẩn hóa quốc tế: <strong>Tiếng Anh</strong> (Cambridge / CEFR A2–C1) và <strong>Tiếng Trung</strong> (HSK 1–6).
           </p>
         </div>
 

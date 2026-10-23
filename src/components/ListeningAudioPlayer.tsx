@@ -23,6 +23,7 @@ interface ListeningAudioContextType {
   activePartId: string;
   activePart: ListeningPart | undefined;
   isPlaying: boolean;
+  isBuffering: boolean;
   currentTime: number;
   duration: number;
   playbackRate: number;
@@ -65,6 +66,7 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [activePartId, setActivePartId] = useState<string>(() => parts[0]?.id || '');
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isBuffering, setIsBuffering] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [playbackRate, setPlaybackRate] = useState<number>(1.0);
@@ -84,11 +86,32 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
     setIsStickyDismissed(true);
   }, []);
 
+  // Proactively prefetch all listening parts into browser cache
+  useEffect(() => {
+    if (!parts || parts.length === 0) return;
+    const prefetchElements: HTMLAudioElement[] = [];
+
+    parts.forEach((p) => {
+      if (p.audioUrl) {
+        const audio = new Audio();
+        audio.preload = 'auto';
+        audio.src = p.audioUrl;
+        prefetchElements.push(audio);
+      }
+    });
+
+    return () => {
+      prefetchElements.forEach((el) => {
+        el.src = '';
+      });
+    };
+  }, [parts]);
+
   // Initialize or update audio element when activePart changes
   useEffect(() => {
     if (!audioRef.current) {
       const audio = new Audio();
-      audio.preload = 'metadata';
+      audio.preload = 'auto';
       audioRef.current = audio;
     }
 
@@ -99,10 +122,12 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
       !audio.src.endsWith(activePart.audioUrl)
     ) {
       audio.src = activePart.audioUrl;
+      audio.preload = 'auto';
       audio.playbackRate = playbackRate;
       audio.volume = isMuted ? 0 : volume;
       setCurrentTime(0);
       setDuration(0);
+      setIsBuffering(false);
     }
   }, [activePart, playbackRate, volume, isMuted]);
 
@@ -123,9 +148,19 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
       }
     };
     const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
+    const handlePause = () => {
+      setIsPlaying(false);
+      setIsBuffering(false);
+    };
+    const handleWaiting = () => setIsBuffering(true);
+    const handlePlaying = () => {
+      setIsPlaying(true);
+      setIsBuffering(false);
+    };
+    const handleCanPlay = () => setIsBuffering(false);
     const handleEnded = () => {
       setIsPlaying(false);
+      setIsBuffering(false);
       audio.currentTime = 0;
       setCurrentTime(0);
       announce('Bài nghe đã kết thúc');
@@ -136,6 +171,9 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
     audio.addEventListener('durationchange', handleDurationChange);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
+    audio.addEventListener('waiting', handleWaiting);
+    audio.addEventListener('playing', handlePlaying);
+    audio.addEventListener('canplay', handleCanPlay);
     audio.addEventListener('ended', handleEnded);
 
     return () => {
@@ -144,6 +182,9 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
       audio.removeEventListener('durationchange', handleDurationChange);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('waiting', handleWaiting);
+      audio.removeEventListener('playing', handlePlaying);
+      audio.removeEventListener('canplay', handleCanPlay);
       audio.removeEventListener('ended', handleEnded);
     };
   }, [announce]);
@@ -366,6 +407,7 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
         activePartId,
         activePart,
         isPlaying,
+        isBuffering,
         currentTime,
         duration,
         playbackRate,
@@ -408,6 +450,7 @@ export const ListeningAudioPlayer: React.FC<ListeningAudioPlayerProps> = ({
   const {
     activePartId,
     isPlaying,
+    isBuffering,
     currentTime,
     duration,
     playbackRate,
@@ -423,6 +466,7 @@ export const ListeningAudioPlayer: React.FC<ListeningAudioPlayerProps> = ({
 
   const isCurrentActive = activePartId === part.id;
   const isPartPlaying = isCurrentActive && isPlaying;
+  const isPartBuffering = isCurrentActive && isBuffering;
   const effectiveCurrentTime = isCurrentActive ? currentTime : 0;
   const effectiveDuration = isCurrentActive ? duration : 0;
   const progressPercent =
@@ -546,14 +590,18 @@ export const ListeningAudioPlayer: React.FC<ListeningAudioPlayerProps> = ({
                 ? 'bg-neutral-900 text-[#fffdf5] hover:bg-neutral-800'
                 : 'bg-black text-[#fffdf5] hover:bg-neutral-800'
               }`}
-            title={isPartPlaying ? 'Tạm dừng (phím Space)' : 'Phát bài nghe (phím Space)'}
+            title={isPartBuffering ? 'Đang tải âm thanh...' : isPartPlaying ? 'Tạm dừng (phím Space)' : 'Phát bài nghe (phím Space)'}
             aria-label={
-              isPartPlaying
+              isPartBuffering
+                ? `Đang tải âm thanh ${part.title}`
+                : isPartPlaying
                 ? `Tạm dừng âm thanh ${part.title}`
                 : `Phát âm thanh ${part.title}`
             }
           >
-            {isPartPlaying ? (
+            {isPartBuffering ? (
+              <span className="inline-block animate-spin text-sm leading-none font-bold" aria-hidden="true">⟳</span>
+            ) : isPartPlaying ? (
               <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="6" y="5" width="4" height="14" rx="1" />
                 <rect x="14" y="5" width="4" height="14" rx="1" />
@@ -669,6 +717,7 @@ export const StickyListeningMiniPlayer: React.FC = () => {
     activePartId,
     activePart,
     isPlaying,
+    isBuffering,
     currentTime,
     duration,
     playbackRate,
@@ -730,10 +779,12 @@ export const StickyListeningMiniPlayer: React.FC = () => {
             type="button"
             onClick={() => togglePlayPause(activePartId)}
             className="w-9 h-9 rounded-full bg-black text-white hover:bg-neutral-800 flex items-center justify-center cursor-pointer transition-colors shadow-xs"
-            title={isPlaying ? 'Tạm dừng' : 'Phát'}
-            aria-label={isPlaying ? 'Tạm dừng âm thanh' : 'Phát âm thanh'}
+            title={isBuffering ? 'Đang tải âm thanh...' : isPlaying ? 'Tạm dừng' : 'Phát'}
+            aria-label={isBuffering ? 'Đang tải âm thanh' : isPlaying ? 'Tạm dừng âm thanh' : 'Phát âm thanh'}
           >
-            {isPlaying ? (
+            {isBuffering ? (
+              <span className="inline-block animate-spin text-xs leading-none font-bold" aria-hidden="true">⟳</span>
+            ) : isPlaying ? (
               <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="6" y="5" width="4" height="14" rx="1" />
                 <rect x="14" y="5" width="4" height="14" rx="1" />

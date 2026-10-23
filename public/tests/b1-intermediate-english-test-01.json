@@ -174,7 +174,7 @@
         {
           "id": "l-p1",
           "title": "Part 1: Planning a Weekend Trip to York",
-          "audioUrl": "/tests/audio/b1-intermediate-english-test-01-l-p1.wav",
+          "audioUrl": "/tests/audio/b1-intermediate-english-test-01-l-p1.mp3",
           "audioConfig": {
             "scenario": "everyday_dialogue",
             "accent": "british",
@@ -238,7 +238,7 @@
         {
           "id": "l-p2",
           "title": "Part 2: Radio Interview with a Young Bakery Owner",
-          "audioUrl": "/tests/audio/b1-intermediate-english-test-01-l-p2.wav",
+          "audioUrl": "/tests/audio/b1-intermediate-english-test-01-l-p2.mp3",
           "audioConfig": {
             "scenario": "interview",
             "accent": "british",
@@ -298,7 +298,7 @@
         {
           "id": "l-p3",
           "title": "Part 3: Sports Centre Student Orientation",
-          "audioUrl": "/tests/audio/b1-intermediate-english-test-01-l-p3.wav",
+          "audioUrl": "/tests/audio/b1-intermediate-english-test-01-l-p3.mp3",
           "audioConfig": {
             "scenario": "public_announcement",
             "accent": "british",

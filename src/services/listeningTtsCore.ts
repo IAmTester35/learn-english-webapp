@@ -79,14 +79,16 @@ export function inferGender(speakerName: string): 'female' | 'male' | 'unknown' 
   if (
     /\b(woman|female|girl|waitress|lady|mom|mother|sister|daughter|mrs|ms|miss|chloe|maria|sarah|elena|jane|anna|lisa|emma|lucy|sophie|olivia|emily|hannah|claire|jessica|rachel)\b/.test(
       lower
-    )
+    ) ||
+    /(女|妈妈|母亲|妹妹|姐姐|女儿|妻子|太太|女士|小红|李娜|王芳|老师)/.test(lower)
   ) {
     return 'female';
   }
   if (
     /\b(man|male|boy|waiter|sir|mr|dad|father|brother|son|sam|liam|daniel|mark|david|leo|joe|john|tom|alex|michael|peter|james|robert|paul|richard|george|steve)\b/.test(
       lower
-    )
+    ) ||
+    /(男|爸爸|父亲|弟弟|哥哥|儿子|丈夫|先生|大卫|王明|张勇|李明|小明|小马)/.test(lower)
   ) {
     return 'male';
   }
@@ -112,7 +114,7 @@ export function parseTranscriptDialogue(transcript: string): {
 
   const speakers: string[] = [];
   const turns: DialogueTurn[] = [];
-  const speakerRegex = /^([A-Za-z0-9_'\-.\(\) ]{1,48}):\s*(.+)$/;
+  const speakerRegex = /^([\p{L}\p{N}_'\-.\(\) ]{1,48})[:：]\s*(.+)$/u;
 
   for (const line of lines) {
     // Skip purely bracketed stage directions e.g. [Bell rings] or (Scene 1)
@@ -178,7 +180,9 @@ export function buildAudioStyleDirective(
         fragments.push('Canadian English accent');
         break;
       case 'standard':
-        fragments.push('neutral international English accent');
+        if (!audioConfig.overallStyle || !/(普通话|中文|汉语|chinese|mandarin)/i.test(audioConfig.overallStyle)) {
+          fragments.push('neutral international English accent');
+        }
         break;
     }
   }
@@ -249,7 +253,7 @@ export function resolveSpeakerProfiles(
 
   if (declaredSpeakers) {
     for (const s of declaredSpeakers) {
-      declaredMap.set(s.name.toLowerCase(), s);
+      declaredMap.set(s.name.trim().toLowerCase(), s);
     }
   }
 
@@ -259,7 +263,7 @@ export function resolveSpeakerProfiles(
   let maleIndex = 0;
 
   detectedSpeakers.forEach((speakerName, index) => {
-    const declared = declaredMap.get(speakerName.toLowerCase());
+    const declared = declaredMap.get(speakerName.trim().toLowerCase());
 
     // Determine gender
     let gender: 'female' | 'male' = 'female';
