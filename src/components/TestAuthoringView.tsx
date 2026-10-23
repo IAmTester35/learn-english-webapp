@@ -743,7 +743,7 @@ export const TestAuthoringView: React.FC = () => {
                     <IconAlert className="w-4 h-4 text-red-700" />
                     <span>Lỗi cú pháp JSON (Syntax Error)</span>
                   </div>
-                  <p className="text-xs font-mono text-red-900 break-words">{syntaxError}</p>
+                  <p className="text-xs font-mono text-red-900 wrap-break-word">{syntaxError}</p>
                 </div>
               )}
 
@@ -886,11 +886,10 @@ export const TestAuthoringView: React.FC = () => {
                         key={tab.id}
                         type="button"
                         onClick={() => setActivePreviewTab(tab.id)}
-                        className={`px-2.5 py-1.5 font-bold transition-colors cursor-pointer border-2 shrink-0 ${
-                          activePreviewTab === tab.id
+                        className={`px-2.5 py-1.5 font-bold transition-colors cursor-pointer border-2 shrink-0 ${activePreviewTab === tab.id
                             ? 'bg-black text-[#fffdf5] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
                             : 'bg-[#fffdf5] text-black border-transparent hover:border-black hover:bg-[#f4eed9]'
-                        }`}
+                          }`}
                       >
                         {tab.label}
                       </button>
@@ -943,7 +942,7 @@ export const TestAuthoringView: React.FC = () => {
 
                   {/* Tab 2: Reading Details */}
                   {activePreviewTab === 'reading' && (
-                    <div className="space-y-4 max-h-[34rem] overflow-y-auto pr-1">
+                    <div className="space-y-4 max-h-136 overflow-y-auto pr-1">
                       {parsedDoc.sections?.reading?.instructions && (
                         <div className="p-2.5 bg-[#f4eed9] border border-black text-xs font-semibold">
                           <span className="font-bold">Hướng dẫn: </span>
@@ -1004,7 +1003,7 @@ export const TestAuthoringView: React.FC = () => {
 
                   {/* Tab 3: Listening Details */}
                   {activePreviewTab === 'listening' && (
-                    <div className="space-y-4 max-h-[34rem] overflow-y-auto pr-1">
+                    <div className="space-y-4 max-h-136 overflow-y-auto pr-1">
                       {parsedDoc.sections?.listening?.instructions && (
                         <div className="p-2.5 bg-[#f4eed9] border border-black text-xs font-semibold">
                           <span className="font-bold">Hướng dẫn: </span>
@@ -1097,7 +1096,7 @@ export const TestAuthoringView: React.FC = () => {
 
                   {/* Tab 4: Speaking Details */}
                   {activePreviewTab === 'speaking' && (
-                    <div className="space-y-4 max-h-[34rem] overflow-y-auto pr-1">
+                    <div className="space-y-4 max-h-136 overflow-y-auto pr-1">
                       {parsedDoc.sections?.speaking?.instructions && (
                         <div className="p-2.5 bg-[#f4eed9] border border-black text-xs font-semibold">
                           <span className="font-bold">Hướng dẫn: </span>
@@ -1169,7 +1168,7 @@ export const TestAuthoringView: React.FC = () => {
 
                   {/* Tab 5: Writing Details */}
                   {activePreviewTab === 'writing' && (
-                    <div className="space-y-4 max-h-[34rem] overflow-y-auto pr-1">
+                    <div className="space-y-4 max-h-136 overflow-y-auto pr-1">
                       {parsedDoc.sections?.writing?.instructions && (
                         <div className="p-2.5 bg-[#f4eed9] border border-black text-xs font-semibold">
                           <span className="font-bold">Hướng dẫn: </span>
@@ -1248,7 +1247,7 @@ export const TestAuthoringView: React.FC = () => {
 
                   {/* Tab 6: Complete Answer Key Matrix */}
                   {activePreviewTab === 'answers' && (
-                    <div className="space-y-3 max-h-[34rem] overflow-y-auto pr-1">
+                    <div className="space-y-3 max-h-136 overflow-y-auto pr-1">
                       <div className="flex items-center justify-between text-xs font-semibold text-neutral-700 border-b border-black pb-1">
                         <span>Bảng đối chiếu toàn bộ đáp án chuẩn của đề thi:</span>
                         <span className="font-mono font-bold text-black">{answerKeyMatrix.length} câu hỏi</span>
@@ -1417,11 +1416,10 @@ const QuestionReviewCard: React.FC<{
               return (
                 <div
                   key={opt.id}
-                  className={`p-1.5 border flex items-center justify-between gap-2 text-xs transition-colors ${
-                    isCorrect
+                  className={`p-1.5 border flex items-center justify-between gap-2 text-xs transition-colors ${isCorrect
                       ? 'bg-emerald-50 border-emerald-700 text-emerald-950 font-bold'
                       : 'bg-[#fffdf5] border-neutral-300 text-neutral-800'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-bold w-5">{opt.id}.</span>
@@ -1445,11 +1443,10 @@ const QuestionReviewCard: React.FC<{
               return (
                 <div
                   key={opt.id}
-                  className={`p-1.5 border flex items-center justify-between gap-2 text-xs transition-colors ${
-                    isCorrect
+                  className={`p-1.5 border flex items-center justify-between gap-2 text-xs transition-colors ${isCorrect
                       ? 'bg-emerald-50 border-emerald-700 text-emerald-950 font-bold'
                       : 'bg-[#fffdf5] border-neutral-300 text-neutral-800'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-bold w-5">{opt.id}.</span>
@@ -1496,11 +1493,10 @@ const QuestionReviewCard: React.FC<{
               return (
                 <div
                   key={choice}
-                  className={`px-3 py-1 border text-center font-bold ${
-                    isCorrect
+                  className={`px-3 py-1 border text-center font-bold ${isCorrect
                       ? 'bg-emerald-600 text-[#fffdf5] border-black font-black'
                       : 'bg-[#fffdf5] text-neutral-700 border-neutral-300'
-                  }`}
+                    }`}
                 >
                   {choice}
                   {isCorrect && ' (Đúng)'}

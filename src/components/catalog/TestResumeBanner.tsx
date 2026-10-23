@@ -56,7 +56,7 @@ export const TestResumeBanner: React.FC<TestResumeBannerProps> = ({ initialProgr
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-mono font-bold px-1.5 py-0.2 border border-black bg-[#f4eed9] truncate max-w-[180px]">
+                  <span className="text-xs font-mono font-bold px-1.5 py-0.2 border border-black bg-[#f4eed9] truncate max-w-45">
                     {prog.testId}
                   </span>
                   <span suppressHydrationWarning className="text-[11px] font-mono font-semibold text-neutral-600 shrink-0">

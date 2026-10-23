@@ -12,9 +12,6 @@ export default async function HomePage() {
   ]);
 
   const totalTests = catalog.tests.length;
-  const inProgressCount = serverProgressList.length;
-  const completedCount = new Set(serverAttemptList.map((a) => a.testId)).size;
-  const attemptsCount = serverAttemptList.length;
 
   return (
     <main className="max-w-5xl mx-auto p-3 sm:p-4 md:p-6 space-y-6 w-full min-w-0 overflow-x-hidden">
