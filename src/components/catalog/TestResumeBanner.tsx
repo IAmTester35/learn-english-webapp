@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { Zap, Play, ArrowRight, Trash2 } from 'lucide-react';
 import type { TestProgressSummary } from '@/types/storage';
 import { useTestProgress } from '@/hooks/useTestProgress';
 import { deleteTestProgress } from '@/services/testProgressStorage';
@@ -30,19 +31,17 @@ export const TestResumeBanner: React.FC<TestResumeBannerProps> = ({ initialProgr
       className="border-2 border-black p-4 sm:p-5 bg-[#fff9e6] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-l-6 sm:border-l-8 border-l-amber-500 space-y-3.5 w-full min-w-0"
     >
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-black/80 pb-3">
+      <div className="flex items-center justify-between gap-2 border-b-2 border-black/80 pb-2.5">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-ping shrink-0" />
-          <span className="text-xs font-mono font-black uppercase tracking-wider bg-amber-300 text-black px-2 py-0.5 border-2 border-black shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)]">
-            ⚡ Tiếp tục làm bài
+          <span className="text-xs font-mono font-black uppercase tracking-wider bg-amber-300 text-black px-2 py-0.5 border-2 border-black shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1">
+            <Zap className="w-3.5 h-3.5 fill-current" />
+            <span>Đang làm dở</span>
           </span>
           <span className="text-xs font-mono font-bold text-neutral-800">
-            {progressList.length} bài chưa nộp
+            {progressList.length} bài
           </span>
         </div>
-        <p className="text-xs text-neutral-700 font-medium">
-          Dữ liệu được lưu an toàn trên máy của bạn
-        </p>
       </div>
 
       {/* Cards Grid */}
@@ -87,13 +86,16 @@ export const TestResumeBanner: React.FC<TestResumeBannerProps> = ({ initialProgr
                 </div>
               </div>
 
-              {/* Action Buttons: Primary Full Width CTA + Subtle Destructive link */}
-              <div className="space-y-2 pt-1 border-t border-neutral-300">
+              {/* Action Buttons */}
+              <div className="space-y-1.5 pt-1 border-t border-neutral-300">
                 <Link
                   href={`/test/${prog.testId}/${prog.lastActiveSection}`}
-                  className="w-full py-2.5 px-4 bg-amber-300 hover:bg-amber-400 text-black font-black text-xs sm:text-sm border-2 border-black text-center flex items-center justify-center gap-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
+                  prefetch={true}
+                  className="w-full py-2 px-3 bg-amber-300 hover:bg-amber-400 text-black font-black text-xs sm:text-sm border-2 border-black text-center flex items-center justify-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
                 >
-                  <span>▶ Tiếp tục làm ({prog.lastActiveSection.toUpperCase()}) &rarr;</span>
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Tiếp tục {prog.lastActiveSection.toUpperCase()}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
 
                 <div className="flex justify-end">
@@ -104,10 +106,11 @@ export const TestResumeBanner: React.FC<TestResumeBannerProps> = ({ initialProgr
                         deleteTestProgress(prog.testId);
                       }
                     }}
-                    className="text-[11px] font-semibold text-neutral-600 hover:text-black underline cursor-pointer"
+                    className="text-[11px] font-semibold text-neutral-600 hover:text-red-700 underline cursor-pointer flex items-center gap-1"
                     title="Xóa tiến độ bài thi này"
                   >
-                    Hủy bản nháp này
+                    <Trash2 className="w-3 h-3" />
+                    <span>Hủy nháp</span>
                   </button>
                 </div>
               </div>

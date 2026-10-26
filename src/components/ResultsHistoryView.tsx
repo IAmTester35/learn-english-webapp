@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
+import { Trash2, Sparkles, RefreshCw, FileQuestion, CheckCircle2 } from 'lucide-react';
 import type { TestAttempt } from '@/types/test';
 import { updateDeferredReview, deleteAttempt } from '@/services/attemptStorage';
 import { gradeWritingTaskWithServer } from '@/services/aiApi';
@@ -186,9 +187,10 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
     return (
       <main className="max-w-4xl mx-auto p-6 space-y-4">
         <div className="border-2 border-black p-8 text-center bg-[#fffdf5] space-y-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <h2 className="text-xl font-black text-black">Chưa có kết quả bài thi nào</h2>
-          <p className="text-sm font-semibold text-neutral-800">
-            Hãy vào mục &ldquo;Danh mục bài thi&rdquo; để chọn đề và hoàn thành bài kiểm tra.
+          <FileQuestion className="w-8 h-8 mx-auto text-neutral-600" />
+          <h2 className="text-xl font-black text-black">Chưa có kết quả bài thi</h2>
+          <p className="text-xs sm:text-sm font-semibold text-neutral-700">
+            Hãy vào mục &ldquo;Đề thi&rdquo; để chọn đề và bắt đầu làm bài.
           </p>
         </div>
       </main>
@@ -200,9 +202,9 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
       {/* Top Header & Selector */}
       <div className="border-2 border-black p-4 bg-[#fffdf5] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-full min-w-0">
         <div className="min-w-0 max-w-full">
-          <h2 className="text-xl font-black text-black">Hồ sơ kết quả bài thi (Local History)</h2>
-          <p className="text-xs font-semibold text-neutral-800">
-            Xem lại chi tiết câu trả lời, đối chiếu đáp án Reading / Listening và chấm điểm Speaking / Writing.
+          <h2 className="text-lg sm:text-xl font-black text-black">Hồ sơ kết quả thi</h2>
+          <p className="text-xs font-semibold text-neutral-700">
+            Chi tiết câu trả lời và bảng điểm kỹ năng.
           </p>
         </div>
 
@@ -296,9 +298,10 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                 <button
                   type="button"
                   onClick={() => handleDelete(currentAttempt.id)}
-                  className="self-start sm:self-center px-3 py-1.5 border-2 border-black text-xs font-bold bg-[#f4eed9] text-black hover:bg-black hover:text-[#fffdf5] transition-colors cursor-pointer"
+                  className="self-start sm:self-center px-2.5 py-1.5 border-2 border-black text-xs font-bold bg-[#f4eed9] text-black hover:bg-black hover:text-[#fffdf5] transition-colors cursor-pointer flex items-center gap-1"
                 >
-                  Xóa bài thi này
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Xóa kết quả</span>
                 </button>
               </div>
 
@@ -672,34 +675,34 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
             {/* SECTION 3: WRITING DEFERRED REVIEW */}
             <section aria-labelledby="writing-results-heading" className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-black pb-2">
-                <h3 id="writing-results-heading" className="text-lg font-black text-black">
-                  3. Kết quả chấm bài Writing (AI Gemini 3.8 Flash theo Rubric)
+                <h3 id="writing-results-heading" className="text-base sm:text-lg font-black text-black">
+                  3. Chấm bài Writing (AI Rubric)
                 </h3>
                 <button
                   type="button"
                   onClick={handleRegradeAllWriting}
                   disabled={isRegradingAllWriting}
-                  className="px-3.5 py-1.5 bg-[#f4eed9] text-black font-black text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
+                  className="px-3 py-1.5 bg-[#f4eed9] text-black font-black text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
                   title="Gọi AI Gemini chấm lại toàn bộ các task Writing"
                 >
                   {isRegradingAllWriting ? (
                     <>
-                      <span className="inline-block animate-spin">⟳</span>
-                      <span>Đang chấm lại tất cả...</span>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Đang chấm lại...</span>
                     </>
                   ) : (
                     <>
-                      <span>✦</span>
-                      <span>Chấm lại tất cả bài Writing bằng AI</span>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Chấm lại tất cả (AI)</span>
                     </>
                   )}
                 </button>
               </div>
 
               {isAutoGrading && (
-                <div className="p-3 bg-amber-50 border-2 border-black flex items-center gap-2 text-xs font-bold text-amber-950">
-                  <span className="inline-block animate-spin text-sm">⟳</span>
-                  <span>AI đang tự động chấm điểm bài viết của bạn trong nền. Điểm số và nhận xét sẽ tự động cập nhật ngay khi hoàn tất.</span>
+                <div className="p-2.5 bg-amber-50 border-2 border-black flex items-center gap-2 text-xs font-bold text-amber-950">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-900 shrink-0" />
+                  <span>AI đang tự động chấm bài viết trong nền.</span>
                 </div>
               )}
 
@@ -721,23 +724,18 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                             type="button"
                             onClick={() => handleRegradeWriting(rev.taskId, rev.userText)}
                             disabled={isTaskGrading}
-                            className="px-3 py-1 bg-[#f4eed9] text-black font-black text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                            className="px-2.5 py-1 bg-[#f4eed9] text-black font-black text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1"
                             title="Gọi AI Gemini chấm lại bài viết này"
                           >
                             {isTaskGrading ? (
                               <>
-                                <span className="inline-block animate-spin">⟳</span>
-                                <span>Đang chấm AI...</span>
-                              </>
-                            ) : rev.status === 'reviewed' ? (
-                              <>
-                                <span>✦</span>
-                                <span>Chấm lại bằng AI</span>
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                <span>Đang chấm...</span>
                               </>
                             ) : (
                               <>
-                                <span>✦</span>
-                                <span>Chấm bằng AI</span>
+                                <Sparkles className="w-3 h-3" />
+                                <span>Chấm AI</span>
                               </>
                             )}
                           </button>
@@ -876,10 +874,10 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                   COMING SOON
                 </span>
                 <h4 className="text-base sm:text-lg font-black text-black">
-                  Kỹ năng Speaking hiện chưa mở xem kết quả
+                  Kỹ năng Speaking đang hoàn thiện
                 </h4>
-                <p className="text-xs sm:text-sm font-semibold text-neutral-700 max-w-lg mx-auto leading-relaxed">
-                  Hệ thống đang tích hợp AI nhận diện giọng nói và tiêu chí chấm phát âm. Nội dung bài Speaking tạm thời được ẩn và sẽ được kích hoạt trong bản cập nhật tới.
+                <p className="text-xs sm:text-sm font-semibold text-neutral-700 max-w-md mx-auto">
+                  Module nhận diện giọng nói và chấm phát âm AI sẽ ra mắt trong bản cập nhật tiếp theo.
                 </p>
                 <div className="pt-2">
                   <button

@@ -2,6 +2,17 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  Pause,
+  Trash2,
+  Send,
+  ArrowDown,
+  Info,
+  BookOpen,
+  Headphones,
+  PenTool,
+  Mic,
+} from 'lucide-react';
 import type {
   TestDocument,
   UserAnswers,
@@ -37,10 +48,17 @@ interface TestRunnerViewProps {
 const SKILL_TABS: SkillTab[] = ['reading', 'listening', 'writing', 'speaking'];
 const ACTIVE_SKILL_TABS: SkillTab[] = ['reading', 'listening', 'writing'];
 const TAB_LABELS: Record<SkillTab, string> = {
-  reading: '1. Reading',
-  listening: '2. Listening',
-  writing: '3. Writing',
-  speaking: '4. Speaking',
+  reading: 'Reading',
+  listening: 'Listening',
+  writing: 'Writing',
+  speaking: 'Speaking',
+};
+
+const TAB_ICONS: Record<SkillTab, React.ReactNode> = {
+  reading: <BookOpen className="w-3.5 h-3.5 shrink-0" />,
+  listening: <Headphones className="w-3.5 h-3.5 shrink-0" />,
+  writing: <PenTool className="w-3.5 h-3.5 shrink-0" />,
+  speaking: <Mic className="w-3.5 h-3.5 shrink-0" />,
 };
 
 export function formatSectionTitle(prefix: string, index: number, rawTitle?: string): string {
@@ -482,27 +500,30 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
             type="button"
             onClick={handlePauseAndExit}
             disabled={isSubmitting}
-            className="px-3.5 py-2 border-2 border-black text-xs font-bold bg-[#fcf8ed] text-black hover:bg-[#f4eed9] disabled:opacity-50 cursor-pointer"
-            title="Lưu tiến độ làm bài vào bộ nhớ máy và quay về trang chủ"
+            className="px-3 py-1.5 border-2 border-black text-xs font-bold bg-[#fcf8ed] text-black hover:bg-[#f4eed9] disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+            title="Lưu tiến độ và về trang chủ"
           >
-            Tạm dừng & Về trang chủ
+            <Pause className="w-3.5 h-3.5" />
+            <span>Tạm dừng</span>
           </button>
           <button
             type="button"
             onClick={handleDiscardAndExit}
             disabled={isSubmitting}
-            className="px-3.5 py-2 border-2 border-black text-xs font-bold bg-[#fffdf5] text-neutral-800 hover:bg-black hover:text-[#fffdf5] disabled:opacity-50 cursor-pointer"
+            className="px-3 py-1.5 border-2 border-black text-xs font-bold bg-[#fffdf5] text-neutral-800 hover:bg-black hover:text-[#fffdf5] disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
             title="Xóa toàn bộ câu trả lời nháp của bài thi này"
           >
-            Hủy bài làm
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Hủy</span>
           </button>
           <button
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="px-4 py-2 bg-black text-[#fffdf5] text-xs font-black border-2 border-black hover:bg-[#fffdf5] hover:text-black transition-colors disabled:opacity-50 cursor-pointer"
+            className="px-3.5 py-1.5 bg-black text-[#fffdf5] text-xs font-black border-2 border-black hover:bg-[#fffdf5] hover:text-black transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
           >
-            {isSubmitting ? 'Đang chấm điểm...' : 'Nộp bài & Chấm điểm →'}
+            <Send className="w-3.5 h-3.5" />
+            <span>{isSubmitting ? 'Đang chấm...' : 'Nộp bài'}</span>
           </button>
         </div>
       </div>
@@ -525,17 +546,20 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
               id={`tab-${tab}`}
               type="button"
               onClick={() => handleGoToTab(tab)}
-              className={`py-2.5 sm:py-3 px-2 sm:px-4 text-center font-bold border-2 border-black transition-colors cursor-pointer relative ${isActive
+              className={`py-2 px-2 sm:px-3 text-center font-bold border-2 border-black transition-colors cursor-pointer relative ${isActive
                 ? 'bg-black text-[#fffdf5]'
                 : isSpeaking
                   ? 'bg-[#fcf8ed] text-neutral-600 hover:bg-[#f4eed9]'
                   : 'bg-[#fffdf5] text-black hover:bg-[#f4eed9]'
                 }`}
             >
-              <span>{TAB_LABELS[tab]}</span>
+              <span className="flex items-center justify-center gap-1.5 text-xs sm:text-sm">
+                {TAB_ICONS[tab]}
+                <span>{TAB_LABELS[tab]}</span>
+              </span>
               {isSpeaking && (
                 <span className="block text-[10px] font-mono font-bold px-1.5 py-0.2 mt-0.5 border border-black bg-[#f4eed9] text-black w-max mx-auto">
-                  Coming soon
+                  Sắp ra mắt
                 </span>
               )}
             </button>
@@ -553,8 +577,9 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
             aria-labelledby="tab-reading"
             className="space-y-6"
           >
-            <div className="p-3.5 border-2 border-black bg-[#f4eed9] text-sm font-semibold text-black">
-              <strong>Hướng dẫn:</strong> {test.sections.reading.instructions}
+            <div className="p-3 border-2 border-black bg-[#f4eed9] text-xs sm:text-sm font-semibold text-black flex items-start gap-2">
+              <Info className="w-4 h-4 shrink-0 text-black mt-0.5" />
+              <div>{test.sections.reading.instructions}</div>
             </div>
 
             {test.sections.reading.passages.map((passage, pIndex) => (
@@ -587,8 +612,9 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
             aria-labelledby="tab-listening"
             className="space-y-6"
           >
-            <div className="p-3.5 border-2 border-black bg-[#f4eed9] text-sm font-semibold text-black">
-              <strong>Hướng dẫn:</strong> {test.sections.listening.instructions}
+            <div className="p-3 border-2 border-black bg-[#f4eed9] text-xs sm:text-sm font-semibold text-black flex items-start gap-2">
+              <Info className="w-4 h-4 shrink-0 text-black mt-0.5" />
+              <div>{test.sections.listening.instructions}</div>
             </div>
 
             {/* Sticky Mini-Player xuất hiện khi cuộn xuống làm câu hỏi */}
@@ -624,8 +650,9 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
             aria-labelledby="tab-writing"
             className="space-y-6"
           >
-            <div className="p-3.5 border-2 border-black bg-[#f4eed9] text-sm font-semibold text-black">
-              <strong>Hướng dẫn:</strong> {test.sections.writing.instructions}
+            <div className="p-3 border-2 border-black bg-[#f4eed9] text-xs sm:text-sm font-semibold text-black flex items-start gap-2">
+              <Info className="w-4 h-4 shrink-0 text-black mt-0.5" />
+              <div>{test.sections.writing.instructions}</div>
             </div>
 
             {test.sections.writing.tasks.map((task, tIndex) => {
@@ -768,10 +795,10 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
       <button
         type="button"
         onClick={() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })}
-        className="fixed bottom-6 right-4 z-40 md:hidden px-3 py-2 bg-[#f4eed9] text-black font-black text-xs border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer flex items-center gap-1"
+        className="fixed bottom-6 right-4 z-40 md:hidden px-2.5 py-2 bg-[#f4eed9] text-black font-black text-xs border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer flex items-center gap-1"
         title="Cuộn xuống cuối bài thi"
       >
-        <span>↓</span>
+        <ArrowDown className="w-3.5 h-3.5" />
         <span>Cuối bài</span>
       </button>
     </main>

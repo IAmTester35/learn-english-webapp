@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Clock, CheckCircle2, Play, ArrowRight, RotateCcw, Zap } from 'lucide-react';
 import type { TestProgressSummary, TestAttemptSummary } from '@/types/storage';
 import { useTestProgress } from '@/hooks/useTestProgress';
 import { useAttempts } from '@/hooks/useAttempts';
@@ -62,16 +63,17 @@ export const TestCardProgressIsland: React.FC<TestCardProgressIslandProps> = ({
   if (mode === 'badge') {
     if (progress) {
       return (
-        <span className="text-xs font-black font-mono px-2 py-0.5 border-2 border-black bg-amber-300 text-black shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1.5 shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
-          <span>Đang dở {progressPercent}%</span>
+        <span className="text-xs font-black font-mono px-2 py-0.5 border-2 border-black bg-amber-300 text-black shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1 shrink-0">
+          <Clock className="w-3 h-3 shrink-0" />
+          <span>{progressPercent}%</span>
         </span>
       );
     }
     if (stats) {
       return (
         <span className="text-xs font-bold font-mono px-2 py-0.5 border border-emerald-800 bg-emerald-100 text-emerald-950 flex items-center gap-1 shrink-0">
-          <span>✓ Đã nộp ({stats.count})</span>
+          <CheckCircle2 className="w-3 h-3 text-emerald-800 shrink-0" />
+          <span>{stats.count} lần</span>
         </span>
       );
     }
@@ -130,9 +132,12 @@ export const TestCardProgressIsland: React.FC<TestCardProgressIslandProps> = ({
           {/* Primary High-Visibility Resume CTA Button */}
           <Link
             href={`/test/${testId}/${progress.lastActiveSection}`}
-            className="w-full py-2.5 px-4 bg-amber-300 hover:bg-amber-400 text-black font-black text-sm border-2 border-black text-center flex items-center justify-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer focus-visible:outline-2"
+            prefetch={true}
+            className="w-full py-2 px-3 bg-amber-300 hover:bg-amber-400 text-black font-black text-xs sm:text-sm border-2 border-black text-center flex items-center justify-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer focus-visible:outline-2"
           >
-            <span>▶ Tiếp tục làm ({progress.lastActiveSection.toUpperCase()}) &rarr;</span>
+            <Play className="w-3.5 h-3.5 fill-current" />
+            <span>Tiếp tục {progress.lastActiveSection.toUpperCase()}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
 
           {/* Secondary Subdued Actions Row */}
@@ -142,7 +147,7 @@ export const TestCardProgressIsland: React.FC<TestCardProgressIslandProps> = ({
                 href={`/results/${stats.id}`}
                 className="text-neutral-700 hover:text-black font-bold text-xs underline cursor-pointer"
               >
-                Kết quả cũ ({stats.readingScore} R)
+                Kết quả ({stats.readingScore} R)
               </Link>
             ) : <span />}
 
@@ -154,10 +159,11 @@ export const TestCardProgressIsland: React.FC<TestCardProgressIslandProps> = ({
                   router.push(`/test/${testId}/reading`);
                 }
               }}
-              className="text-neutral-500 hover:text-red-700 underline font-semibold text-xs cursor-pointer ml-auto"
+              className="text-neutral-500 hover:text-red-700 underline font-semibold text-xs cursor-pointer ml-auto flex items-center gap-1"
               title="Xóa tiến độ dở và làm lại từ đầu"
             >
-              Làm lại từ đầu
+              <RotateCcw className="w-3 h-3" />
+              <span>Làm lại</span>
             </button>
           </div>
         </div>
@@ -168,17 +174,19 @@ export const TestCardProgressIsland: React.FC<TestCardProgressIslandProps> = ({
       <div className="pt-2 border-t-2 border-black flex items-center gap-2">
         <Link
           href={`/test/${testId}`}
-          className="flex-1 px-4 py-2.5 bg-black text-[#fffdf5] font-black text-sm border-2 border-black hover:bg-[#fffdf5] hover:text-black transition-colors text-center inline-block cursor-pointer focus-visible:outline-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+          prefetch={true}
+          className="flex-1 px-3.5 py-2 bg-black text-[#fffdf5] font-black text-xs sm:text-sm border-2 border-black hover:bg-[#fffdf5] hover:text-black transition-colors text-center flex items-center justify-center gap-1 cursor-pointer focus-visible:outline-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
         >
-          Bắt đầu làm bài &rarr;
+          <span>Làm bài</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </Link>
         {stats && (
           <Link
             href={`/results/${stats.id}`}
-            className="px-3 py-2.5 bg-[#f4eed9] text-black font-bold text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors text-center inline-block cursor-pointer focus-visible:outline-2 shrink-0"
+            className="px-2.5 py-2 bg-[#f4eed9] text-black font-bold text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors text-center inline-block cursor-pointer focus-visible:outline-2 shrink-0"
             title="Xem lại kết quả bài nộp gần nhất"
           >
-            Kết quả cũ
+            Kết quả
           </Link>
         )}
       </div>
@@ -190,13 +198,15 @@ export const TestCardProgressIsland: React.FC<TestCardProgressIslandProps> = ({
     return (
       <>
         {progress && (
-          <span className="font-black px-2 py-0.5 border-2 border-black bg-amber-300 text-black text-xs shadow-xs">
-            ⚡ Đang dở: {progressPercent}% ({progress.lastActiveSection})
+          <span className="font-black px-2 py-0.5 border-2 border-black bg-amber-300 text-black text-xs shadow-xs flex items-center gap-1">
+            <Zap className="w-3 h-3 fill-current" />
+            <span>{progressPercent}% ({progress.lastActiveSection})</span>
           </span>
         )}
         {stats && (
-          <span className="font-bold px-2 py-0.5 border border-emerald-800 bg-emerald-100 text-emerald-950 text-xs">
-            ✓ Đã nộp ({stats.count} lần)
+          <span className="font-bold px-2 py-0.5 border border-emerald-800 bg-emerald-100 text-emerald-950 text-xs flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3 text-emerald-800" />
+            <span>{stats.count} lần</span>
           </span>
         )}
       </>
@@ -211,9 +221,11 @@ export const TestCardProgressIsland: React.FC<TestCardProgressIslandProps> = ({
           <>
             <Link
               href={`/test/${testId}/${progress.lastActiveSection}`}
-              className="px-3.5 py-2 bg-amber-300 hover:bg-amber-400 text-black font-black text-xs border-2 border-black transition-colors text-center cursor-pointer shadow-xs"
+              prefetch={true}
+              className="px-3 py-1.5 bg-amber-300 hover:bg-amber-400 text-black font-black text-xs border-2 border-black transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
             >
-              ▶ Tiếp tục ({progress.lastActiveSection})
+              <Play className="w-3 h-3 fill-current" />
+              <span>Tiếp tục ({progress.lastActiveSection})</span>
             </Link>
             <button
               type="button"
@@ -223,7 +235,7 @@ export const TestCardProgressIsland: React.FC<TestCardProgressIslandProps> = ({
                   router.push(`/test/${testId}/reading`);
                 }
               }}
-              className="px-2 py-2 text-xs font-semibold text-neutral-500 hover:text-red-700 underline cursor-pointer"
+              className="px-1.5 py-1 text-xs font-semibold text-neutral-500 hover:text-red-700 underline cursor-pointer"
               title="Làm lại từ đầu"
             >
               Làm lại
@@ -232,15 +244,17 @@ export const TestCardProgressIsland: React.FC<TestCardProgressIslandProps> = ({
         ) : (
           <Link
             href={`/test/${testId}`}
-            className="px-4 py-2 bg-black text-[#fffdf5] font-black text-xs border-2 border-black hover:bg-[#fffdf5] hover:text-black transition-colors text-center cursor-pointer"
+            prefetch={true}
+            className="px-3 py-1.5 bg-black text-[#fffdf5] font-black text-xs border-2 border-black hover:bg-[#fffdf5] hover:text-black transition-colors flex items-center gap-1 cursor-pointer"
           >
-            Làm bài &rarr;
+            <span>Làm bài</span>
+            <ArrowRight className="w-3 h-3" />
           </Link>
         )}
         {stats && (
           <Link
             href={`/results/${stats.id}`}
-            className="px-3 py-2 bg-[#fcf8ed] text-black font-bold text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors text-center cursor-pointer"
+            className="px-2.5 py-1.5 bg-[#fcf8ed] text-black font-bold text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors text-center cursor-pointer"
           >
             Kết quả
           </Link>

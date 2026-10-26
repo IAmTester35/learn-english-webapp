@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { Search, X, LayoutGrid, List, RotateCcw } from 'lucide-react';
 import type { TestCatalogItem } from '@/types/test';
 import type { TestProgressSummary, TestAttemptSummary } from '@/types/storage';
 import { useTestProgress } from '@/hooks/useTestProgress';
@@ -201,9 +202,9 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
       <section aria-label="Lựa chọn ngôn ngữ bài thi" className="w-full">
         <div className="flex border-2 border-black bg-[#f4eed9] p-1 gap-1.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex-wrap sm:flex-nowrap">
           {[
-            { id: 'all', label: 'Tất cả ngôn ngữ', count: counts.all, flag: '🌐' },
-            { id: 'en', label: 'Tiếng Anh (CEFR)', count: counts.en, flag: '🇬🇧' },
-            { id: 'zh', label: 'Tiếng Trung (HSK)', count: counts.zh, flag: '🇨🇳' },
+            { id: 'all', label: 'Tất cả', count: counts.all, flag: '🌐' },
+            { id: 'en', label: 'Tiếng Anh', count: counts.en, flag: '🇬🇧' },
+            { id: 'zh', label: 'Tiếng Trung', count: counts.zh, flag: '🇨🇳' },
           ].map((tab) => {
             const isActive = languageFilter === tab.id;
             return (
@@ -211,17 +212,17 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
                 key={tab.id}
                 type="button"
                 onClick={() => handleLanguageChange(tab.id as LanguageFilter)}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 font-black text-xs sm:text-sm border-2 transition-all cursor-pointer select-none ${
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 font-black text-xs sm:text-sm border-2 transition-all cursor-pointer select-none ${
                   isActive
                     ? 'bg-black text-[#fffdf5] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] -translate-y-0.5'
                     : 'bg-[#fffdf5] text-black border-transparent hover:border-black hover:bg-[#fffcf0]'
                 }`}
                 aria-pressed={isActive}
               >
-                <span className="text-base sm:text-lg shrink-0">{tab.flag}</span>
+                <span className="text-base shrink-0">{tab.flag}</span>
                 <span className="truncate">{tab.label}</span>
                 <span
-                  className={`font-mono text-xs px-2 py-0.5 border shrink-0 ${
+                  className={`font-mono text-xs px-1.5 py-0.2 border shrink-0 ${
                     isActive
                       ? 'border-[#fffdf5] bg-neutral-800 text-[#fffdf5]'
                       : 'border-black bg-[#f4eed9] text-black'
@@ -239,10 +240,11 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
       <section
         role="search"
         aria-label="Tìm kiếm và lọc đề thi"
-        className="border-2 border-black p-4 bg-[#fffdf5] space-y-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+        className="border-2 border-black p-3 sm:p-4 bg-[#fffdf5] space-y-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
       >
-        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
           <div className="relative flex-1">
+            <Search className="w-4 h-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <label htmlFor="test-search-input" className="sr-only">
               Tìm kiếm đề thi
             </label>
@@ -251,23 +253,17 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={
-                languageFilter === 'zh'
-                  ? '🔍 Tìm kiếm đề thi HSK theo tên, mã đề (hsk2-test-01), chủ đề...'
-                  : languageFilter === 'en'
-                  ? '🔍 Tìm kiếm đề thi Tiếng Anh theo tên, mã đề (a2-key-01), trình độ (B1, B2)...'
-                  : '🔍 Tìm kiếm đề thi theo tên, mã đề, trình độ (A2, B1, B2, C1, HSK)...'
-              }
-              className="w-full px-3.5 py-2.5 border-2 border-black bg-[#fcf8ed] text-black font-semibold text-sm placeholder:text-neutral-700 placeholder:font-normal focus-visible:outline-2"
+              placeholder="Tìm theo tên, mã đề, trình độ..."
+              className="w-full pl-9 pr-8 py-2 border-2 border-black bg-[#fcf8ed] text-black font-semibold text-xs sm:text-sm placeholder:text-neutral-500 placeholder:font-normal focus-visible:outline-2"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold px-2 py-0.5 bg-black text-[#fffdf5] hover:opacity-80"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-neutral-600 hover:text-black"
                 aria-label="Xóa từ khóa tìm kiếm"
               >
-                Xóa
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -277,34 +273,36 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`px-3 py-2 cursor-pointer transition-colors ${
+                className={`px-2.5 py-1.5 cursor-pointer transition-colors flex items-center gap-1 ${
                   viewMode === 'grid' ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-[#f4eed9]'
                 }`}
                 aria-pressed={viewMode === 'grid'}
                 title="Chế độ lưới (Grid)"
               >
-                ⊞ Thẻ lưới
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Lưới</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('list')}
-                className={`px-3 py-2 border-l-2 border-black cursor-pointer transition-colors ${
+                className={`px-2.5 py-1.5 border-l-2 border-black cursor-pointer transition-colors flex items-center gap-1 ${
                   viewMode === 'list' ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-[#f4eed9]'
                 }`}
                 aria-pressed={viewMode === 'list'}
                 title="Chế độ danh sách (List)"
               >
-                ☰ Danh sách
+                <List className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Danh sách</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Filter Pills */}
-        <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-black text-xs">
+        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-black text-xs">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="font-bold font-mono text-black">
-              {languageFilter === 'zh' ? 'Cấp độ HSK:' : languageFilter === 'en' ? 'Trình độ CEFR:' : 'Trình độ:'}
+              {languageFilter === 'zh' ? 'Cấp độ:' : languageFilter === 'en' ? 'Trình độ:' : 'Trình độ:'}
             </span>
             {availableLevels.map((level) => (
               <button
@@ -349,9 +347,10 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
             <button
               type="button"
               onClick={handleResetFilters}
-              className="ml-auto underline font-bold text-xs text-black hover:opacity-70 cursor-pointer"
+              className="ml-auto flex items-center gap-1 font-bold text-xs text-neutral-700 hover:text-black cursor-pointer underline"
             >
-              &times; Đặt lại tất cả bộ lọc
+              <RotateCcw className="w-3 h-3" />
+              <span>Đặt lại</span>
             </button>
           )}
         </div>

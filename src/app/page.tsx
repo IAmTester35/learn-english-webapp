@@ -4,6 +4,8 @@ import { TestCatalogOverview } from '@/components/catalog/TestCatalogOverview';
 import { TestResumeBanner } from '@/components/catalog/TestResumeBanner';
 import { TestCatalogContainer } from '@/components/catalog/TestCatalogContainer';
 
+export const revalidate = 60;
+
 export default async function HomePage() {
   const [catalog, serverProgressList, serverAttemptList] = await Promise.all([
     getTestCatalog(),

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Neo-brutalist rounded container -->
+  <rect width="32" height="32" rx="7" fill="#0f0f11"/>
+  <rect x="1" y="1" width="30" height="30" rx="6" fill="none" stroke="#fffdf5" stroke-width="1" stroke-opacity="0.25"/>
+  
+  <!-- Stylized bold 'L' in cream -->
+  <path d="M 7 7 H 12 V 20 H 21 V 25 H 7 Z" fill="#fffdf5"/>
+  
+  <!-- Assessment / Test checkmark badge -->
+  <circle cx="22" cy="11" r="5.5" fill="#10b981"/>
+  <path d="M 19.5 11 L 21.2 12.7 L 24.5 9.3" fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

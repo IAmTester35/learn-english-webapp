@@ -16,60 +16,17 @@ import { validateTestDocument } from '@/domain/validator';
 import { countWordsOrCharacters } from '@/domain/grader';
 import { SAMPLE_TEST_TEMPLATE } from '@/services/testTemplate';
 
-// --- Clean SVG Icons (Zero Emojis) ---
-const IconUpload = () => (
-  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-  </svg>
-);
-
-const IconTemplate = () => (
-  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-  </svg>
-);
-
-const IconPrettify = () => (
-  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-  </svg>
-);
-
-const IconMinify = () => (
-  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
-  </svg>
-);
-
-const IconDownload = () => (
-  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-  </svg>
-);
-
-const IconRules = () => (
-  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const IconCheck = ({ className = 'w-4 h-4' }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-  </svg>
-);
-
-const IconAlert = ({ className = 'w-4 h-4' }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-  </svg>
-);
-
-const IconX = ({ className = 'w-4 h-4' }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
+import {
+  Upload as IconUpload,
+  FileCode as IconTemplate,
+  Sparkles as IconPrettify,
+  Minimize2 as IconMinify,
+  Download as IconDownload,
+  HelpCircle as IconRules,
+  Check as IconCheck,
+  AlertTriangle as IconAlert,
+  X as IconX,
+} from 'lucide-react';
 
 // --- Helpers ---
 export function getNextIncrementedId(currentId: string, existingList: string[]): string {
@@ -483,14 +440,14 @@ export const TestAuthoringView: React.FC = () => {
             <div className="flex items-center gap-2 mb-1">
               <span className="w-3.5 h-3.5 bg-black inline-block"></span>
               <span className="text-xs font-mono font-bold uppercase tracking-wider text-neutral-700">
-                Exam Authoring Studio
+                Authoring Studio
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-black">
-              Thêm Đề Thi Mới Trên Web
+            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-black">
+              Soạn Thảo Đề Thi
             </h2>
-            <p className="text-sm font-semibold text-neutral-800 mt-1 max-w-2xl leading-relaxed">
-              Nhập trực tiếp mã JSON hoặc tải file <code className="bg-[#f4eed9] px-1 py-0.5 border border-black text-xs font-mono">.json</code> vào hệ thống. Cấu trúc 4 kỹ năng (Reading, Listening, Speaking, Writing) được tự động kiểm tra và bảo toàn tính toàn vẹn.
+            <p className="text-xs sm:text-sm font-semibold text-neutral-700 mt-0.5">
+              Soạn trực tiếp hoặc tải file JSON đề thi để kiểm tra và lưu vào hệ thống.
             </p>
           </div>
 
@@ -537,8 +494,8 @@ export const TestAuthoringView: React.FC = () => {
             className="border-2 border-black px-3 py-1.5 bg-[#f4eed9] text-black font-bold text-xs sm:text-sm hover:bg-black hover:text-[#fffdf5] transition-colors cursor-pointer flex items-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
             title="Chọn file .json từ máy tính của bạn"
           >
-            <IconUpload />
-            <span>Tải file .json từ máy</span>
+            <IconUpload className="w-4 h-4 shrink-0" />
+            <span>Tải file</span>
           </button>
 
           <button
@@ -547,8 +504,8 @@ export const TestAuthoringView: React.FC = () => {
             className="border-2 border-black px-3 py-1.5 bg-[#fffdf5] text-black font-bold text-xs sm:text-sm hover:bg-[#f4eed9] transition-colors cursor-pointer flex items-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
             title="Nạp cấu trúc bài thi mẫu chuẩn 4 kỹ năng"
           >
-            <IconTemplate />
-            <span>Nạp đề mẫu chuẩn</span>
+            <IconTemplate className="w-4 h-4 shrink-0" />
+            <span>Đề mẫu</span>
           </button>
 
           <button
@@ -558,8 +515,8 @@ export const TestAuthoringView: React.FC = () => {
             className="border-2 border-black px-3 py-1.5 bg-[#fffdf5] text-black font-bold text-xs sm:text-sm hover:bg-[#f4eed9] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
             title="Định dạng lại thụt lề JSON cho dễ đọc"
           >
-            <IconPrettify />
-            <span>Làm đẹp JSON</span>
+            <IconPrettify className="w-4 h-4 shrink-0" />
+            <span>Format</span>
           </button>
 
           <button
@@ -569,8 +526,8 @@ export const TestAuthoringView: React.FC = () => {
             className="border-2 border-black px-3 py-1.5 bg-[#fffdf5] text-black font-bold text-xs sm:text-sm hover:bg-[#f4eed9] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
             title="Nén nhỏ JSON loại bỏ khoảng trắng và dòng trống"
           >
-            <IconMinify />
-            <span>Thu gọn JSON (Minify)</span>
+            <IconMinify className="w-4 h-4 shrink-0" />
+            <span>Nén JSON</span>
           </button>
 
           <button
@@ -579,8 +536,8 @@ export const TestAuthoringView: React.FC = () => {
             className="border-2 border-black px-3 py-1.5 bg-[#fffdf5] text-black font-bold text-xs sm:text-sm hover:bg-[#f4eed9] transition-colors cursor-pointer flex items-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
             title="Tải nội dung JSON trong trình soạn thảo về máy"
           >
-            <IconDownload />
-            <span>Tải JSON về máy</span>
+            <IconDownload className="w-4 h-4 shrink-0" />
+            <span>Xuất file</span>
           </button>
 
           <button
@@ -597,8 +554,8 @@ export const TestAuthoringView: React.FC = () => {
               );
             }}
           >
-            <IconRules />
-            <span>Quy tắc chuẩn</span>
+            <IconRules className="w-4 h-4 shrink-0" />
+            <span>Quy tắc</span>
           </button>
         </div>
       </section>

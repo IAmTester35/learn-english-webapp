@@ -11,12 +11,20 @@ export async function GET(request: NextRequest) {
   const isTemplateRequest = searchParams.get('template') === 'true';
 
   if (isTemplateRequest) {
-    return NextResponse.json(SAMPLE_TEST_TEMPLATE);
+    return NextResponse.json(SAMPLE_TEST_TEMPLATE, {
+      headers: {
+        'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+      },
+    });
   }
 
   try {
     const catalog = await getTestCatalog();
-    return NextResponse.json(catalog);
+    return NextResponse.json(catalog, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Không thể lấy danh mục bài thi.' },
