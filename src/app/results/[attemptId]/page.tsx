@@ -15,7 +15,7 @@ export default function AttemptDetailPage() {
       attempts={attempts}
       selectedAttemptId={attemptId}
       onSelectAttempt={(id) => router.push(`/results/${id}`)}
-      onRefreshAttempts={() => {}}
+      onRefreshAttempts={() => router.refresh()}
     />
   );
 }

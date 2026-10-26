@@ -43,6 +43,7 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
     (async () => {
       let anyGraded = false;
       for (const rev of pendingTasks) {
+        setRegradingMap((prev) => ({ ...prev, [rev.taskId]: true }));
         try {
           const res = await gradeWritingTaskWithServer({
             testId: currentAttempt.testId,
@@ -59,6 +60,8 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
           }
         } catch (err) {
           console.error('Lỗi tự động chấm bài Writing:', err);
+        } finally {
+          setRegradingMap((prev) => ({ ...prev, [rev.taskId]: false }));
         }
       }
       setIsAutoGrading(false);
@@ -693,6 +696,13 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                 </button>
               </div>
 
+              {isAutoGrading && (
+                <div className="p-3 bg-amber-50 border-2 border-black flex items-center gap-2 text-xs font-bold text-amber-950">
+                  <span className="inline-block animate-spin text-sm">⟳</span>
+                  <span>AI đang tự động chấm điểm bài viết của bạn trong nền. Điểm số và nhận xét sẽ tự động cập nhật ngay khi hoàn tất.</span>
+                </div>
+              )}
+
               <div className="space-y-6">
                 {currentAttempt.writingReviews.map((rev) => {
                   const currentScore = String(scoringFormState[rev.taskId]?.score ?? rev.score ?? '');
@@ -700,6 +710,7 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                   const isCjk = isCjkText(rev.prompt + rev.userText);
                   const wordCount = countWordsOrCharacters(rev.userText);
                   const unitLabel = isCjk ? 'chữ' : 'từ';
+                  const isTaskGrading = Boolean(regradingMap[rev.taskId]);
 
                   return (
                     <article key={rev.taskId} className="border-2 border-black p-5 bg-[#fffdf5] space-y-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -709,27 +720,39 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                           <button
                             type="button"
                             onClick={() => handleRegradeWriting(rev.taskId, rev.userText)}
-                            disabled={regradingMap[rev.taskId]}
+                            disabled={isTaskGrading}
                             className="px-3 py-1 bg-[#f4eed9] text-black font-black text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                             title="Gọi AI Gemini chấm lại bài viết này"
                           >
-                            {regradingMap[rev.taskId] ? (
+                            {isTaskGrading ? (
                               <>
                                 <span className="inline-block animate-spin">⟳</span>
-                                <span>Đang chấm lại...</span>
+                                <span>Đang chấm AI...</span>
+                              </>
+                            ) : rev.status === 'reviewed' ? (
+                              <>
+                                <span>✦</span>
+                                <span>Chấm lại bằng AI</span>
                               </>
                             ) : (
                               <>
                                 <span>✦</span>
-                                <span>Chấm lại bài này bằng AI</span>
+                                <span>Chấm bằng AI</span>
                               </>
                             )}
                           </button>
                           <span
-                            className={`text-xs px-2 py-0.5 border-2 font-mono font-bold ${rev.status === 'reviewed' ? 'bg-black text-[#fffdf5] border-black' : 'bg-[#f4eed9] text-black border-black'
-                              }`}
+                            className={`text-xs px-2 py-0.5 border-2 font-mono font-bold ${
+                              isTaskGrading
+                                ? 'bg-amber-200 text-black border-black animate-pulse'
+                                : rev.status === 'reviewed'
+                                ? 'bg-black text-[#fffdf5] border-black'
+                                : 'bg-[#f4eed9] text-black border-black'
+                            }`}
                           >
-                            {rev.status === 'reviewed'
+                            {isTaskGrading
+                              ? '[ĐANG CHẤM AI...]'
+                              : rev.status === 'reviewed'
                               ? `[ĐÃ CHẤM${rev.score ? `: ${rev.score}` : ''}]`
                               : '[CHỜ CHẤM]'}
                           </span>

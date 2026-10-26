@@ -96,6 +96,7 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
         const audio = new Audio();
         audio.preload = 'auto';
         audio.src = p.audioUrl;
+        audio.load();
         prefetchElements.push(audio);
       }
     });
@@ -147,7 +148,9 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
         setDuration(audio.duration);
       }
     };
-    const handlePlay = () => setIsPlaying(true);
+    const handlePlay = () => {
+      // Audio playback requested or started
+    };
     const handlePause = () => {
       setIsPlaying(false);
       setIsBuffering(false);
@@ -157,7 +160,11 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
       setIsPlaying(true);
       setIsBuffering(false);
     };
-    const handleCanPlay = () => setIsBuffering(false);
+    const handleCanPlay = () => {
+      if (audio.paused === false) {
+        setIsBuffering(false);
+      }
+    };
     const handleEnded = () => {
       setIsPlaying(false);
       setIsBuffering(false);
@@ -219,21 +226,30 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
         setActivePartId(partId);
         setIsStickyDismissed(false);
         audio.src = target.audioUrl;
+        audio.playbackRate = playbackRate;
+        audio.volume = isMuted ? 0 : volume;
         audio.currentTime = 0;
         setCurrentTime(0);
+      }
+
+      // If audio has not buffered enough future frames, mark as buffering immediately
+      if (audio.readyState < 3) {
+        setIsBuffering(true);
       }
 
       audio
         .play()
         .then(() => {
           setIsPlaying(true);
+          setIsBuffering(false);
           announce(`Đang phát âm thanh ${target.title}`);
         })
         .catch((err) => {
+          setIsBuffering(false);
           if (err.name !== 'AbortError') console.warn('Audio playback error:', err);
         });
     },
-    [activePartId, parts, announce]
+    [activePartId, parts, playbackRate, volume, isMuted, announce]
   );
 
   const togglePlayPause = useCallback(
@@ -250,23 +266,30 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
         return;
       }
 
-      if (isPlaying) {
+      // If currently playing or waiting to play (buffering), pause cancels playback
+      if (isPlaying || isBuffering) {
         audio.pause();
         setIsPlaying(false);
+        setIsBuffering(false);
         announce(`Đã tạm dừng âm thanh ${target.title}`);
       } else {
+        if (audio.readyState < 3) {
+          setIsBuffering(true);
+        }
         audio
           .play()
           .then(() => {
             setIsPlaying(true);
+            setIsBuffering(false);
             announce(`Đang phát âm thanh ${target.title}`);
           })
           .catch((err) => {
+            setIsBuffering(false);
             if (err.name !== 'AbortError') console.warn('Audio play error:', err);
           });
       }
     },
-    [activePartId, isPlaying, parts, playPart, announce]
+    [activePartId, isPlaying, isBuffering, parts, playPart, announce]
   );
 
   const seek = useCallback(
@@ -494,17 +517,27 @@ export const ListeningAudioPlayer: React.FC<ListeningAudioPlayerProps> = ({
 
         {isCurrentActive && (
           <span
-            className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full flex items-center gap-1.5 ${isPartPlaying
+            className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full flex items-center gap-1.5 ${
+              isPartBuffering
+                ? 'bg-amber-100 text-amber-900 border border-amber-400'
+                : isPartPlaying
                 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                 : 'bg-[#f4eed9] text-neutral-700 border border-neutral-300'
-              }`}
+            }`}
           >
             <span
-              className={`w-1.5 h-1.5 rounded-full ${isPartPlaying ? 'bg-emerald-600 animate-pulse' : 'bg-neutral-500'
-                }`}
+              className={`w-1.5 h-1.5 rounded-full ${
+                isPartBuffering
+                  ? 'bg-amber-500 animate-ping'
+                  : isPartPlaying
+                  ? 'bg-emerald-600 animate-pulse'
+                  : 'bg-neutral-500'
+              }`}
               aria-hidden="true"
             />
-            <span>{isPartPlaying ? 'Đang phát' : 'Tạm dừng'}</span>
+            <span>
+              {isPartBuffering ? 'Đang tải âm thanh...' : isPartPlaying ? 'Đang phát' : 'Tạm dừng'}
+            </span>
           </span>
         )}
       </div>
@@ -586,11 +619,20 @@ export const ListeningAudioPlayer: React.FC<ListeningAudioPlayerProps> = ({
             type="button"
             onClick={() => togglePlayPause(part.id)}
             disabled={!part.audioUrl}
-            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-sm disabled:opacity-40 ${isPartPlaying
+            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-sm disabled:opacity-40 ${
+              isPartBuffering
+                ? 'bg-amber-600 text-[#fffdf5] hover:bg-amber-700'
+                : isPartPlaying
                 ? 'bg-neutral-900 text-[#fffdf5] hover:bg-neutral-800'
                 : 'bg-black text-[#fffdf5] hover:bg-neutral-800'
-              }`}
-            title={isPartBuffering ? 'Đang tải âm thanh...' : isPartPlaying ? 'Tạm dừng (phím Space)' : 'Phát bài nghe (phím Space)'}
+            }`}
+            title={
+              isPartBuffering
+                ? 'Đang tải âm thanh (nhấn để hủy)...'
+                : isPartPlaying
+                ? 'Tạm dừng (phím Space)'
+                : 'Phát bài nghe (phím Space)'
+            }
             aria-label={
               isPartBuffering
                 ? `Đang tải âm thanh ${part.title}`
@@ -600,7 +642,26 @@ export const ListeningAudioPlayer: React.FC<ListeningAudioPlayerProps> = ({
             }
           >
             {isPartBuffering ? (
-              <span className="inline-block animate-spin text-sm leading-none font-bold" aria-hidden="true">⟳</span>
+              <svg
+                className="w-5 h-5 animate-spin text-[#fffdf5]"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="3.5"
+                />
+                <path
+                  className="opacity-90"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v3.5a4.5 4.5 0 00-4.5 4.5H4z"
+                />
+              </svg>
             ) : isPartPlaying ? (
               <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="6" y="5" width="4" height="14" rx="1" />
@@ -749,8 +810,13 @@ export const StickyListeningMiniPlayer: React.FC = () => {
         {/* Left: Active Title & Quick Return */}
         <div className="flex items-center gap-2 min-w-0">
           <span
-            className={`w-2 h-2 rounded-full shrink-0 ${isPlaying ? 'bg-emerald-600 animate-pulse' : 'bg-neutral-400'
-              }`}
+            className={`w-2 h-2 rounded-full shrink-0 ${
+              isBuffering
+                ? 'bg-amber-500 animate-ping'
+                : isPlaying
+                ? 'bg-emerald-600 animate-pulse'
+                : 'bg-neutral-400'
+            }`}
             aria-hidden="true"
           />
           <div className="min-w-0">
@@ -758,7 +824,7 @@ export const StickyListeningMiniPlayer: React.FC = () => {
               {activePart.title}
             </p>
             <span className="text-[10px] font-mono text-neutral-600">
-              {formatTime(currentTime)} / {formatTime(duration)}
+              {isBuffering ? 'Đang tải...' : `${formatTime(currentTime)} / ${formatTime(duration)}`}
             </span>
           </div>
         </div>
@@ -778,12 +844,35 @@ export const StickyListeningMiniPlayer: React.FC = () => {
           <button
             type="button"
             onClick={() => togglePlayPause(activePartId)}
-            className="w-9 h-9 rounded-full bg-black text-white hover:bg-neutral-800 flex items-center justify-center cursor-pointer transition-colors shadow-xs"
-            title={isBuffering ? 'Đang tải âm thanh...' : isPlaying ? 'Tạm dừng' : 'Phát'}
+            className={`w-9 h-9 rounded-full flex items-center justify-center cursor-pointer transition-colors shadow-xs ${
+              isBuffering
+                ? 'bg-amber-600 text-white hover:bg-amber-700'
+                : 'bg-black text-white hover:bg-neutral-800'
+            }`}
+            title={isBuffering ? 'Đang tải âm thanh (nhấn để hủy)...' : isPlaying ? 'Tạm dừng' : 'Phát'}
             aria-label={isBuffering ? 'Đang tải âm thanh' : isPlaying ? 'Tạm dừng âm thanh' : 'Phát âm thanh'}
           >
             {isBuffering ? (
-              <span className="inline-block animate-spin text-xs leading-none font-bold" aria-hidden="true">⟳</span>
+              <svg
+                className="w-4 h-4 animate-spin text-white"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="3.5"
+                />
+                <path
+                  className="opacity-90"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v3.5a4.5 4.5 0 00-4.5 4.5H4z"
+                />
+              </svg>
             ) : isPlaying ? (
               <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="6" y="5" width="4" height="14" rx="1" />

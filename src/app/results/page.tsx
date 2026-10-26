@@ -13,7 +13,7 @@ export default function ResultsPage() {
       attempts={attempts}
       selectedAttemptId={attempts[0]?.id || null}
       onSelectAttempt={(id) => router.push(`/results/${id}`)}
-      onRefreshAttempts={() => {}}
+      onRefreshAttempts={() => router.refresh()}
     />
   );
 }

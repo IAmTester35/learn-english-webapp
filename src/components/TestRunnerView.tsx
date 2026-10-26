@@ -19,7 +19,6 @@ import {
   deleteTestProgress,
   calculateProgressStats,
 } from '@/services/testProgressStorage';
-import { gradeWritingTaskWithServer } from '@/services/aiApi';
 import { useNavigationGuard } from './NavigationGuard';
 import {
   ListeningAudioProvider,
@@ -281,46 +280,27 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
   const handleSubmit = async () => {
     if (isSubmitting) return;
     const confirmed = window.confirm(
-      'Bạn có chắc chắn muốn nộp bài thi không?\n\n- Reading & Listening sẽ được chấm điểm ngay.\n- Writing sẽ được gửi lên server chấm tự động bằng AI (nếu có cấu hình API Key).\n- Speaking sẽ được lưu để đối chiếu sau.'
+      'Bạn có chắc chắn muốn nộp bài thi không?\n\n- Reading & Listening sẽ được chấm điểm ngay.\n- Writing sẽ được lưu an toàn và tự động chấm bằng AI trên trang kết quả.\n- Speaking sẽ được lưu để đối chiếu sau.'
     );
     if (!confirmed) return;
 
     stopAudio();
     setIsSubmitting(true);
     try {
+      // Chấm ngay các phần trắc nghiệm và khởi tạo attempt có đầy đủ bài viết của thí sinh
       const attempt = gradeTestAttempt(test, answers);
 
-      if (aiEnabled) {
-        attempt.writingReviews = await Promise.all(
-          attempt.writingReviews.map(async (review) => {
-            try {
-              const res = await gradeWritingTaskWithServer({
-                testId: test.id,
-                taskId: review.taskId,
-                userText: review.userText,
-              });
-              if (res) {
-                return {
-                  ...review,
-                  score: res.score,
-                  notes: res.notes,
-                  status: 'reviewed' as const,
-                };
-              }
-            } catch (err) {
-              console.error('Lỗi khi chấm AI cho task:', review.taskId, err);
-            }
-            return review;
-          })
-        );
-      }
-
+      // Lưu kết quả ngay lập tức vào LocalStorage để không bao giờ bị mất bài khi reload/mất mạng
       saveNewAttempt(attempt);
       deleteTestProgress(test.id);
       setIsTestInProgress(false);
+
+      // Chuyển ngay sang trang kết quả - không block UI để chờ AI
       router.push(`/results/${attempt.id}`);
-    } finally {
+    } catch (err) {
+      console.error('Lỗi khi nộp bài:', err);
       setIsSubmitting(false);
+      alert('Đã xảy ra lỗi khi lưu kết quả bài thi. Vui lòng thử lại!');
     }
   };
 
@@ -472,8 +452,12 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
   );
 
   return (
-    <main className="max-w-5xl mx-auto p-3 sm:p-4 md:p-6 space-y-6 w-full min-w-0 overflow-x-hidden">
-      {/* Test Title Bar */}
+    <ListeningAudioProvider
+      parts={test.sections.listening?.parts || []}
+      isCurrentTab={activeTab === 'listening'}
+    >
+      <main className="max-w-5xl mx-auto p-3 sm:p-4 md:p-6 space-y-6 w-full min-w-0 overflow-x-hidden">
+        {/* Test Title Bar */}
       <div className="border-2 border-black p-4 bg-[#fffdf5] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-full min-w-0">
         <div className="space-y-1 min-w-0 max-w-full">
           <div className="flex items-center gap-2 flex-wrap">
@@ -597,44 +581,39 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
 
         {/* LISTENING PANEL */}
         {activeTab === 'listening' && (
-          <ListeningAudioProvider
-            parts={test.sections.listening.parts}
-            isCurrentTab={activeTab === 'listening'}
+          <div
+            id="panel-listening"
+            role="tabpanel"
+            aria-labelledby="tab-listening"
+            className="space-y-6"
           >
-            <div
-              id="panel-listening"
-              role="tabpanel"
-              aria-labelledby="tab-listening"
-              className="space-y-6"
-            >
-              <div className="p-3.5 border-2 border-black bg-[#f4eed9] text-sm font-semibold text-black">
-                <strong>Hướng dẫn:</strong> {test.sections.listening.instructions}
-              </div>
-
-              {/* Sticky Mini-Player xuất hiện khi cuộn xuống làm câu hỏi */}
-              <StickyListeningMiniPlayer />
-
-              {test.sections.listening.parts.map((part, pIndex) => (
-                <div key={part.id} className="space-y-6">
-                  <article className="border-2 border-black p-5 bg-[#fffdf5] space-y-4">
-                    <h3 className="text-lg font-black border-b-2 border-black pb-2 text-black">
-                      {formatSectionTitle('Part', pIndex + 1, part.title)}
-                    </h3>
-
-                    {/* Trình phát âm thanh Neo-brutalism có sóng âm và scrubber mượt */}
-                    <ListeningAudioPlayer part={part} partIndex={pIndex} />
-                  </article>
-
-                  <div className="space-y-4">
-                    <h4 className="font-bold text-sm text-black uppercase tracking-wide">
-                      Câu hỏi cho phần nghe {pIndex + 1}:
-                    </h4>
-                    {part.questions.map((q) => renderQuestion(q, 'listening'))}
-                  </div>
-                </div>
-              ))}
+            <div className="p-3.5 border-2 border-black bg-[#f4eed9] text-sm font-semibold text-black">
+              <strong>Hướng dẫn:</strong> {test.sections.listening.instructions}
             </div>
-          </ListeningAudioProvider>
+
+            {/* Sticky Mini-Player xuất hiện khi cuộn xuống làm câu hỏi */}
+            <StickyListeningMiniPlayer />
+
+            {test.sections.listening.parts.map((part, pIndex) => (
+              <div key={part.id} className="space-y-6">
+                <article className="border-2 border-black p-5 bg-[#fffdf5] space-y-4">
+                  <h3 className="text-lg font-black border-b-2 border-black pb-2 text-black">
+                    {formatSectionTitle('Part', pIndex + 1, part.title)}
+                  </h3>
+
+                  {/* Trình phát âm thanh Neo-brutalism có sóng âm và scrubber mượt */}
+                  <ListeningAudioPlayer part={part} partIndex={pIndex} />
+                </article>
+
+                <div className="space-y-4">
+                  <h4 className="font-bold text-sm text-black uppercase tracking-wide">
+                    Câu hỏi cho phần nghe {pIndex + 1}:
+                  </h4>
+                  {part.questions.map((q) => renderQuestion(q, 'listening'))}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
 
         {/* WRITING PANEL */}
@@ -796,5 +775,6 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, aiEnabled,
         <span>Cuối bài</span>
       </button>
     </main>
+  </ListeningAudioProvider>
   );
 };
