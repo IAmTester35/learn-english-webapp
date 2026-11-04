@@ -18,6 +18,7 @@ import {
   FileText
 } from 'lucide-react';
 import type { TestCatalogItem } from '@/types/test';
+import { TtsProgressModal } from './TtsProgressModal';
 
 interface AdminDashboardProps {
   initialTests: TestCatalogItem[];
@@ -30,6 +31,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
   const [filterStatus, setFilterStatus] = useState<'all' | 'public' | 'hidden'>('all');
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [generatingTtsId, setGeneratingTtsId] = useState<string | null>(null);
+  const [activeModalTest, setActiveModalTest] = useState<{ id: string; title?: string } | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleToggle = async (testId: string) => {
@@ -65,37 +67,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
     }
   };
 
-  const handleGenerateTts = async (testId: string) => {
+  const handleGenerateTts = async (testId: string, testTitle?: string) => {
+    setActiveModalTest({ id: testId, title: testTitle });
     setGeneratingTtsId(testId);
-    setStatusMessage({
-      type: 'success',
-      text: `Đang tạo/kiểm tra audio cho bài thi "${testId}"...`,
-    });
 
     try {
       const res = await fetch('/api/admin/generate-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ testId }),
+        body: JSON.stringify({ testId, background: true }),
       });
       const data = await res.json();
 
       if (!res.ok) {
         throw new Error(data.error || 'Tạo audio thất bại.');
       }
-
-      const summary = data.result || data;
-      setStatusMessage({
-        type: 'success',
-        text: `Hoàn tất Audio "${testId}": ${summary.generated || 0} tạo mới, ${summary.skipped || 0} đã có sẵn.${summary.errors?.length ? ` (Có ${summary.errors.length} lỗi)` : ''}`,
-      });
     } catch (err) {
       setStatusMessage({
         type: 'error',
         text: err instanceof Error ? err.message : 'Lỗi khi kích hoạt tiến trình TTS.',
       });
-    } finally {
-      setGeneratingTtsId(null);
     }
   };
 
@@ -181,11 +172,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
       {/* Notifications */}
       {statusMessage && (
         <div
-          className={`p-3.5 border-2 flex items-center gap-2 text-sm font-medium ${
-            statusMessage.type === 'success'
+          className={`p-3.5 border-2 flex items-center gap-2 text-sm font-medium ${statusMessage.type === 'success'
               ? 'bg-[#e6f4ea] border-[#137333] text-[#137333]'
               : 'bg-[#fce8e6] border-[#c5221f] text-[#c5221f]'
-          }`}
+            }`}
         >
           {statusMessage.type === 'success' ? (
             <CheckCircle2 className="w-5 h-5 shrink-0" />
@@ -213,27 +203,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
           <button
             type="button"
             onClick={() => setFilterStatus('all')}
-            className={`border-2 border-black px-2.5 py-1.5 text-xs font-bold cursor-pointer transition-colors ${
-              filterStatus === 'all' ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-neutral-100'
-            }`}
+            className={`border-2 border-black px-2.5 py-1.5 text-xs font-bold cursor-pointer transition-colors ${filterStatus === 'all' ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-neutral-100'
+              }`}
           >
             Tất cả ({totalCount})
           </button>
           <button
             type="button"
             onClick={() => setFilterStatus('public')}
-            className={`border-2 border-black px-2.5 py-1.5 text-xs font-bold cursor-pointer transition-colors ${
-              filterStatus === 'public' ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-neutral-100'
-            }`}
+            className={`border-2 border-black px-2.5 py-1.5 text-xs font-bold cursor-pointer transition-colors ${filterStatus === 'public' ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-neutral-100'
+              }`}
           >
             Công khai ({publicCount})
           </button>
           <button
             type="button"
             onClick={() => setFilterStatus('hidden')}
-            className={`border-2 border-black px-2.5 py-1.5 text-xs font-bold cursor-pointer transition-colors ${
-              filterStatus === 'hidden' ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-neutral-100'
-            }`}
+            className={`border-2 border-black px-2.5 py-1.5 text-xs font-bold cursor-pointer transition-colors ${filterStatus === 'hidden' ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-neutral-100'
+              }`}
           >
             Đang ẩn ({hiddenCount})
           </button>
@@ -242,7 +229,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
 
       {/* Table / List */}
       <div className="border-2 border-black bg-white shadow-sm overflow-x-auto">
-        <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[700px]">
+        <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-175">
           <thead>
             <tr className="border-b-2 border-black bg-[#f4eed9] text-black font-black uppercase text-[11px] sm:text-xs tracking-wider">
               <th className="p-3">Mã đề (ID) & Tiêu đề</th>
@@ -301,11 +288,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                           type="button"
                           onClick={() => handleToggle(test.id)}
                           disabled={isToggling}
-                          className={`border-2 border-black font-bold px-2.5 py-1 text-xs inline-flex items-center gap-1 transition-colors cursor-pointer ${
-                            isHidden
+                          className={`border-2 border-black font-bold px-2.5 py-1 text-xs inline-flex items-center gap-1 transition-colors cursor-pointer ${isHidden
                               ? 'bg-[#137333] text-white hover:bg-[#0d5926]'
                               : 'bg-[#fffdf5] text-black hover:bg-neutral-200'
-                          }`}
+                            }`}
                           title={isHidden ? 'Mở hiển thị công khai bài này' : 'Ẩn bài thi này khỏi thí sinh'}
                         >
                           {isToggling ? (
@@ -326,12 +312,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                         {/* Trigger TTS */}
                         <button
                           type="button"
-                          onClick={() => handleGenerateTts(test.id)}
-                          disabled={isGeneratingTts}
+                          onClick={() => handleGenerateTts(test.id, test.title)}
+                          disabled={isGeneratingTts && activeModalTest?.id === test.id}
                           className="border-2 border-black bg-[#fffdf5] hover:bg-neutral-200 text-black font-bold px-2.5 py-1 text-xs inline-flex items-center gap-1 transition-colors cursor-pointer"
-                          title="Tạo mới hoặc kiểm tra audio MP3 cho phần nghe"
+                          title="Tạo mới hoặc kiểm tra audio MP3 cho phần nghe (Xem tiến trình trực quan)"
                         >
-                          {isGeneratingTts ? (
+                          {isGeneratingTts && activeModalTest?.id === test.id ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           ) : (
                             <Volume2 className="w-3.5 h-3.5" />
@@ -357,6 +343,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
           </tbody>
         </table>
       </div>
+
+      {/* Visual Live TTS Progress Modal */}
+      {activeModalTest && (
+        <TtsProgressModal
+          testId={activeModalTest.id}
+          testTitle={activeModalTest.title}
+          onClose={() => setActiveModalTest(null)}
+          onFinished={() => {
+            setGeneratingTtsId(null);
+            router.refresh();
+          }}
+        />
+      )}
     </div>
   );
 };

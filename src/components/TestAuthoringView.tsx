@@ -21,10 +21,13 @@ import {
   FileCode as IconTemplate,
   Sparkles as IconPrettify,
   Download as IconDownload,
+  Copy as IconCopy,
   Check as IconCheck,
   AlertTriangle as IconAlert,
+  Volume2 as IconVolume,
   X as IconX,
 } from 'lucide-react';
+import { TtsProgressModal } from './admin/TtsProgressModal';
 
 // --- Helpers ---
 export function getNextIncrementedId(currentId: string, existingList: string[]): string {
@@ -120,6 +123,11 @@ export const TestAuthoringView: React.FC = () => {
   const [expandedPassageIds, setExpandedPassageIds] = useState<Record<string, boolean>>({});
   const [expandedTranscriptIds, setExpandedTranscriptIds] = useState<Record<string, boolean>>({});
   const [expandedSampleIds, setExpandedSampleIds] = useState<Record<string, boolean>>({});
+
+  // Quick Copy Guide state
+  const [copiedDocType, setCopiedDocType] = useState<'cefr' | 'hsk' | null>(null);
+  const [isCopyingDoc, setIsCopyingDoc] = useState<'cefr' | 'hsk' | null>(null);
+  const [activeTtsModalTestId, setActiveTtsModalTestId] = useState<string | null>(null);
 
   // Fetch catalog on mount to know existing test IDs
   useEffect(() => {
@@ -243,6 +251,27 @@ export const TestAuthoringView: React.FC = () => {
     }
   };
 
+  // Quick Copy Authoring Guide
+  const handleCopyDoc = async (type: 'cefr' | 'hsk') => {
+    setIsCopyingDoc(type);
+    try {
+      const res = await fetch(`/api/docs?type=${type}`);
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Lỗi khi tải tài liệu');
+      }
+      await navigator.clipboard.writeText(data.content);
+      setCopiedDocType(type);
+      setTimeout(() => {
+        setCopiedDocType(null);
+      }, 2500);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Không thể sao chép tài liệu.');
+    } finally {
+      setIsCopyingDoc(null);
+    }
+  };
+
   // Core execution of saving a verified test document
   const executeSave = async (docToSave: TestDocument) => {
     setIsSaving(true);
@@ -276,6 +305,12 @@ export const TestAuthoringView: React.FC = () => {
         id: data.id || docToSave.id,
         message: data.message || `Đã lưu thành công "${docToSave.title}".`,
       });
+      const hasListening = docToSave.sections?.listening?.parts?.some(
+        (p) => p.transcript && p.transcript.trim().length > 0
+      );
+      if (hasListening) {
+        setActiveTtsModalTestId(data.id || docToSave.id);
+      }
       router.refresh();
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Lỗi khi lưu đề thi.');
@@ -448,51 +483,100 @@ export const TestAuthoringView: React.FC = () => {
         </div>
 
         {/* Toolbar Buttons */}
-        <div className="pt-2 border-t border-neutral-200 flex flex-wrap items-center gap-1.5">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            accept=".json,application/json"
-            className="hidden"
-          />
+        <div className="pt-2 border-t border-neutral-200 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".json,application/json"
+              className="hidden"
+            />
 
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="border border-black px-2.5 py-1 bg-[#f4eed9] text-black font-semibold text-xs hover:bg-black hover:text-[#fffdf5] transition-colors cursor-pointer flex items-center gap-1"
-          >
-            <IconUpload className="w-3.5 h-3.5 shrink-0" />
-            <span>Tải file</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="border border-black px-2.5 py-1 bg-[#f4eed9] text-black font-semibold text-xs hover:bg-black hover:text-[#fffdf5] transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <IconUpload className="w-3.5 h-3.5 shrink-0" />
+              <span>Tải file</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={handleLoadTemplate}
-            className="border border-black px-2.5 py-1 bg-[#fffdf5] text-black font-semibold text-xs hover:bg-[#f4eed9] transition-colors cursor-pointer flex items-center gap-1"
-          >
-            <IconTemplate className="w-3.5 h-3.5 shrink-0" />
-            <span>Đề mẫu</span>
-          </button>
+            <button
+              type="button"
+              onClick={handleLoadTemplate}
+              className="border border-black px-2.5 py-1 bg-[#fffdf5] text-black font-semibold text-xs hover:bg-[#f4eed9] transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <IconTemplate className="w-3.5 h-3.5 shrink-0" />
+              <span>Đề mẫu</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={handlePrettify}
-            disabled={Boolean(syntaxError)}
-            className="border border-black px-2.5 py-1 bg-[#fffdf5] text-black font-semibold text-xs hover:bg-[#f4eed9] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center gap-1"
-          >
-            <IconPrettify className="w-3.5 h-3.5 shrink-0" />
-            <span>Format</span>
-          </button>
+            <button
+              type="button"
+              onClick={handlePrettify}
+              disabled={Boolean(syntaxError)}
+              className="border border-black px-2.5 py-1 bg-[#fffdf5] text-black font-semibold text-xs hover:bg-[#f4eed9] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <IconPrettify className="w-3.5 h-3.5 shrink-0" />
+              <span>Format</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={handleDownload}
-            className="border border-black px-2.5 py-1 bg-[#fffdf5] text-black font-semibold text-xs hover:bg-[#f4eed9] transition-colors cursor-pointer flex items-center gap-1"
-          >
-            <IconDownload className="w-3.5 h-3.5 shrink-0" />
-            <span>Tải về</span>
-          </button>
+            <button
+              type="button"
+              onClick={handleDownload}
+              className="border border-black px-2.5 py-1 bg-[#fffdf5] text-black font-semibold text-xs hover:bg-[#f4eed9] transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <IconDownload className="w-3.5 h-3.5 shrink-0" />
+              <span>Tải về</span>
+            </button>
+          </div>
+
+          {/* Quick Copy Authoring Guidelines */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider hidden sm:inline">
+              Tài liệu hướng dẫn:
+            </span>
+
+            <button
+              type="button"
+              onClick={() => handleCopyDoc('cefr')}
+              disabled={Boolean(isCopyingDoc)}
+              className="border border-black px-2.5 py-1 bg-[#fffdf5] text-black font-semibold text-xs hover:bg-[#f4eed9] transition-colors cursor-pointer flex items-center gap-1.5"
+              title="Sao chép toàn bộ hướng dẫn quy chuẩn CEFR (test-authoring-guide.md)"
+            >
+              {copiedDocType === 'cefr' ? (
+                <>
+                  <IconCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0 stroke-[2.5]" />
+                  <span className="text-emerald-800 font-bold">Đã chép CEFR Guide</span>
+                </>
+              ) : (
+                <>
+                  <IconCopy className="w-3.5 h-3.5 shrink-0 text-neutral-600" />
+                  <span>Copy CEFR Guide</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleCopyDoc('hsk')}
+              disabled={Boolean(isCopyingDoc)}
+              className="border border-black px-2.5 py-1 bg-[#fffdf5] text-black font-semibold text-xs hover:bg-[#f4eed9] transition-colors cursor-pointer flex items-center gap-1.5"
+              title="Sao chép toàn bộ hướng dẫn quy chuẩn HSK (hsk-test-authoring-guide.md)"
+            >
+              {copiedDocType === 'hsk' ? (
+                <>
+                  <IconCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0 stroke-[2.5]" />
+                  <span className="text-emerald-800 font-bold">Đã chép HSK Guide</span>
+                </>
+              ) : (
+                <>
+                  <IconCopy className="w-3.5 h-3.5 shrink-0 text-neutral-600" />
+                  <span>Copy HSK Guide</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </section>
 
@@ -1009,6 +1093,16 @@ export const TestAuthoringView: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Visual TTS Progress Tracking Modal */}
+      {activeTtsModalTestId && (
+        <TtsProgressModal
+          testId={activeTtsModalTestId}
+          testTitle={parsedDoc?.title}
+          onClose={() => setActiveTtsModalTestId(null)}
+          onFinished={() => router.refresh()}
+        />
       )}
     </div>
   );

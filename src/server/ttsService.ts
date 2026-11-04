@@ -11,6 +11,43 @@ import type { ListeningAudioConfig, SpeakerConfig } from '../types/test';
 // In-memory key cooldown map: maps API key string to timestamp (ms) when cooldown expires
 export const keyCooldownMap = new Map<string, number>();
 
+export interface TtsPartProgress {
+  id: string;
+  title: string;
+  status: 'pending' | 'processing' | 'completed' | 'skipped' | 'failed';
+  error?: string;
+  webUrl?: string;
+  byteLength?: number;
+}
+
+export interface TtsJobProgress {
+  testId: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  total: number;
+  completed: number;
+  currentPartIndex: number;
+  currentPartId?: string;
+  currentPartTitle?: string;
+  currentMessage?: string;
+  percent: number;
+  parts: TtsPartProgress[];
+  errors: string[];
+  startedAt: string;
+  updatedAt: string;
+}
+
+// In-memory live job store
+const ttsJobStore = new Map<string, TtsJobProgress>();
+
+export function getTtsJobProgress(testId: string): TtsJobProgress | null {
+  const cleanId = testId.trim().replace(/\.json$/i, '');
+  return ttsJobStore.get(cleanId) || null;
+}
+
+export function getAllTtsJobProgresses(): Record<string, TtsJobProgress> {
+  return Object.fromEntries(ttsJobStore.entries());
+}
+
 // Cache GoogleGenAI client instances per API key
 const clientCache = new Map<string, GoogleGenAI>();
 
@@ -448,6 +485,26 @@ export async function generateAudioForTest(testId: string): Promise<{
 
   const partsWithTranscript = parts.filter((p) => p.transcript && p.transcript.trim().length > 0);
 
+  // Initialize or update live job progress
+  const nowIso = new Date().toISOString();
+  const initialJob: TtsJobProgress = {
+    testId: cleanTestId,
+    status: partsWithTranscript.length === 0 ? 'completed' : 'processing',
+    total: partsWithTranscript.length,
+    completed: 0,
+    currentPartIndex: 0,
+    percent: partsWithTranscript.length === 0 ? 100 : 0,
+    parts: partsWithTranscript.map((p) => ({
+      id: p.id,
+      title: p.title || p.id,
+      status: 'pending',
+    })),
+    errors: [],
+    startedAt: nowIso,
+    updatedAt: nowIso,
+  };
+  ttsJobStore.set(cleanTestId, initialJob);
+
   const stats = {
     total: partsWithTranscript.length,
     generated: 0,
@@ -460,10 +517,25 @@ export async function generateAudioForTest(testId: string): Promise<{
 
   const fileBase = path.basename(targetFilePath, '.json');
 
-  for (const part of partsWithTranscript) {
+  for (let idx = 0; idx < partsWithTranscript.length; idx++) {
+    const part = partsWithTranscript[idx];
     const baseName = `${fileBase}-${part.id}`;
     const mp3Path = path.join(testsAudioDir, `${baseName}.mp3`);
     const wavPath = path.join(testsAudioDir, `${baseName}.wav`);
+
+    // Update job tracking
+    const currentJob = ttsJobStore.get(cleanTestId);
+    if (currentJob) {
+      currentJob.currentPartIndex = idx + 1;
+      currentJob.currentPartId = part.id;
+      currentJob.currentPartTitle = part.title || part.id;
+      currentJob.currentMessage = `Đang xử lý ${part.id} - ${part.title || ''}...`;
+      const targetPart = currentJob.parts.find((p) => p.id === part.id);
+      if (targetPart) {
+        targetPart.status = 'processing';
+      }
+      currentJob.updatedAt = new Date().toISOString();
+    }
 
     // Kiểm tra xem file âm thanh đã tồn tại trên đĩa hay chưa
     const existingDiskPath =
@@ -475,6 +547,17 @@ export async function generateAudioForTest(testId: string): Promise<{
 
     if (existingDiskPath && part.audioUrl) {
       stats.skipped++;
+      if (currentJob) {
+        currentJob.completed++;
+        currentJob.percent = Math.round((currentJob.completed / currentJob.total) * 100);
+        const targetPart = currentJob.parts.find((p) => p.id === part.id);
+        if (targetPart) {
+          targetPart.status = 'skipped';
+          targetPart.webUrl = part.audioUrl;
+          targetPart.byteLength = fs.statSync(existingDiskPath).size;
+        }
+        currentJob.updatedAt = new Date().toISOString();
+      }
       continue;
     }
 
@@ -485,17 +568,39 @@ export async function generateAudioForTest(testId: string): Promise<{
         fs.writeFileSync(targetFilePath, JSON.stringify(doc, null, 2) + '\n', 'utf-8');
       });
       stats.skipped++;
+      if (currentJob) {
+        currentJob.completed++;
+        currentJob.percent = Math.round((currentJob.completed / currentJob.total) * 100);
+        const targetPart = currentJob.parts.find((p) => p.id === part.id);
+        if (targetPart) {
+          targetPart.status = 'skipped';
+          targetPart.webUrl = part.audioUrl;
+          targetPart.byteLength = fs.statSync(existingDiskPath).size;
+        }
+        currentJob.updatedAt = new Date().toISOString();
+      }
       continue;
     }
 
     // Chưa có file âm thanh: thực hiện tạo audio với Zero-Wait Rotation
     try {
       console.log(`[TTS Engine] Đang tạo audio cho ${baseName}...`);
+      if (currentJob) {
+        currentJob.currentMessage = `Đang gọi Gemini AI tạo giọng đọc cho ${part.id}...`;
+        currentJob.updatedAt = new Date().toISOString();
+      }
+
       const wavBytes = await generateAudioBytesWithKeyRotation(
         part.transcript!,
         part.audioConfig,
         part.speakers
       );
+
+      if (currentJob) {
+        currentJob.currentMessage = `Đang lưu và convert MP3 cho ${part.id}...`;
+        currentJob.updatedAt = new Date().toISOString();
+      }
+
       const saved = saveAudioBytes(baseName, wavBytes);
       part.audioUrl = saved.webUrl;
 
@@ -505,6 +610,17 @@ export async function generateAudioForTest(testId: string): Promise<{
       });
 
       stats.generated++;
+      if (currentJob) {
+        currentJob.completed++;
+        currentJob.percent = Math.round((currentJob.completed / currentJob.total) * 100);
+        const targetPart = currentJob.parts.find((p) => p.id === part.id);
+        if (targetPart) {
+          targetPart.status = 'completed';
+          targetPart.webUrl = saved.webUrl;
+          targetPart.byteLength = saved.byteLength;
+        }
+        currentJob.updatedAt = new Date().toISOString();
+      }
       console.log(
         `[TTS Engine] ✅ Hoàn thành ${baseName} -> ${saved.webUrl} (${(saved.byteLength / 1024).toFixed(1)} KB)`
       );
@@ -512,7 +628,37 @@ export async function generateAudioForTest(testId: string): Promise<{
       const errMsg = err instanceof Error ? err.message : String(err);
       console.error(`[TTS Engine] ❌ Lỗi tạo audio cho part "${part.id}":`, errMsg);
       stats.errors.push(`Phần ${part.id}: ${errMsg}`);
+      if (currentJob) {
+        currentJob.completed++;
+        currentJob.percent = Math.round((currentJob.completed / currentJob.total) * 100);
+        currentJob.errors.push(`Phần ${part.id}: ${errMsg}`);
+        const targetPart = currentJob.parts.find((p) => p.id === part.id);
+        if (targetPart) {
+          targetPart.status = 'failed';
+          targetPart.error = errMsg;
+        }
+        currentJob.updatedAt = new Date().toISOString();
+      }
     }
+  }
+
+  // Finalize job status
+  const finalJob = ttsJobStore.get(cleanTestId);
+  if (finalJob) {
+    finalJob.percent = 100;
+    finalJob.currentPartId = undefined;
+    finalJob.currentPartTitle = undefined;
+    finalJob.status =
+      finalJob.errors.length === 0
+        ? 'completed'
+        : stats.generated > 0 || stats.skipped > 0
+        ? 'completed'
+        : 'failed';
+    finalJob.currentMessage =
+      finalJob.status === 'completed'
+        ? `Hoàn tất! Đã tạo ${stats.generated} phần, bỏ qua ${stats.skipped} phần.${stats.errors.length ? ` (${stats.errors.length} lỗi)` : ''}`
+        : `Tạo audio thất bại (${stats.errors.length} lỗi).`;
+    finalJob.updatedAt = new Date().toISOString();
   }
 
   return stats;
