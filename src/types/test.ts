@@ -153,6 +153,7 @@ export interface TestCatalogItem {
   title: string;
   description: string;
   file: string;
+  hidden?: boolean;
 }
 
 export interface TestCatalog {

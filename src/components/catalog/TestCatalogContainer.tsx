@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo, useSyncExternalStore } from 'react';
 import { Search, X, LayoutGrid, List, RotateCcw } from 'lucide-react';
 import type { TestCatalogItem } from '@/types/test';
 import type { TestProgressSummary, TestAttemptSummary } from '@/types/storage';
@@ -22,7 +22,6 @@ export type ViewMode = 'grid' | 'list';
 export interface TestLanguageInfo {
   language: 'en' | 'zh';
   label: string;
-  flag: string;
   level: string;
 }
 
@@ -42,7 +41,6 @@ export function getTestLanguageInfo(test: TestCatalogItem): TestLanguageInfo {
     return {
       language: 'zh',
       label: 'Tiếng Trung',
-      flag: '🇨🇳',
       level,
     };
   }
@@ -58,7 +56,6 @@ export function getTestLanguageInfo(test: TestCatalogItem): TestLanguageInfo {
   return {
     language: 'en',
     label: 'Tiếng Anh',
-    flag: '🇬🇧',
     level,
   };
 }
@@ -74,10 +71,7 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const isMounted = useSyncExternalStore(() => () => {}, () => true, () => false);
 
   const clientProgress = useTestProgress();
   const clientAttempts = useAttempts();
@@ -197,14 +191,14 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* 1. Primary Language Segmented Tabs */}
-      <section aria-label="Lựa chọn ngôn ngữ bài thi" className="w-full">
-        <div className="flex border-2 border-black bg-[#f4eed9] p-1 gap-1.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex-wrap sm:flex-nowrap">
+      <section aria-label="Lựa chọn ngôn ngữ" className="w-full">
+        <div className="flex border-2 border-black bg-[#f4eed9] p-1 gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
           {[
-            { id: 'all', label: 'Tất cả', count: counts.all, flag: '🌐' },
-            { id: 'en', label: 'Tiếng Anh', count: counts.en, flag: '🇬🇧' },
-            { id: 'zh', label: 'Tiếng Trung', count: counts.zh, flag: '🇨🇳' },
+            { id: 'all', label: 'Tất cả', count: counts.all },
+            { id: 'en', label: 'Tiếng Anh', count: counts.en },
+            { id: 'zh', label: 'Tiếng Trung', count: counts.zh },
           ].map((tab) => {
             const isActive = languageFilter === tab.id;
             return (
@@ -212,14 +206,13 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
                 key={tab.id}
                 type="button"
                 onClick={() => handleLanguageChange(tab.id as LanguageFilter)}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 font-black text-xs sm:text-sm border-2 transition-all cursor-pointer select-none ${
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 font-bold text-xs sm:text-sm border transition-all cursor-pointer select-none ${
                   isActive
-                    ? 'bg-black text-[#fffdf5] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] -translate-y-0.5'
-                    : 'bg-[#fffdf5] text-black border-transparent hover:border-black hover:bg-[#fffcf0]'
+                    ? 'bg-black text-[#fffdf5] border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]'
+                    : 'bg-[#fffdf5] text-black border-transparent hover:border-black'
                 }`}
                 aria-pressed={isActive}
               >
-                <span className="text-base shrink-0">{tab.flag}</span>
                 <span className="truncate">{tab.label}</span>
                 <span
                   className={`font-mono text-xs px-1.5 py-0.2 border shrink-0 ${
@@ -239,29 +232,29 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
       {/* 2. Search and Contextual Filters Toolbar */}
       <section
         role="search"
-        aria-label="Tìm kiếm và lọc đề thi"
-        className="border-2 border-black p-3 sm:p-4 bg-[#fffdf5] space-y-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+        aria-label="Tìm kiếm và lọc"
+        className="border-2 border-black p-3 bg-[#fffdf5] space-y-2.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
       >
-        <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <label htmlFor="test-search-input" className="sr-only">
-              Tìm kiếm đề thi
+              Tìm kiếm
             </label>
             <input
               id="test-search-input"
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm theo tên, mã đề, trình độ..."
-              className="w-full pl-9 pr-8 py-2 border-2 border-black bg-[#fcf8ed] text-black font-semibold text-xs sm:text-sm placeholder:text-neutral-500 placeholder:font-normal focus-visible:outline-2"
+              placeholder="Tìm kiếm..."
+              className="w-full pl-9 pr-8 py-1.5 border border-black bg-[#fcf8ed] text-black font-medium text-xs sm:text-sm placeholder:text-neutral-500 focus-visible:outline-2"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-neutral-600 hover:text-black"
-                aria-label="Xóa từ khóa tìm kiếm"
+                aria-label="Xóa từ khóa"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -269,15 +262,15 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <div className="flex border-2 border-black font-bold text-xs" role="group" aria-label="Chế độ hiển thị">
+            <div className="flex border border-black font-bold text-xs" role="group" aria-label="Chế độ xem">
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`px-2.5 py-1.5 cursor-pointer transition-colors flex items-center gap-1 ${
+                className={`px-2.5 py-1 cursor-pointer transition-colors flex items-center gap-1 ${
                   viewMode === 'grid' ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-[#f4eed9]'
                 }`}
                 aria-pressed={viewMode === 'grid'}
-                title="Chế độ lưới (Grid)"
+                title="Lưới"
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Lưới</span>
@@ -285,11 +278,11 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
               <button
                 type="button"
                 onClick={() => setViewMode('list')}
-                className={`px-2.5 py-1.5 border-l-2 border-black cursor-pointer transition-colors flex items-center gap-1 ${
+                className={`px-2.5 py-1 border-l border-black cursor-pointer transition-colors flex items-center gap-1 ${
                   viewMode === 'list' ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-[#f4eed9]'
                 }`}
                 aria-pressed={viewMode === 'list'}
-                title="Chế độ danh sách (List)"
+                title="Danh sách"
               >
                 <List className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Danh sách</span>
@@ -299,18 +292,18 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
         </div>
 
         {/* Filter Pills */}
-        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-black text-xs">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="font-bold font-mono text-black">
-              {languageFilter === 'zh' ? 'Cấp độ:' : languageFilter === 'en' ? 'Trình độ:' : 'Trình độ:'}
-            </span>
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-neutral-200 text-xs">
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="font-bold text-neutral-700 mr-1">Cấp độ:</span>
             {availableLevels.map((level) => (
               <button
                 key={level}
                 type="button"
                 onClick={() => setLevelFilter(level)}
-                className={`px-2.5 py-1 border-2 border-black font-bold cursor-pointer transition-colors ${
-                  levelFilter === level ? 'bg-black text-[#fffdf5]' : 'bg-[#fcf8ed] text-black hover:bg-[#f4eed9]'
+                className={`px-2 py-0.5 border font-semibold cursor-pointer transition-colors ${
+                  levelFilter === level
+                    ? 'border-black bg-black text-[#fffdf5]'
+                    : 'border-neutral-300 bg-[#fcf8ed] text-black hover:border-black'
                 }`}
                 aria-pressed={levelFilter === level}
               >
@@ -319,22 +312,24 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
             ))}
           </div>
 
-          <span className="hidden sm:inline text-neutral-400">|</span>
+          <span className="hidden sm:inline text-neutral-300">|</span>
 
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="font-bold font-mono text-black">Tiến độ:</span>
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="font-bold text-neutral-700 mr-1">Trạng thái:</span>
             {[
               { id: 'all', label: 'Tất cả' },
-              { id: 'in_progress', label: `Đang làm (${progressMap.size})` },
-              { id: 'completed', label: `Đã nộp (${attemptMap.size})` },
+              { id: 'in_progress', label: 'Đang làm' },
+              { id: 'completed', label: 'Đã nộp' },
               { id: 'not_started', label: 'Chưa làm' },
             ].map((st) => (
               <button
                 key={st.id}
                 type="button"
                 onClick={() => setStatusFilter(st.id as StatusFilter)}
-                className={`px-2.5 py-1 border-2 border-black font-bold cursor-pointer transition-colors ${
-                  statusFilter === st.id ? 'bg-black text-[#fffdf5]' : 'bg-[#fcf8ed] text-black hover:bg-[#f4eed9]'
+                className={`px-2 py-0.5 border font-semibold cursor-pointer transition-colors ${
+                  statusFilter === st.id
+                    ? 'border-black bg-black text-[#fffdf5]'
+                    : 'border-neutral-300 bg-[#fcf8ed] text-black hover:border-black'
                 }`}
                 aria-pressed={statusFilter === st.id}
               >
@@ -347,7 +342,7 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
             <button
               type="button"
               onClick={handleResetFilters}
-              className="ml-auto flex items-center gap-1 font-bold text-xs text-neutral-700 hover:text-black cursor-pointer underline"
+              className="ml-auto flex items-center gap-1 font-semibold text-xs text-neutral-600 hover:text-black cursor-pointer underline"
             >
               <RotateCcw className="w-3 h-3" />
               <span>Đặt lại</span>
@@ -357,20 +352,10 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
       </section>
 
       {/* Results Count Counter */}
-      <div className="flex items-center justify-between text-xs font-bold font-mono text-black" aria-live="polite">
+      <div className="flex items-center justify-between text-xs font-mono text-neutral-600" aria-live="polite">
         <span>
-          Hiển thị <strong className="text-sm underline">{filteredTests.length}</strong> / {tests.length} bài thi
-          {languageFilter !== 'all' && (
-            <span className="ml-1 text-neutral-800">
-              ({languageFilter === 'zh' ? '🇨🇳 Tiếng Trung' : '🇬🇧 Tiếng Anh'})
-            </span>
-          )}
+          <strong className="text-black font-bold">{filteredTests.length}</strong> đề thi
         </span>
-        {searchQuery && (
-          <span className="text-neutral-800">
-            Từ khóa: &quot;{searchQuery}&quot;
-          </span>
-        )}
       </div>
 
       {/* Test List / Grid */}
@@ -380,23 +365,20 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
         </h3>
 
         {filteredTests.length === 0 ? (
-          <div className="border-2 border-black p-8 bg-[#fffdf5] text-center space-y-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <p className="text-base font-bold text-black">
-              Không tìm thấy đề thi nào phù hợp với điều kiện tìm kiếm.
-            </p>
-            <p className="text-xs text-neutral-800">
-              Hãy thử chọn tab ngôn ngữ khác hoặc bấm nút đặt lại bộ lọc bên dưới.
+          <div className="border-2 border-black p-6 bg-[#fffdf5] text-center space-y-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            <p className="text-sm font-bold text-black">
+              Không có đề thi phù hợp.
             </p>
             <button
               type="button"
               onClick={handleResetFilters}
-              className="px-4 py-2 bg-black text-[#fffdf5] font-bold text-sm border-2 border-black hover:bg-[#fffdf5] hover:text-black transition-colors cursor-pointer"
+              className="px-3 py-1.5 bg-black text-[#fffdf5] font-bold text-xs border border-black hover:bg-[#fffdf5] hover:text-black transition-colors cursor-pointer"
             >
               Đặt lại bộ lọc
             </button>
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredTests.map((test) => {
               const langInfo = getTestLanguageInfo(test);
               const initialProg = progressMap.get(test.id);
@@ -405,24 +387,22 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
               return (
                 <article
                   key={test.id}
-                  className={`border-2 border-black p-5 flex flex-col justify-between gap-4 transition-all hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 ${
+                  className={`border-2 border-black p-4 flex flex-col justify-between gap-3 transition-all hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
                     initialProg
-                      ? 'bg-[#fffcf0] border-l-6 sm:border-l-8 border-l-amber-500 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]'
-                      : 'bg-[#fffdf5]'
+                      ? 'bg-[#fffcf0] border-l-4 border-l-amber-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                      : 'bg-[#fffdf5] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
                   }`}
                 >
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-1.5">
                       <div className="flex items-center gap-1.5 font-mono text-xs flex-wrap">
-                        {/* Language & Level Badges */}
-                        <span className="font-bold px-2 py-0.5 border-2 border-black bg-[#f4eed9] text-black flex items-center gap-1 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
-                          <span>{langInfo.flag}</span>
-                          <span>{langInfo.label}</span>
+                        <span className="font-bold px-1.5 py-0.2 border border-black bg-[#f4eed9] text-black">
+                          {langInfo.label}
                         </span>
-                        <span className="font-bold px-2 py-0.5 border-2 border-black bg-black text-[#fffdf5]">
+                        <span className="font-bold px-1.5 py-0.2 border border-black bg-black text-[#fffdf5]">
                           {langInfo.level}
                         </span>
-                        <span className="font-bold px-1.5 py-0.5 border border-neutral-400 bg-neutral-100 text-neutral-800 text-[11px]">
+                        <span className="px-1.5 py-0.2 border border-neutral-300 bg-neutral-100 text-neutral-600 text-[11px]">
                           {test.id}
                         </span>
                       </div>
@@ -436,10 +416,10 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
                     </div>
 
                     <div>
-                      <h4 className="text-lg font-black tracking-tight text-black line-clamp-2">
+                      <h4 className="text-base font-bold text-black line-clamp-1">
                         {test.title}
                       </h4>
-                      <p className="text-sm font-medium text-neutral-800 mt-1 line-clamp-3 leading-relaxed">
+                      <p className="text-xs text-neutral-600 mt-1 line-clamp-2 leading-relaxed">
                         {test.description}
                       </p>
                       <TestCardProgressIsland
@@ -464,7 +444,7 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
             })}
           </div>
         ) : (
-          <div className="border-2 border-black divide-y-2 divide-black bg-[#fffdf5] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="border-2 border-black divide-y border-neutral-300 divide-neutral-200 bg-[#fffdf5] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
             {filteredTests.map((test) => {
               const langInfo = getTestLanguageInfo(test);
               const initialProg = progressMap.get(test.id);
@@ -473,20 +453,19 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
               return (
                 <article
                   key={test.id}
-                  className={`p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors ${
+                  className={`p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 transition-colors ${
                     initialProg ? 'bg-[#fffcf0] border-l-4 border-l-amber-500' : 'hover:bg-[#fcf8ed]'
                   }`}
                 >
-                  <div className="space-y-1.5 flex-1 min-w-0">
-                    <div className="flex items-center gap-2 font-mono text-xs flex-wrap">
-                      <span className="font-bold px-2 py-0.5 border border-black bg-[#f4eed9] text-black flex items-center gap-1">
-                        <span>{langInfo.flag}</span>
-                        <span>{langInfo.label}</span>
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 font-mono text-xs flex-wrap">
+                      <span className="font-bold px-1.5 py-0.2 border border-black bg-[#f4eed9] text-black">
+                        {langInfo.label}
                       </span>
-                      <span className="font-bold px-2 py-0.5 border border-black bg-black text-[#fffdf5]">
+                      <span className="font-bold px-1.5 py-0.2 border border-black bg-black text-[#fffdf5]">
                         {langInfo.level}
                       </span>
-                      <span className="font-bold px-1.5 py-0.5 border border-neutral-400 bg-neutral-100 text-neutral-800 text-[11px]">
+                      <span className="px-1.5 py-0.2 border border-neutral-300 bg-neutral-100 text-neutral-600 text-[11px]">
                         {test.id}
                       </span>
                       <TestCardProgressIsland
@@ -498,8 +477,8 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
                       />
                     </div>
 
-                    <h4 className="font-black text-base text-black truncate">{test.title}</h4>
-                    <p className="text-xs text-neutral-800 line-clamp-2">{test.description}</p>
+                    <h4 className="font-bold text-sm text-black truncate">{test.title}</h4>
+                    <p className="text-xs text-neutral-600 line-clamp-1">{test.description}</p>
                   </div>
 
                   <TestCardProgressIsland

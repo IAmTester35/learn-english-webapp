@@ -3,6 +3,8 @@ import { revalidatePath } from 'next/cache';
 import { getTestCatalog, saveTestDocument } from '@/server/testRepository';
 import { validateTestDocument } from '@/domain/validator';
 import { SAMPLE_TEST_TEMPLATE } from '@/services/testTemplate';
+import { verifyAdminSession } from '@/server/auth';
+import { triggerBackgroundTts } from '@/server/ttsService';
 
 export const maxDuration = 30;
 
@@ -19,10 +21,16 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const catalog = await getTestCatalog();
+    const isAdmin = await verifyAdminSession();
+    const wantsAdmin = searchParams.get('admin') === 'true';
+    const includeHidden = isAdmin || (wantsAdmin && isAdmin);
+
+    const catalog = await getTestCatalog({ includeHidden });
     return NextResponse.json(catalog, {
       headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        'Cache-Control': includeHidden
+          ? 'private, no-store'
+          : 'public, s-maxage=60, stale-while-revalidate=300',
       },
     });
   } catch (err) {
@@ -34,6 +42,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const isAdmin = await verifyAdminSession();
+  if (!isAdmin) {
+    return NextResponse.json(
+      { error: 'Bạn cần đăng nhập quyền quản trị viên để tải lên đề thi mới.' },
+      { status: 401 }
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -74,8 +90,18 @@ export async function POST(request: NextRequest) {
       revalidatePath('/', 'layout');
       revalidatePath('/test');
       revalidatePath(`/test/${result.id}`);
+      revalidatePath('/admin');
     } catch {
       // Revalidation might be skipped in non-cache contexts
+    }
+
+    // Auto-run Pipeline: Tự động chạy TTS nền nếu đề thi có phần nghe
+    try {
+      if (validation.data.sections?.listening?.parts?.some((p) => p.transcript?.trim())) {
+        triggerBackgroundTts(result.id);
+      }
+    } catch (ttsErr) {
+      console.warn('[Auto-run TTS] Không thể khởi chạy background TTS:', ttsErr);
     }
 
     return NextResponse.json({

@@ -10,6 +10,7 @@ import {
   Info,
   BookOpen,
   Headphones,
+  FileText,
 } from 'lucide-react';
 import type {
   TestDocument,
@@ -87,7 +88,15 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, initialSec
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [lastSavedNotice, setLastSavedNotice] = useState<string>('');
+  const [expandedTranscripts, setExpandedTranscripts] = useState<Record<string, boolean>>({});
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const toggleTranscript = (partId: string) => {
+    setExpandedTranscripts((prev) => ({
+      ...prev,
+      [partId]: !prev[partId],
+    }));
+  };
 
   // Pre-calculate sequential 1-based question numbers for clean UI display
   const questionNumberMap = React.useMemo(() => {
@@ -575,6 +584,27 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, initialSec
 
                   {/* Trình phát âm thanh Neo-brutalism có sóng âm và scrubber mượt */}
                   <ListeningAudioPlayer part={part} partIndex={pIndex} />
+
+                  {/* Xem transcript tĩnh (mặc định ẩn) */}
+                  {part.transcript && (
+                    <div className="pt-2 border-t border-neutral-300">
+                      <button
+                        type="button"
+                        onClick={() => toggleTranscript(part.id)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-black bg-[#f4eed9] hover:bg-black hover:text-[#fffdf5] text-black font-semibold text-xs transition-colors cursor-pointer"
+                        aria-expanded={Boolean(expandedTranscripts[part.id])}
+                      >
+                        <FileText className="w-3.5 h-3.5 shrink-0" />
+                        <span>{expandedTranscripts[part.id] ? 'Ẩn transcript' : 'Xem transcript'}</span>
+                      </button>
+
+                      {expandedTranscripts[part.id] && (
+                        <div className="mt-2.5 p-3.5 border border-neutral-300 bg-[#fbf9f0] text-xs sm:text-sm text-neutral-800 whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto">
+                          {part.transcript}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </article>
 
                 <div className="space-y-4">

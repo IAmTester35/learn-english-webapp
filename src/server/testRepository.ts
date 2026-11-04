@@ -13,7 +13,11 @@ const LEGACY_ID_ALIASES: Record<string, string> = {
   'test-04': 'b1-intermediate-english-test-01',
 };
 
-export async function getTestCatalog(): Promise<TestCatalog> {
+/**
+ * Lấy danh mục bài thi từ public/tests/index.json.
+ * Mặc định lọc bỏ các bài bị ẩn trừ khi options.includeHidden = true.
+ */
+export async function getTestCatalog(options?: { includeHidden?: boolean }): Promise<TestCatalog> {
   const indexPath = path.join(TESTS_DIR, 'index.json');
   try {
     const raw = await fs.readFile(indexPath, 'utf-8');
@@ -21,21 +25,35 @@ export async function getTestCatalog(): Promise<TestCatalog> {
     if (!parsed || !Array.isArray(parsed.tests)) {
       throw new Error('Định dạng public/tests/index.json không hợp lệ: thiếu mảng "tests".');
     }
-    return parsed as TestCatalog;
+
+    const allTests = parsed.tests as TestCatalogItem[];
+    const tests = options?.includeHidden
+      ? allTests
+      : allTests.filter((item) => item.hidden !== true);
+
+    return { tests };
   } catch (err) {
     console.error('Lỗi khi đọc danh mục bài thi:', err);
     throw new Error('Không thể nạp danh mục bài thi từ server.');
   }
 }
 
-export async function getTestById(id: string): Promise<TestDocument | null> {
+/**
+ * Lấy nội dung chi tiết bài thi theo ID.
+ * Nếu bài bị ẩn mà không có options.allowHidden = true, trả về null để bảo mật.
+ */
+export async function getTestById(
+  id: string,
+  options?: { allowHidden?: boolean }
+): Promise<TestDocument | null> {
   // Validate id: only alphanumeric, dashes and underscores, no slashes or dots
   if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(id)) {
     return null;
   }
 
   const resolvedId = LEGACY_ID_ALIASES[id] || id;
-  const catalog = await getTestCatalog();
+  // Đọc danh mục đầy đủ (gồm bài ẩn) để kiểm tra chính xác trạng thái ẩn/hiện
+  const catalog = await getTestCatalog({ includeHidden: true });
 
   // 1. Match directly against catalog item ID (e.g., "a2-key-english-test-01")
   let catalogItem = catalog.tests.find((item) => item.id === resolvedId);
@@ -70,6 +88,11 @@ export async function getTestById(id: string): Promise<TestDocument | null> {
     return null;
   }
 
+  // Nếu bài đang ở trạng thái ẩn và không được phép truy cập bài ẩn, trả về null
+  if (catalogItem.hidden === true && !options?.allowHidden) {
+    return null;
+  }
+
   // Ensure filePath resolves inside TESTS_DIR
   const filename = path.basename(catalogItem.file);
   const targetPath = path.join(TESTS_DIR, filename);
@@ -95,6 +118,60 @@ export async function getTestById(id: string): Promise<TestDocument | null> {
   }
 }
 
+/**
+ * Đảo ngược trạng thái hiển thị (hidden) của đề thi trong public/tests/index.json
+ */
+export async function toggleTestVisibility(
+  id: string
+): Promise<{ success: boolean; id: string; hidden: boolean }> {
+  if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(id)) {
+    throw new Error(`Mã bài thi "${id}" không hợp lệ.`);
+  }
+
+  const indexPath = path.join(TESTS_DIR, 'index.json');
+  let raw: string;
+  try {
+    raw = await fs.readFile(indexPath, 'utf-8');
+  } catch {
+    throw new Error('Không thể đọc file danh mục bài thi public/tests/index.json.');
+  }
+
+  let catalog: TestCatalog;
+  try {
+    catalog = JSON.parse(raw) as TestCatalog;
+  } catch {
+    throw new Error('Dữ liệu public/tests/index.json không đúng định dạng JSON.');
+  }
+
+  if (!catalog || !Array.isArray(catalog.tests)) {
+    throw new Error('Định dạng public/tests/index.json không hợp lệ: thiếu danh mục "tests".');
+  }
+
+  const resolvedId = LEGACY_ID_ALIASES[id] || id;
+  const index = catalog.tests.findIndex(
+    (item) =>
+      item.id === resolvedId ||
+      item.id === id ||
+      path.basename(item.file, path.extname(item.file)) === resolvedId
+  );
+
+  if (index === -1) {
+    throw new Error(`Không tìm thấy bài thi với mã ID "${id}".`);
+  }
+
+  const targetItem = catalog.tests[index];
+  const newHidden = !targetItem.hidden;
+  targetItem.hidden = newHidden;
+
+  await fs.writeFile(indexPath, JSON.stringify(catalog, null, 2) + '\n', 'utf-8');
+
+  return {
+    success: true,
+    id: targetItem.id,
+    hidden: newHidden,
+  };
+}
+
 export async function saveTestDocument(
   doc: unknown,
   _options?: { overwrite?: boolean }
@@ -107,8 +184,8 @@ export async function saveTestDocument(
 
   const validDoc = validation.data;
 
-  // 2. Read existing catalog
-  const catalog = await getTestCatalog();
+  // 2. Read existing catalog (bao gồm cả bài ẩn để tránh trùng ID)
+  const catalog = await getTestCatalog({ includeHidden: true });
   const existingIdx = catalog.tests.findIndex(
     (t) => t.id === validDoc.id || path.basename(t.file, path.extname(t.file)) === validDoc.id
   );
@@ -135,7 +212,7 @@ export async function saveTestDocument(
 
   // 5. Write updated index.json
   const indexPath = path.join(TESTS_DIR, 'index.json');
-  await fs.writeFile(indexPath, JSON.stringify(catalog, null, 2), 'utf-8');
+  await fs.writeFile(indexPath, JSON.stringify(catalog, null, 2) + '\n', 'utf-8');
 
   return {
     success: true,

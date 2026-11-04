@@ -64,6 +64,7 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
   children,
 }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playbackIntentRef = useRef<string | null>(null);
   const [activePartId, setActivePartId] = useState<string>(() => parts[0]?.id || '');
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isBuffering, setIsBuffering] = useState<boolean>(false);
@@ -113,6 +114,10 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
     if (!audioRef.current) {
       const audio = new Audio();
       audio.preload = 'auto';
+      if (activePart?.audioUrl) {
+        audio.src = activePart.audioUrl;
+        audio.load();
+      }
       audioRef.current = audio;
     }
 
@@ -124,11 +129,11 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
     ) {
       audio.src = activePart.audioUrl;
       audio.preload = 'auto';
+      audio.load();
       audio.playbackRate = playbackRate;
       audio.volume = isMuted ? 0 : volume;
       setCurrentTime(0);
       setDuration(0);
-      setIsBuffering(false);
     }
   }, [activePart, playbackRate, volume, isMuted]);
 
@@ -149,28 +154,47 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
       }
     };
     const handlePlay = () => {
-      // Audio playback requested or started
+      if (audio.readyState < 3) {
+        setIsBuffering(true);
+      }
     };
     const handlePause = () => {
-      setIsPlaying(false);
-      setIsBuffering(false);
+      // Only clear playing/buffering if there is no active intent to play
+      if (!playbackIntentRef.current) {
+        setIsPlaying(false);
+        setIsBuffering(false);
+      }
     };
-    const handleWaiting = () => setIsBuffering(true);
+    const handleWaiting = () => {
+      if (playbackIntentRef.current || !audio.paused) {
+        setIsBuffering(true);
+      }
+    };
     const handlePlaying = () => {
       setIsPlaying(true);
       setIsBuffering(false);
     };
     const handleCanPlay = () => {
-      if (audio.paused === false) {
-        setIsBuffering(false);
+      if (audio.duration && !isNaN(audio.duration)) {
+        setDuration(audio.duration);
+      }
+      // If user intended to play and audio is currently paused, auto-start immediately
+      if (playbackIntentRef.current && audio.paused) {
+        audio.play().catch(() => {});
       }
     };
     const handleEnded = () => {
+      playbackIntentRef.current = null;
       setIsPlaying(false);
       setIsBuffering(false);
       audio.currentTime = 0;
       setCurrentTime(0);
       announce('Bài nghe đã kết thúc');
+    };
+    const handleError = () => {
+      playbackIntentRef.current = null;
+      setIsPlaying(false);
+      setIsBuffering(false);
     };
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -182,6 +206,7 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
     audio.addEventListener('playing', handlePlaying);
     audio.addEventListener('canplay', handleCanPlay);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
@@ -193,16 +218,19 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
       audio.removeEventListener('playing', handlePlaying);
       audio.removeEventListener('canplay', handleCanPlay);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
     };
   }, [announce]);
 
   // Pause audio automatically if user leaves the listening tab
   useEffect(() => {
-    if (!isCurrentTab && isPlaying && audioRef.current) {
+    if (!isCurrentTab && (isPlaying || isBuffering) && audioRef.current) {
+      playbackIntentRef.current = null;
       audioRef.current.pause();
       setIsPlaying(false);
+      setIsBuffering(false);
     }
-  }, [isCurrentTab, isPlaying]);
+  }, [isCurrentTab, isPlaying, isBuffering]);
 
   // Clean up on unmount
   useEffect(() => {
@@ -214,42 +242,84 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
     };
   }, []);
 
-  const playPart = useCallback(
-    (partId: string) => {
-      const target = parts.find((p) => p.id === partId);
-      if (!target || !target.audioUrl) return;
-
+  const startPlayback = useCallback(
+    async (targetPart: ListeningPart) => {
       const audio = audioRef.current;
-      if (!audio) return;
+      if (!audio || !targetPart.audioUrl) return;
 
-      if (partId !== activePartId) {
-        setActivePartId(partId);
-        setIsStickyDismissed(false);
-        audio.src = target.audioUrl;
+      playbackIntentRef.current = targetPart.id;
+      setIsBuffering(true);
+
+      const isDifferentSrc =
+        audio.src !== window.location.origin + targetPart.audioUrl &&
+        !audio.src.endsWith(targetPart.audioUrl);
+
+      if (isDifferentSrc) {
+        audio.src = targetPart.audioUrl;
+        audio.preload = 'auto';
+        audio.load();
         audio.playbackRate = playbackRate;
         audio.volume = isMuted ? 0 : volume;
         audio.currentTime = 0;
         setCurrentTime(0);
+        setDuration(0);
       }
 
-      // If audio has not buffered enough future frames, mark as buffering immediately
-      if (audio.readyState < 3) {
-        setIsBuffering(true);
+      if (targetPart.id !== activePartId) {
+        setActivePartId(targetPart.id);
+        setIsStickyDismissed(false);
       }
 
-      audio
-        .play()
-        .then(() => {
-          setIsPlaying(true);
-          setIsBuffering(false);
-          announce(`Đang phát âm thanh ${target.title}`);
-        })
-        .catch((err) => {
-          setIsBuffering(false);
-          if (err.name !== 'AbortError') console.warn('Audio playback error:', err);
-        });
+      const executePlay = async () => {
+        if (playbackIntentRef.current !== targetPart.id) return;
+        try {
+          await audio.play();
+          if (playbackIntentRef.current === targetPart.id) {
+            setIsPlaying(true);
+            setIsBuffering(false);
+            announce(`Đang phát âm thanh ${targetPart.title}`);
+          }
+        } catch (err: unknown) {
+          if (playbackIntentRef.current !== targetPart.id) return;
+          const error = err as Error;
+          if (error.name === 'AbortError') {
+            // Keep buffering true while waiting for resource to become playable
+            setIsBuffering(true);
+            const onPlayable = () => {
+              audio.removeEventListener('canplay', onPlayable);
+              audio.removeEventListener('canplaythrough', onPlayable);
+              if (playbackIntentRef.current === targetPart.id) {
+                audio.play().catch(() => {
+                  if (playbackIntentRef.current === targetPart.id) {
+                    setIsBuffering(false);
+                    setIsPlaying(false);
+                    playbackIntentRef.current = null;
+                  }
+                });
+              }
+            };
+            audio.addEventListener('canplay', onPlayable);
+            audio.addEventListener('canplaythrough', onPlayable);
+          } else {
+            setIsBuffering(false);
+            setIsPlaying(false);
+            playbackIntentRef.current = null;
+          }
+        }
+      };
+
+      await executePlay();
     },
-    [activePartId, parts, playbackRate, volume, isMuted, announce]
+    [activePartId, playbackRate, volume, isMuted, announce]
+  );
+
+  const playPart = useCallback(
+    (partId: string) => {
+      const target = parts.find((p) => p.id === partId);
+      if (!target || !target.audioUrl) return;
+      startPlayback(target);
+    },
+    [parts, startPlayback]
   );
 
   const togglePlayPause = useCallback(
@@ -262,34 +332,22 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
       if (!audio) return;
 
       if (targetId !== activePartId) {
-        playPart(targetId);
+        startPlayback(target);
         return;
       }
 
-      // If currently playing or waiting to play (buffering), pause cancels playback
-      if (isPlaying || isBuffering) {
+      // If currently playing or buffering this part, clicking cancels/pauses
+      if (isPlaying || isBuffering || playbackIntentRef.current === targetId) {
+        playbackIntentRef.current = null;
         audio.pause();
         setIsPlaying(false);
         setIsBuffering(false);
         announce(`Đã tạm dừng âm thanh ${target.title}`);
       } else {
-        if (audio.readyState < 3) {
-          setIsBuffering(true);
-        }
-        audio
-          .play()
-          .then(() => {
-            setIsPlaying(true);
-            setIsBuffering(false);
-            announce(`Đang phát âm thanh ${target.title}`);
-          })
-          .catch((err) => {
-            setIsBuffering(false);
-            if (err.name !== 'AbortError') console.warn('Audio play error:', err);
-          });
+        startPlayback(target);
       }
     },
-    [activePartId, isPlaying, isBuffering, parts, playPart, announce]
+    [activePartId, isPlaying, isBuffering, parts, startPlayback, announce]
   );
 
   const seek = useCallback(
@@ -397,10 +455,7 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
 
   // Robust scroll tracking with hysteresis to completely prevent oscillation
   useEffect(() => {
-    if (!isCurrentTab) {
-      setIsStickyVisible(false);
-      return;
-    }
+    if (!isCurrentTab) return;
 
     const checkVisibility = () => {
       const targetEl = document.getElementById(`audio-player-part-${activePartId}`);
@@ -436,7 +491,7 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
         playbackRate,
         volume,
         isMuted,
-        isStickyVisible,
+        isStickyVisible: isCurrentTab && isStickyVisible,
         isStickyDismissed,
         dismissSticky,
         playPart,
@@ -782,7 +837,6 @@ export const StickyListeningMiniPlayer: React.FC = () => {
     currentTime,
     duration,
     playbackRate,
-    isMuted,
     isStickyVisible,
     isStickyDismissed,
     dismissSticky,
@@ -790,7 +844,6 @@ export const StickyListeningMiniPlayer: React.FC = () => {
     seek,
     skip,
     setRate,
-    toggleMute,
     scrollToPlayer,
   } = useListeningAudio();
 

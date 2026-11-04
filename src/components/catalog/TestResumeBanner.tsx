@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { Zap, Play, ArrowRight, Trash2 } from 'lucide-react';
+import { Play, ArrowRight, Trash2 } from 'lucide-react';
 import type { TestProgressSummary } from '@/types/storage';
 import { useTestProgress } from '@/hooks/useTestProgress';
 import { deleteTestProgress } from '@/services/testProgressStorage';
@@ -11,14 +11,11 @@ interface TestResumeBannerProps {
   initialProgressList: TestProgressSummary[];
 }
 
-export const TestResumeBanner: React.FC<TestResumeBannerProps> = ({ initialProgressList }) => {
-  const [isMounted, setIsMounted] = React.useState(false);
-  React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
+const emptySubscribe = () => () => {};
 
+export const TestResumeBanner: React.FC<TestResumeBannerProps> = ({ initialProgressList }) => {
+  const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const clientProgress = useTestProgress();
-  // Safe hydration: use server initialProgressList on first render, switch to clientProgress after mount
   const progressList = isMounted ? clientProgress : initialProgressList;
 
   if (!progressList || progressList.length === 0) {
@@ -27,92 +24,66 @@ export const TestResumeBanner: React.FC<TestResumeBannerProps> = ({ initialProgr
 
   return (
     <section
-      aria-label="Bài thi đang làm dở"
-      className="border-2 border-black p-4 sm:p-5 bg-[#fff9e6] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-l-6 sm:border-l-8 border-l-amber-500 space-y-3.5 w-full min-w-0"
+      aria-label="Đang làm dở"
+      className="border-2 border-black p-3.5 sm:p-4 bg-[#fff9e6] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] border-l-4 border-l-amber-500 space-y-3 w-full min-w-0"
     >
-      {/* Header Banner */}
-      <div className="flex items-center justify-between gap-2 border-b-2 border-black/80 pb-2.5">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-ping shrink-0" />
-          <span className="text-xs font-mono font-black uppercase tracking-wider bg-amber-300 text-black px-2 py-0.5 border-2 border-black shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1">
-            <Zap className="w-3.5 h-3.5 fill-current" />
-            <span>Đang làm dở</span>
-          </span>
-          <span className="text-xs font-mono font-bold text-neutral-800">
-            {progressList.length} bài
-          </span>
-        </div>
+      <div className="flex items-center justify-between text-xs font-bold font-mono">
+        <span className="text-amber-950 uppercase tracking-wider">
+          Đang làm dở ({progressList.length})
+        </span>
       </div>
 
-      {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {progressList.map((prog) => {
           const percent = Math.round((prog.answeredCount / (prog.totalCount || 1)) * 100);
           return (
             <div
               key={prog.testId}
-              className="border-2 border-black p-3.5 sm:p-4 bg-[#fffdf5] flex flex-col justify-between gap-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-white transition-colors"
+              className="border-2 border-black p-3 bg-[#fffdf5] flex flex-col justify-between gap-2.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
             >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-mono font-bold px-1.5 py-0.2 border border-black bg-[#f4eed9] truncate max-w-45">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2 text-xs font-mono">
+                  <span className="font-bold px-1.5 py-0.2 border border-black bg-[#f4eed9] truncate max-w-45">
                     {prog.testId}
                   </span>
-                  <span suppressHydrationWarning className="text-[11px] font-mono font-semibold text-neutral-600 shrink-0">
-                    {new Date(prog.updatedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} • {new Date(prog.updatedAt).toLocaleDateString('vi-VN')}
-                  </span>
+                  <span className="text-amber-900 font-bold">{percent}%</span>
                 </div>
 
-                <h4 className="font-black text-sm sm:text-base text-black line-clamp-1">
+                <h4 className="font-bold text-sm text-black truncate">
                   {prog.testTitle}
                 </h4>
 
-                <div className="text-xs font-mono font-bold text-neutral-900 flex items-center justify-between pt-0.5">
-                  <span className="flex items-center gap-1.5">
-                    <span>Đang làm:</span>
-                    <span className="uppercase font-black bg-black text-[#fffdf5] px-1.5 py-0.2 text-[10px]">
-                      {prog.lastActiveSection}
-                    </span>
-                  </span>
-                  <span className="text-amber-900 font-black">{percent}%</span>
-                </div>
-
-                {/* Vivid Progress Bar */}
-                <div className="w-full h-2.5 border-2 border-black bg-white overflow-hidden">
+                <div className="w-full h-1.5 border border-black bg-white overflow-hidden">
                   <div
-                    className="h-full bg-amber-400 border-r-2 border-black transition-all"
+                    className="h-full bg-amber-400 transition-all"
                     style={{ width: `${percent}%` }}
                   />
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-1.5 pt-1 border-t border-neutral-300">
+              <div className="flex items-center justify-between gap-2 pt-1 border-t border-neutral-200">
                 <Link
                   href={`/test/${prog.testId}/${prog.lastActiveSection}`}
                   prefetch={true}
-                  className="w-full py-2 px-3 bg-amber-300 hover:bg-amber-400 text-black font-black text-xs sm:text-sm border-2 border-black text-center flex items-center justify-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
+                  className="px-3 py-1.5 bg-amber-300 hover:bg-amber-400 text-black font-bold text-xs border border-black flex items-center gap-1 transition-colors cursor-pointer"
                 >
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Tiếp tục {prog.lastActiveSection.toUpperCase()}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <Play className="w-3 h-3 fill-current" />
+                  <span>Tiếp tục</span>
+                  <ArrowRight className="w-3 h-3" />
                 </Link>
 
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm(`Bạn có chắc muốn xóa bản lưu nháp của bài "${prog.testTitle}"?`)) {
-                        deleteTestProgress(prog.testId);
-                      }
-                    }}
-                    className="text-[11px] font-semibold text-neutral-600 hover:text-red-700 underline cursor-pointer flex items-center gap-1"
-                    title="Xóa tiến độ bài thi này"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    <span>Hủy nháp</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm(`Xóa tiến độ của "${prog.testTitle}"?`)) {
+                      deleteTestProgress(prog.testId);
+                    }
+                  }}
+                  className="text-xs text-neutral-500 hover:text-red-700 underline cursor-pointer flex items-center gap-1"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span>Xóa</span>
+                </button>
               </div>
             </div>
           );

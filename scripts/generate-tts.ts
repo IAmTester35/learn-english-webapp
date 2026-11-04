@@ -1,11 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
-import { GoogleGenAI } from '@google/genai';
 import {
-  buildListeningTtsRequest,
-  combineAudioPartsToWavBytes,
+  generateAudioBytesWithKeyRotation,
+  saveAudioBytes,
+  getShortestCooldownRemainingMs,
+  resetKeyCooldowns,
+  isFfmpegAvailable,
+} from '../src/server/ttsService';
+import {
   parseTranscriptDialogue,
   resolveSpeakerProfiles,
 } from '../src/services/listeningTtsCore';
@@ -13,103 +16,15 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..');
-const ENV_PATH = path.join(ROOT_DIR, '.env');
 const TESTS_DIR = path.join(ROOT_DIR, 'public', 'tests');
 const AUDIO_DIR = path.join(TESTS_DIR, 'audio');
 const TEMP_MD_PATH = path.join(ROOT_DIR, 'temp.md');
 const HEALTH_FILE_PATH = path.join(ROOT_DIR, '.gemini_key_health.json');
-const ARCHIVE_AUDIO_DIR = path.join(ROOT_DIR, 'archive', 'audio');
 
-const HAS_FFMPEG = (() => {
-  try {
-    const res = spawnSync('ffmpeg', ['-version'], { stdio: 'ignore' });
-    return res.status === 0;
-  } catch {
-    return false;
-  }
-})();
-
-function saveAudioBytes(rawWavBytes: Uint8Array, outputPath: string): void {
-  // Tự động sao lưu bản WAV raw vào thư mục archive/audio/ cục bộ
-  try {
-    fs.mkdirSync(ARCHIVE_AUDIO_DIR, { recursive: true });
-    const wavArchiveName = path.basename(outputPath).replace(/\.mp3$/i, '.wav');
-    fs.writeFileSync(path.join(ARCHIVE_AUDIO_DIR, wavArchiveName), rawWavBytes);
-  } catch {
-    // Không làm gián đoạn nếu ghi archive gặp lỗi
-  }
-
-  if (outputPath.endsWith('.mp3') && HAS_FFMPEG) {
-    const tempWav = outputPath + '.tmp.wav';
-    fs.writeFileSync(tempWav, rawWavBytes);
-    // 192kbps MP3 preserves the full 24kHz acoustic spectrum and subtle vocal phonetics
-    const proc = spawnSync('ffmpeg', ['-y', '-i', tempWav, '-b:a', '192k', '-ar', '24000', outputPath], {
-      stdio: 'ignore',
-    });
-    try {
-      fs.unlinkSync(tempWav);
-    } catch {
-      // ignore
-    }
-    if (proc.status === 0 && fs.existsSync(outputPath)) {
-      return;
-    }
-  }
-  fs.writeFileSync(outputPath, rawWavBytes);
-}
-
-// Rate limit & Retry Configuration
-// Đã loại bỏ hoàn toàn thời gian chờ 5 phút: chỉ thử 1m (lần 1) và 3m (lần 2).
-const MAX_RETRIES_PER_KEY = 2;
-const RETRY_BASE_DELAYS_MS = [
-  1 * 60 * 1000, // Lần 1: 1 phút
-  3 * 60 * 1000, // Lần 2: 3 phút
-];
-
-// Ngưỡng số lần bị down liên tiếp để tự động comment out key trong file .env
-const DOWN_THRESHOLD_TO_COMMENT_OUT = 2;
+const HAS_FFMPEG = isFfmpegAvailable();
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function calculateJitterDelay(attemptIndex: number): number {
-  const baseMs = RETRY_BASE_DELAYS_MS[attemptIndex] ?? 3 * 60 * 1000;
-  // Jitter: dao động ngẫu nhiên 0 đến 15s để chống thundering herd
-  const jitterMs = Math.floor(Math.random() * 15_000);
-  return baseMs + jitterMs;
-}
-
-function isRateLimitError(err: unknown): boolean {
-  if (!err) return false;
-  const anyErr = err as { status?: number; code?: number; statusCode?: number; message?: string };
-  if (anyErr.status === 429 || anyErr.code === 429 || anyErr.statusCode === 429) {
-    return true;
-  }
-  const msg = (anyErr.message || String(err)).toLowerCase();
-  return (
-    msg.includes('429') ||
-    msg.includes('resource_exhausted') ||
-    msg.includes('rate limit') ||
-    msg.includes('quota') ||
-    msg.includes('too many requests')
-  );
-}
-
-function isFatalError(err: unknown): boolean {
-  if (!err) return false;
-  const anyErr = err as { status?: number; code?: number; statusCode?: number; message?: string };
-  if (anyErr.status === 400 || anyErr.status === 401 || anyErr.status === 403) {
-    return true;
-  }
-  const msg = (anyErr.message || String(err)).toLowerCase();
-  return (
-    msg.includes('api_key_invalid') ||
-    msg.includes('api key not valid') ||
-    msg.includes('permission_denied') ||
-    msg.includes('unauthorized') ||
-    msg.includes('invalid argument')
-  );
 }
 
 interface KeyHealthRecord {
@@ -139,49 +54,14 @@ function saveHealthRecords(records: Record<string, KeyHealthRecord>): void {
   }
 }
 
-function commentOutKeyInEnv(envVarName: string, reason: string): boolean {
-  if (!fs.existsSync(ENV_PATH)) return false;
-
-  const rawContent = fs.readFileSync(ENV_PATH, 'utf-8');
-  const lines = rawContent.split(/\r?\n/);
-  let modified = false;
-
-  const updatedLines: string[] = [];
-  const regex = new RegExp(`^(\\s*${envVarName}\\s*=.*)$`);
-
-  for (const line of lines) {
-    if (regex.test(line)) {
-      modified = true;
-      const timestamp = new Date().toISOString();
-      updatedLines.push(
-        `# [VÔ HIỆU HÓA TỰ ĐỘNG - ${timestamp}]`,
-        `# Lý do: ${reason}`,
-        `# Bỏ dấu comment '#' dòng dưới khi key đã được mở lại Quota:`,
-        `# ${line.trim()}`
-      );
-    } else {
-      updatedLines.push(line);
-    }
-  }
-
-  if (modified) {
-    fs.writeFileSync(ENV_PATH, updatedLines.join('\n') + '\n', 'utf-8');
-    console.warn(`\n🚨 [ENV UPDATE] Đã tự động comment out \`${envVarName}\` trong file .env!`);
-    console.warn(`   Lý do: ${reason}\n`);
-  }
-
-  return modified;
-}
-
 export interface ActiveKey {
-  envVarName: string; // e.g. "GEMINI_API_KEY_1"
+  envVarName: string;
   apiKey: string;
   keyShort: string;
 }
 
 function loadActiveKeys(): ActiveKey[] {
   const envMap: Record<string, string> = {};
-
   const envFiles = [
     path.join(ROOT_DIR, '.env'),
     path.join(ROOT_DIR, '.env.local'),
@@ -192,7 +72,6 @@ function loadActiveKeys(): ActiveKey[] {
       const content = fs.readFileSync(envFile, 'utf-8');
       for (const line of content.split(/\r?\n/)) {
         const trimmed = line.trim();
-        // Bỏ qua dòng comment (#) hoặc dòng rỗng
         if (!trimmed || trimmed.startsWith('#')) continue;
         const eqIdx = trimmed.indexOf('=');
         if (eqIdx === -1) continue;
@@ -206,9 +85,7 @@ function loadActiveKeys(): ActiveKey[] {
     }
   }
 
-  // Merge process.env with envMap from files
   const merged: Record<string, string | undefined> = { ...envMap, ...process.env };
-
   const activeKeys: ActiveKey[] = [];
   const seenValues = new Set<string>();
 
@@ -230,7 +107,6 @@ function loadActiveKeys(): ActiveKey[] {
     }
   }
 
-  // Sắp xếp thứ tự tự nhiên (GEMINI_API_KEY_1, GEMINI_API_KEY_2...)
   activeKeys.sort((a, b) => a.envVarName.localeCompare(b.envVarName, undefined, { numeric: true }));
   return activeKeys;
 }
@@ -254,7 +130,7 @@ interface TestJson {
 }
 
 interface TtsTask {
-  id: string; // e.g. "b2-upper-intermediate/l-p1"
+  id: string;
   file: string;
   filePath: string;
   fileBase: string;
@@ -262,10 +138,9 @@ interface TtsTask {
   audioDiskPath: string;
   publicAudioUrl: string;
   taskLabel: string;
-  lastError?: string;
 }
 
-// Per-file Mutex to ensure thread-safe atomic updates to JSON test documents
+// Mutex để cập nhật atomic cho từng file JSON
 const fileMutexMap = new Map<string, Promise<void>>();
 
 async function updateTestJsonWithAudioUrl(
@@ -305,7 +180,9 @@ function generateTempMarkdown(failedList: { task: TtsTask; error: Error }[]): st
     const speakerInfo = profiles
       .map(
         (p) =>
-          `- **${p.name}** (${p.gender.toUpperCase()}): Giọng đề xuất \`${p.voiceName}\`${p.style ? ` | Phong thái: *${p.style}*` : ''}`
+          `- **${p.name}** (${p.gender.toUpperCase()}): Giọng đề xuất \`${p.voiceName}\`${
+            p.style ? ` | Phong thái: *${p.style}*` : ''
+          }`
       )
       .join('\n');
 
@@ -323,7 +200,9 @@ function generateTempMarkdown(failedList: { task: TtsTask; error: Error }[]): st
 - **File đích cần lưu**: \`${task.audioDiskPath}\`
 - **Đường dẫn web**: \`${task.publicAudioUrl}\`
 - **Nhịp điệu (Pacing)**: \`${audioConfig?.pacing || 'exam_standard'}\`
-- **Ngữ cảnh & Chất giọng**: \`${audioConfig?.scenario || 'dialogue'}\` | \`${audioConfig?.accent || 'british'}\`${audioConfig?.overallStyle ? ` (${audioConfig.overallStyle})` : ''}
+- **Ngữ cảnh & Chất giọng**: \`${audioConfig?.scenario || 'dialogue'}\` | \`${audioConfig?.accent || 'british'}\`${
+      audioConfig?.overallStyle ? ` (${audioConfig.overallStyle})` : ''
+    }
 
 ### Nhân vật & Giọng đọc (Google Gemini Prebuilt Voices):
 ${speakerInfo || '- Không có thông tin nhân vật cụ thể (Single Speaker)'}
@@ -344,9 +223,9 @@ ${part.transcript?.trim() || ''}
 `;
   });
 
-  return `# Danh Sách Các Phần Nghe Chưa Tạo Được Audio (Rate Limit)
+  return `# Danh Sách Các Phần Nghe Chưa Tạo Được Audio (Rate Limit / Timeout)
 
-> Tài liệu này được tạo tự động khi các API key gặp Rate Limit kéo dài hoặc khi tiến trình dừng.
+> Tài liệu này được tạo tự động khi các API key gặp sự cố kéo dài hoặc tiến trình dừng sớm.
 > Bạn có thể sao chép kịch bản bên dưới để tạo audio thủ công qua Google AI Studio / TTS Tool rồi lưu file vào đúng **File đích cần lưu**.
 
 **Tổng số phần chưa hoàn thành**: ${failedList.length}
@@ -357,38 +236,33 @@ ${sections.join('\n')}
 `;
 }
 
-// Dedicated Worker Thread: 1 Worker assigned 100% to 1 Gemini API Key
-async function runDedicatedWorker(
+/**
+ * Worker luân chuyển key tức thì (Zero-Wait Key Rotation Worker):
+ * Không bao giờ sleep 1m/3m trên 1 key!
+ * Tự động chuyển key ngay lập tức (0ms delay) qua engine ttsService.
+ */
+async function runRotationWorker(
   workerId: number,
-  keyInfo: ActiveKey,
   taskQueue: TtsTask[],
   inFlightSet: Set<string>,
   failedTasksMap: Map<string, { task: TtsTask; error: Error }>,
   healthRecords: Record<string, KeyHealthRecord>,
-  onSuccess: (task: TtsTask, byteLength: number) => void,
+  onSuccess: (task: TtsTask, byteLength: number, webUrl: string) => void,
   isStoppingRef: { current: boolean }
 ): Promise<void> {
-  const { apiKey, keyShort, envVarName } = keyInfo;
-  const client = new GoogleGenAI({ apiKey });
-
   while (!isStoppingRef.current) {
     const task = taskQueue.shift();
     if (!task) {
-      // Hàng đợi rỗng, worker hoàn thành
       break;
     }
 
     inFlightSet.add(task.id);
-    const requestParams = buildListeningTtsRequest({
-      transcript: task.part.transcript || '',
-      audioConfig: task.part.audioConfig,
-      speakers: task.part.speakers,
-    });
+    console.log(`  [Worker ${workerId}] 🎙️ Bắt đầu xử lý: ${task.taskLabel} - ${task.part.title}`);
 
-    let taskSucceeded = false;
+    let succeeded = false;
 
-    // Retry loop: Tối đa 2 lần thử lại (1m, 3m). KHÔNG có lần chờ 5m.
-    for (let attempt = 0; attempt <= MAX_RETRIES_PER_KEY; attempt++) {
+    // Vòng lặp xử lý task (nếu tất cả key đều cooldown, đợi key sớm nhất hạ nhiệt rồi thử tiếp)
+    for (let loopAttempt = 0; loopAttempt < 3; loopAttempt++) {
       if (isStoppingRef.current) {
         taskQueue.unshift(task);
         inFlightSet.delete(task.id);
@@ -396,129 +270,53 @@ async function runDedicatedWorker(
       }
 
       try {
-        console.log(`  [Worker ${workerId} (${envVarName}: ${keyShort})] Đang xử lý: ${task.taskLabel} - ${task.part.title}`);
-        const response = await client.models.generateContent(requestParams);
-        const parts =
-          response.candidates?.[0]?.content?.parts
-            ?.map((p) => p.inlineData)
-            .filter((d): d is { data: string; mimeType?: string } => Boolean(d?.data)) || [];
+        // Timeout 45s + Zero-wait Failover qua pool keys
+        const wavBytes = await generateAudioBytesWithKeyRotation(
+          task.part.transcript || '',
+          task.part.audioConfig,
+          task.part.speakers
+        );
 
-        if (parts.length === 0) {
-          throw new Error('API không trả về inlineData audio.');
-        }
-
-        const { bytes } = combineAudioPartsToWavBytes(parts);
-
-        // Incremental save: Ghi file âm thanh & cập nhật file JSON ngay lập tức
-        saveAudioBytes(bytes, task.audioDiskPath);
-        await updateTestJsonWithAudioUrl(task.filePath, task.part.id, task.publicAudioUrl);
+        const saved = saveAudioBytes(`${task.fileBase}-${task.part.id}`, wavBytes);
+        await updateTestJsonWithAudioUrl(task.filePath, task.part.id, saved.webUrl);
 
         inFlightSet.delete(task.id);
         failedTasksMap.delete(task.id);
-        taskSucceeded = true;
-
-        // Cập nhật sức khỏe key: ghi nhận thành công
-        const rec = healthRecords[envVarName] || { downCount: 0, totalSuccesses: 0 };
+        succeeded = true;
+        const rec = healthRecords[task.fileBase] || { downCount: 0, totalSuccesses: 0 };
         rec.totalSuccesses += 1;
-        healthRecords[envVarName] = rec;
+        healthRecords[task.fileBase] = rec;
         saveHealthRecords(healthRecords);
 
-        onSuccess(task, bytes.byteLength);
-        break; // Hoàn thành task thành công
+        onSuccess(task, saved.byteLength, saved.webUrl);
+        break;
       } catch (err: unknown) {
-        // 1. Lỗi Fatal (400, 401, 403): Key chết hẳn, vô hiệu hóa ngay
-        if (isFatalError(err)) {
-          const reason = `API Key bị lỗi xác thực/quyền (HTTP 401/403): ${(err as Error)?.message || 'Unauthorized'}`;
-          console.error(
-            `  ❌ [Worker ${workerId} (${envVarName})] ${reason}. DOWN HẲN KEY NÀY!`
-          );
-          taskQueue.unshift(task);
-          inFlightSet.delete(task.id);
-          failedTasksMap.set(task.id, {
-            task,
-            error: err instanceof Error ? err : new Error(String(err)),
-          });
+        const error = err instanceof Error ? err : new Error(String(err));
+        const waitMs = getShortestCooldownRemainingMs();
 
-          // Tự động comment out ngay trong file .env
-          commentOutKeyInEnv(envVarName, reason);
-          return; // Worker kết thúc
-        }
-
-        // 2. Lỗi Rate Limit (429 / RESOURCE_EXHAUSTED)
-        if (isRateLimitError(err)) {
-          if (attempt < MAX_RETRIES_PER_KEY) {
-            // Lần 1 chờ 1 phút (+ jitter), Lần 2 chờ 3 phút (+ jitter)
-            const delayMs = calculateJitterDelay(attempt);
-            const minutes = (delayMs / 60000).toFixed(1);
-            console.warn(
-              `  ⏳ [Worker ${workerId} (${envVarName})] Rate Limit (429). Lần thử lại ${attempt + 1}/${MAX_RETRIES_PER_KEY}: chờ ${minutes} phút (kèm jitter)...`
-            );
-
-            // Responsive sleep: kiểm tra isStoppingRef mỗi giây
-            const step = 1000;
-            let elapsed = 0;
-            while (elapsed < delayMs && !isStoppingRef.current) {
-              await sleep(Math.min(step, delayMs - elapsed));
-              elapsed += step;
-            }
-
-            if (isStoppingRef.current) {
-              taskQueue.unshift(task);
-              inFlightSet.delete(task.id);
-              return;
-            }
-            continue;
-          } else {
-            // ĐÃ HẾT 2 LẦN THỬ LẠI (sau 1m và 3m mà vẫn 429) -> ĐÁNH GIÁ KEY NÀY RATE LIMIT NẶNG, DOWN HẲN!
-            const rec = healthRecords[envVarName] || { downCount: 0, totalSuccesses: 0 };
-            rec.downCount += 1;
-            rec.lastDownAt = new Date().toISOString();
-            rec.lastDownReason = 'Rate limit nặng (thử lại sau 1m và 3m vẫn bị 429)';
-            healthRecords[envVarName] = rec;
-            saveHealthRecords(healthRecords);
-
-            console.warn(
-              `  🛑 [Worker ${workerId} (${envVarName})] Rate Limit nặng kéo dài (hết lượt sau 1m & 3m). DOWN HẲN KEY NÀY, nhường việc lại cho Queue! (Lần down: ${rec.downCount})`
-            );
-
-            // Nếu số lần down đạt ngưỡng (>= 2 lần) -> Comment out trong file .env!
-            if (rec.downCount >= DOWN_THRESHOLD_TO_COMMENT_OUT) {
-              const reason = `Key bị Rate Limit nặng kéo dài (đã chạm ngưỡng ${rec.downCount} lần down liên tiếp)`;
-              commentOutKeyInEnv(envVarName, reason);
-            }
-
-            taskQueue.unshift(task); // Trả task lại cho các key khác xử lý
-            inFlightSet.delete(task.id);
-            failedTasksMap.set(task.id, {
-              task,
-              error: new Error(`Key ${envVarName} bị down do Rate Limit kéo dài`),
-            });
-            return; // Worker kết thúc! Các worker khác tiếp tục chạy!
-          }
-        }
-
-        // 3. Transient Network Error: Chờ ngắn 5s
-        if (attempt < MAX_RETRIES_PER_KEY) {
-          const networkWait = 5000 + Math.floor(Math.random() * 3000);
+        if (waitMs > 0 && loopAttempt < 2 && !isStoppingRef.current) {
+          const waitSec = Math.ceil(waitMs / 1000);
           console.warn(
-            `  ⚠️ [Worker ${workerId} (${envVarName})] Lỗi mạng: ${(err as Error)?.message}. Chờ ${(networkWait / 1000).toFixed(1)}s thử lại...`
+            `  ⏳ [Worker ${workerId}] Tất cả keys đang trong cooldown. Đợi ${waitSec}s cho key kế tiếp sẵn sàng...`
           );
-          await sleep(networkWait);
+          let elapsed = 0;
+          const step = 1000;
+          while (elapsed < waitMs && !isStoppingRef.current) {
+            await sleep(Math.min(step, waitMs - elapsed));
+            elapsed += step;
+          }
           continue;
         }
 
-        // Lỗi khác không thể hồi phục
-        taskQueue.unshift(task);
+        // Đã thử qua hết lượt và vẫn không thể hoàn thành
+        console.error(`  ❌ [Worker ${workerId}] Thất bại cho task ${task.taskLabel}: ${error.message}`);
         inFlightSet.delete(task.id);
-        failedTasksMap.set(task.id, {
-          task,
-          error: err instanceof Error ? err : new Error(String(err)),
-        });
-        return;
+        failedTasksMap.set(task.id, { task, error });
+        break;
       }
     }
 
-    if (!taskSucceeded) {
+    if (!succeeded) {
       inFlightSet.delete(task.id);
     }
   }
@@ -527,12 +325,15 @@ async function runDedicatedWorker(
 async function main() {
   const force = process.argv.includes('--force');
 
-  // Option to reset health history if requested
+  // Đặt lại lịch sử sức khỏe và cooldown
   if (process.argv.includes('--reset-health')) {
     if (fs.existsSync(HEALTH_FILE_PATH)) {
-      fs.unlinkSync(HEALTH_FILE_PATH);
-      console.log('🔄 Đã đặt lại toàn bộ lịch sử sức khỏe API key.');
+      try {
+        fs.unlinkSync(HEALTH_FILE_PATH);
+      } catch {}
     }
+    resetKeyCooldowns();
+    console.log('🔄 Đã đặt lại toàn bộ lịch sử sức khỏe API key và xóa sạch Cooldown Cache.');
   }
 
   const activeKeys = loadActiveKeys();
@@ -544,7 +345,6 @@ async function main() {
   }
 
   const healthRecords = loadHealthRecords();
-
   fs.mkdirSync(AUDIO_DIR, { recursive: true });
 
   const files = fs
@@ -605,28 +405,28 @@ async function main() {
     if (fs.existsSync(TEMP_MD_PATH)) {
       try {
         fs.unlinkSync(TEMP_MD_PATH);
-      } catch {
-        // ignore
-      }
+      } catch {}
     }
     return;
   }
 
   const totalTasks = taskQueue.length;
-  console.log(`\n🎙️  Bắt đầu tiến trình tạo TTS (Mô hình Producer-Consumer)...`);
-  console.log(`⚡ Số Workers khởi tạo: ${activeKeys.length} luồng (Tương ứng linh động với ${activeKeys.length} API Keys active trong .env)`);
-  console.log(`📋 Danh sách Keys: ${activeKeys.map((k) => k.envVarName).join(', ')}`);
+  // Số worker chạy song song (tối ưu 2-3 workers đồng thời để tránh tràn Quota quá nhanh)
+  const workerCount = Math.max(1, Math.min(activeKeys.length, 3));
+
+  console.log(`\n🎙️  Bắt đầu tiến trình tạo TTS (Timeout 45s + Zero-Wait Key Rotation)...`);
+  console.log(`⚡ Số Workers khởi tạo: ${workerCount} luồng song song`);
+  console.log(`🔑 Pool API Keys khả dụng: ${activeKeys.length} keys (${activeKeys.map((k) => k.envVarName).join(', ')})`);
   console.log(`📦 Tổng số phần nghe cần xử lý: ${totalTasks}`);
-  console.log(`⏳ Chính sách Rate Limit: Chờ 1m (lần 1), 3m (lần 2). LOẠI BỎ hoàn toàn 5m.`);
-  console.log(`🛡️  Đánh giá sức khỏe: Key bị 429 sau 3m sẽ DOWN HẲN; nếu down >= ${DOWN_THRESHOLD_TO_COMMENT_OUT} lần sẽ tự động comment out trong .env.`);
-  console.log(`💾 Cơ chế lưu: Incremental Save (Ghi đĩa & cập nhật JSON ngay khi xong từng part)\n`);
+  console.log(`⏱️  Chính sách Timeout: 45 giây/cuộc gọi (hủy bỏ treo API)`);
+  console.log(`🚀 Chính sách Failover: ZERO-WAIT (0ms delay khi gặp 429/Timeout, không sleep 1m/3m trên 1 key!)`);
+  console.log(`💾 Cơ chế lưu: Incremental Save (Ghi đĩa MP3 192k 24kHz & cập nhật JSON ngay sau mỗi part)\n`);
 
   const inFlightSet = new Set<string>();
   const failedTasksMap = new Map<string, { task: TtsTask; error: Error }>();
   let completedCount = 0;
   const isStoppingRef = { current: false };
 
-  // Graceful Shutdown on SIGINT / SIGTERM
   const handleShutdown = () => {
     if (isStoppingRef.current) {
       console.log('\nĐang cưỡng chế dừng tiến trình...');
@@ -639,19 +439,17 @@ async function main() {
   process.on('SIGINT', handleShutdown);
   process.on('SIGTERM', handleShutdown);
 
-  // Khởi tạo Dedicated Workers (1 worker per API key)
-  const workerPromises = activeKeys.map((keyInfo, index) =>
-    runDedicatedWorker(
-      index + 1,
-      keyInfo,
+  const workerPromises = Array.from({ length: workerCount }, (_, idx) =>
+    runRotationWorker(
+      idx + 1,
       taskQueue,
       inFlightSet,
       failedTasksMap,
       healthRecords,
-      (task, byteLength) => {
+      (task, byteLength, webUrl) => {
         completedCount++;
         console.log(
-          `  ✅ [ĐÃ XONG ${completedCount}/${totalTasks}] Lưu: ${task.publicAudioUrl} (${(byteLength / 1024).toFixed(1)} KB)`
+          `  ✅ [ĐÃ XONG ${completedCount}/${totalTasks}] Lưu: ${webUrl} (${(byteLength / 1024).toFixed(1)} KB)`
         );
       },
       isStoppingRef
@@ -660,7 +458,7 @@ async function main() {
 
   await Promise.all(workerPromises);
 
-  // Gom các task còn lại trong queue nếu tất cả worker đã down hoặc dừng
+  // Gom các task còn lại nếu bị dừng sớm
   while (taskQueue.length > 0) {
     const remaining = taskQueue.shift();
     if (remaining && !failedTasksMap.has(remaining.id)) {
@@ -669,13 +467,13 @@ async function main() {
         error: new Error(
           isStoppingRef.current
             ? 'Tiến trình dừng bởi người dùng (SIGINT)'
-            : 'Tất cả API key đều đã cạn kiệt Quota hoặc bị down'
+            : 'Tất cả API keys đều đã cạn kiệt Quota hoặc gặp sự cố'
         ),
       });
     }
   }
 
-  // Handle results & temp.md
+  // Xử lý báo cáo temp.md
   if (failedTasksMap.size > 0) {
     const failedList = Array.from(failedTasksMap.values());
     const mdContent = generateTempMarkdown(failedList);
@@ -687,9 +485,7 @@ async function main() {
     if (fs.existsSync(TEMP_MD_PATH)) {
       try {
         fs.unlinkSync(TEMP_MD_PATH);
-      } catch {
-        // ignore
-      }
+      } catch {}
     }
     console.log(`\n🎉 Xuất sắc! Đã hoàn tất 100% (${completedCount}/${totalTasks}) file âm thanh Listening!`);
   }

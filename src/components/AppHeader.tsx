@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, Award, Plus, ArrowDown } from 'lucide-react';
+import { BookOpen, Award, ArrowDown, ShieldCheck } from 'lucide-react';
 import { useAttempts } from '@/hooks/useAttempts';
 import { useNavigationGuard } from './NavigationGuard';
 
@@ -52,8 +52,9 @@ export const AppHeader: React.FC = () => {
   };
 
   const isCreate = pathname === '/test/create';
+  const isAdmin = pathname.startsWith('/admin') || isCreate;
   const isTestPage = pathname.startsWith('/test') && !isCreate;
-  const isCatalog = pathname === '/' || isTestPage;
+  const isCatalog = (pathname === '/' || isTestPage) && !isAdmin;
   const isResults = pathname.startsWith('/results');
 
   return (
@@ -129,16 +130,16 @@ export const AppHeader: React.FC = () => {
             </Link>
 
             <Link
-              href="/test/create"
-              onClick={(e) => handleLinkClick(e, '/test/create')}
-              className={`border-2 border-black font-bold transition-colors cursor-pointer shrink-0 px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm inline-flex items-center gap-1.5 ${isCreate
+              href="/admin"
+              onClick={(e) => handleLinkClick(e, '/admin')}
+              className={`border-2 border-black font-bold transition-colors cursor-pointer shrink-0 px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm inline-flex items-center gap-1.5 ${isAdmin
                   ? 'bg-black text-[#fffdf5]'
                   : 'bg-[#fffdf5] text-black hover:bg-[#f4eed9]'
                 }`}
-              aria-current={isCreate ? 'page' : undefined}
+              aria-current={isAdmin ? 'page' : undefined}
             >
-              <Plus className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden sm:inline">Thêm đề</span>
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Quản trị</span>
             </Link>
           </nav>
         </div>

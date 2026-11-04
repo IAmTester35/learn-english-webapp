@@ -16,7 +16,7 @@ export default async function HomePage() {
   const totalTests = catalog.tests.length;
 
   return (
-    <main className="max-w-5xl mx-auto p-3 sm:p-4 md:p-6 space-y-6 w-full min-w-0 overflow-x-hidden">
+    <main className="max-w-5xl mx-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 w-full min-w-0 overflow-x-hidden">
       {/* 1. Server Component: Pure SSR, Zero Client JS */}
       <TestCatalogOverview totalTests={totalTests} />
 

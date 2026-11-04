@@ -1,5 +1,7 @@
 import { Metadata } from 'next';
 import dynamic from 'next/dynamic';
+import { redirect } from 'next/navigation';
+import { verifyAdminSession } from '@/server/auth';
 
 const TestAuthoringView = dynamic(
   () => import('@/components/TestAuthoringView').then((mod) => mod.TestAuthoringView),
@@ -17,10 +19,15 @@ const TestAuthoringView = dynamic(
 
 export const metadata: Metadata = {
   title: 'Thêm Đề Thi Mới | L TestLab',
-  description: 'Giao diện tạo và tải đề thi tiếng Anh 4 kỹ năng chuẩn CEFR vào hệ thống.',
+  description: 'Giao diện tạo và tải đề thi tiếng Anh 4 kỹ năng chuẩn CEFR vào hệ thống (Chỉ dành cho quản trị viên).',
 };
 
-export default function CreateTestPage() {
+export default async function CreateTestPage() {
+  const isAdmin = await verifyAdminSession();
+  if (!isAdmin) {
+    redirect('/admin/login?redirect=/test/create');
+  }
+
   return (
     <main className="max-w-6xl mx-auto p-3 sm:p-6">
       <TestAuthoringView />
