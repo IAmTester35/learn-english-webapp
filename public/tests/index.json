@@ -53,6 +53,12 @@
       "title": "B2 Upper-Intermediate English Examination (CEFR / FCE Standard)",
       "description": "Comprehensive CEFR B2 assessment evaluating upper-intermediate Reading and Listening comprehension across contemporary urban, scientific, psychological, and workplace contexts.",
       "file": "/tests/b2-upper-intermediate-english-test-02.json"
+    },
+    {
+      "id": "c2-proficiency-english-test-01",
+      "title": "C2 Proficiency English Examination (CEFR / CPE Standard)",
+      "description": "Extremely demanding CEFR C2 assessment of Reading and Listening comprehension for near-native candidates (Cambridge C2 Proficiency level). Four dense argumentative reading texts and four fast-paced listening parts test inference, writer attitude, implicit meaning, paraphrase and fine discrimination between near-synonymous options. 44 questions, approximately 95 minutes.",
+      "file": "/tests/c2-proficiency-english-test-01.json"
     }
   ]
 }
