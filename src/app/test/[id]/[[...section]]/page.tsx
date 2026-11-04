@@ -4,7 +4,7 @@ import { hasGeminiApiKey } from '@/server/gemini';
 import { TestRunnerView } from '@/components/TestRunnerView';
 import type { SkillSection } from '@/types/test';
 
-const VALID_SECTIONS: SkillSection[] = ['reading', 'listening', 'speaking', 'writing'];
+const VALID_SECTIONS: SkillSection[] = ['reading', 'listening'];
 
 export async function generateStaticParams() {
   try {

@@ -143,8 +143,8 @@ export interface TestDocument {
   sections: {
     reading: ReadingSection;
     listening: ListeningSection;
-    speaking: SpeakingSection;
-    writing: WritingSection;
+    speaking?: SpeakingSection;
+    writing?: WritingSection;
   };
 }
 

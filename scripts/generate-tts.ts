@@ -42,7 +42,8 @@ function saveAudioBytes(rawWavBytes: Uint8Array, outputPath: string): void {
   if (outputPath.endsWith('.mp3') && HAS_FFMPEG) {
     const tempWav = outputPath + '.tmp.wav';
     fs.writeFileSync(tempWav, rawWavBytes);
-    const proc = spawnSync('ffmpeg', ['-y', '-i', tempWav, '-b:a', '96k', '-ar', '24000', outputPath], {
+    // 192kbps MP3 preserves the full 24kHz acoustic spectrum and subtle vocal phonetics
+    const proc = spawnSync('ffmpeg', ['-y', '-i', tempWav, '-b:a', '192k', '-ar', '24000', outputPath], {
       stdio: 'ignore',
     });
     try {

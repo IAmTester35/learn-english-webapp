@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Không tìm thấy bài thi "${testId}".` }, { status: 404 });
     }
 
-    const task = testDoc.sections.writing.tasks.find((t) => t.id === taskId);
+    const task = testDoc.sections.writing?.tasks?.find((t) => t.id === taskId);
     if (!task) {
       return NextResponse.json(
         { error: `Không tìm thấy phần Writing task "${taskId}" trong bài thi.` },

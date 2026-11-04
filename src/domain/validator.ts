@@ -96,7 +96,8 @@ export function validateTestDocument(raw: unknown): { valid: boolean; errors: st
   }
 
   const sections = doc.sections as Record<string, unknown>;
-  const requiredSections = ['reading', 'listening', 'speaking', 'writing'];
+  // Only Reading and Listening are required sections
+  const requiredSections = ['reading', 'listening'];
   for (const s of requiredSections) {
     if (!sections[s] || typeof sections[s] !== 'object') {
       errors.push(`Section "${s}" is required.`);
@@ -185,50 +186,50 @@ export function validateTestDocument(raw: unknown): { valid: boolean; errors: st
     });
   }
 
-  // Check Speaking
-  const speaking = sections.speaking as Record<string, unknown>;
-  if (!Array.isArray(speaking.tasks)) {
-    errors.push('speaking.tasks must be an array.');
-  } else {
-    speaking.tasks.forEach((t, tIdx) => {
-      const tObj = t as Record<string, unknown>;
-      const tPath = `speaking.tasks[${tIdx}]`;
-      if (!tObj.id) {
-        errors.push(`${tPath}: task id is missing.`);
-      } else if (typeof tObj.id === 'string') {
-        if (taskIdSet.has(tObj.id)) {
-          errors.push(`${tPath}: speaking task id "${tObj.id}" bị trùng lặp.`);
-        } else {
-          taskIdSet.add(tObj.id);
+  // Check Speaking (optional)
+  if (sections.speaking && typeof sections.speaking === 'object') {
+    const speaking = sections.speaking as Record<string, unknown>;
+    if (Array.isArray(speaking.tasks)) {
+      speaking.tasks.forEach((t, tIdx) => {
+        const tObj = t as Record<string, unknown>;
+        const tPath = `speaking.tasks[${tIdx}]`;
+        if (!tObj.id) {
+          errors.push(`${tPath}: task id is missing.`);
+        } else if (typeof tObj.id === 'string') {
+          if (taskIdSet.has(tObj.id)) {
+            errors.push(`${tPath}: speaking task id "${tObj.id}" bị trùng lặp.`);
+          } else {
+            taskIdSet.add(tObj.id);
+          }
         }
-      }
-      if (!tObj.title) errors.push(`${tPath}: task title is missing.`);
-      if (!tObj.prompt) errors.push(`${tPath}: task prompt is missing.`);
-      if (!Array.isArray(tObj.rubric)) errors.push(`${tPath}: rubric array is missing.`);
-    });
+        if (!tObj.title) errors.push(`${tPath}: task title is missing.`);
+        if (!tObj.prompt) errors.push(`${tPath}: task prompt is missing.`);
+        if (!Array.isArray(tObj.rubric)) errors.push(`${tPath}: rubric array is missing.`);
+      });
+    }
   }
 
-  // Check Writing
-  const writing = sections.writing as Record<string, unknown>;
-  if (!Array.isArray(writing.tasks)) {
-    errors.push('writing.tasks must be an array.');
-  } else {
-    writing.tasks.forEach((t, tIdx) => {
-      const tObj = t as Record<string, unknown>;
-      const tPath = `writing.tasks[${tIdx}]`;
-      if (!tObj.id) {
-        errors.push(`${tPath}: task id is missing.`);
-      } else if (typeof tObj.id === 'string') {
-        if (taskIdSet.has(tObj.id)) {
-          errors.push(`${tPath}: writing task id "${tObj.id}" bị trùng lặp.`);
-        } else {
-          taskIdSet.add(tObj.id);
+  // Check Writing (optional)
+  if (sections.writing && typeof sections.writing === 'object') {
+    const writing = sections.writing as Record<string, unknown>;
+    if (Array.isArray(writing.tasks)) {
+      writing.tasks.forEach((t, tIdx) => {
+        const tObj = t as Record<string, unknown>;
+        const tPath = `writing.tasks[${tIdx}]`;
+        if (!tObj.id) {
+          errors.push(`${tPath}: task id is missing.`);
+        } else if (typeof tObj.id === 'string') {
+          if (taskIdSet.has(tObj.id)) {
+            errors.push(`${tPath}: writing task id "${tObj.id}" bị trùng lặp.`);
+          } else {
+            taskIdSet.add(tObj.id);
+          }
         }
-      }
-      if (!tObj.title) errors.push(`${tPath}: task title is missing.`);
-      if (!tObj.prompt) errors.push(`${tPath}: task prompt is missing.`);
-      if (!Array.isArray(tObj.rubric)) errors.push(`${tPath}: rubric array is missing.`);
-    });
+        if (!tObj.title) errors.push(`${tPath}: task title is missing.`);
+        if (!tObj.prompt) errors.push(`${tPath}: task prompt is missing.`);
+        if (!Array.isArray(tObj.rubric)) errors.push(`${tPath}: rubric array is missing.`);
+      });
+    }
   }
 
   if (errors.length > 0) {

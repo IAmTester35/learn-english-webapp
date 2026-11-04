@@ -2,10 +2,19 @@ import type { Part, SpeechConfig } from '@google/genai';
 import type {
   ListeningAudioConfig,
   SpeakerConfig,
-  SpeakerGender,
 } from '../types/test';
 
-export const LISTENING_TTS_MODEL = 'gemini-3.8-flash-lite-tts';
+export const LISTENING_TTS_MODEL = 'gemini-3.8-flash-tts';
+
+/**
+ * Returns the effective Gemini TTS model ID.
+ * Defaults to `gemini-3.8-flash-tts` for flagship studio audio fidelity,
+ * or reads `GEMINI_TTS_MODEL` from environment if explicitly overridden.
+ */
+export function getListeningTtsModel(): string {
+  return process.env.GEMINI_TTS_MODEL?.trim() || LISTENING_TTS_MODEL;
+}
+
 const DEFAULT_SAMPLE_RATE = 24000;
 
 // Full library of 30 official Google Gemini Studio voices
@@ -156,7 +165,43 @@ export function parseTranscriptDialogue(transcript: string): {
 }
 
 /**
+ * Resolves standard ISO 639-1 / BCP-47 language code for Google GenAI speechConfig.
+ * Grounding the request in a specific language code ensures phonetic consistency
+ * and prevents dialect drift across British, American, Australian, or Chinese examinations.
+ */
+export function resolveLanguageCode(
+  audioConfig?: ListeningAudioConfig,
+  transcript?: string
+): string {
+  if (audioConfig?.accent) {
+    switch (audioConfig.accent) {
+      case 'british':
+        return 'en-GB';
+      case 'american':
+        return 'en-US';
+      case 'australian':
+        return 'en-AU';
+      case 'canadian':
+        return 'en-CA';
+      case 'standard':
+        return 'en-US';
+    }
+  }
+
+  // Detect Chinese characters in transcript or style
+  if (
+    (transcript && /[\u4e00-\u9fa5]/.test(transcript)) ||
+    (audioConfig?.overallStyle && /(普通话|中文|汉语|chinese|mandarin)/i.test(audioConfig.overallStyle))
+  ) {
+    return 'zh-CN';
+  }
+
+  return 'en-US';
+}
+
+/**
  * Builds standard style prompt directive from scenario, accent, and pacing.
+ * Integrates Google Gemini 3.8 acoustic staging (reverberation, close-mic presence, PA projection).
  */
 export function buildAudioStyleDirective(
   audioConfig?: ListeningAudioConfig,
@@ -164,49 +209,49 @@ export function buildAudioStyleDirective(
 ): string | undefined {
   const fragments: string[] = [];
 
-  // Accent directive
+  // Accent directive with acoustic resonance
   if (audioConfig?.accent) {
     switch (audioConfig.accent) {
       case 'british':
-        fragments.push('British English RP accent');
+        fragments.push('authentic British English RP accent, crisp Received Pronunciation articulation');
         break;
       case 'american':
-        fragments.push('General American accent');
+        fragments.push('General American accent, clear natural Midwestern phonetics');
         break;
       case 'australian':
-        fragments.push('mild Australian English accent');
+        fragments.push('natural Australian English accent, gentle inflection');
         break;
       case 'canadian':
-        fragments.push('Canadian English accent');
+        fragments.push('standard Canadian English accent, articulate delivery');
         break;
       case 'standard':
         if (!audioConfig.overallStyle || !/(普通话|中文|汉语|chinese|mandarin)/i.test(audioConfig.overallStyle)) {
-          fragments.push('neutral international English accent');
+          fragments.push('clear neutral international English accent');
         }
         break;
     }
   }
 
-  // Scenario directive
+  // Acoustic Scenario & Environmental Atmosphere
   if (audioConfig?.scenario) {
     switch (audioConfig.scenario) {
       case 'public_announcement':
-        fragments.push('authoritative public address announcement, clear resonance, articulate');
+        fragments.push('public address loudspeaker announcement, acoustic hall reverberation, clear projection, authoritative cadence');
         break;
       case 'everyday_dialogue':
-        fragments.push('natural everyday conversation, friendly, clear enunciation');
+        fragments.push('intimate conversational room acoustic, natural speech dynamics, friendly enunciation, expressive cadence');
         break;
       case 'interview':
-        fragments.push('professional broadcast interview, polite and attentive');
+        fragments.push('soundproof broadcast studio acoustics, close-mic vocal warmth, articulate and attentive dialogue');
         break;
       case 'academic_lecture':
-        fragments.push('formal academic lecture, informative, structured pacing');
+        fragments.push('university lecture hall acoustics, moderate room reverb, clear vocal projection, measured instructional pacing');
         break;
       case 'group_discussion':
-        fragments.push('lively collaborative discussion, interactive turns');
+        fragments.push('meeting room acoustic, collaborative exchange, lively conversational interaction');
         break;
       case 'news_broadcast':
-        fragments.push('steady broadcast news delivery, neutral and informative');
+        fragments.push('professional broadcast news booth acoustic, crisp neutral delivery, informative and steady timbre');
         break;
     }
   }
@@ -215,16 +260,16 @@ export function buildAudioStyleDirective(
   if (audioConfig?.pacing) {
     switch (audioConfig.pacing) {
       case 'slow':
-        fragments.push('speak slowly and clearly for beginner language learners');
+        fragments.push('deliberate slow speaking rate with distinct sentence boundaries for language learners');
         break;
       case 'moderate':
-        fragments.push('moderate conversational speaking rate');
+        fragments.push('moderate conversational speaking tempo with natural phrase breaks');
         break;
       case 'fast':
-        fragments.push('natural fast-paced native speech');
+        fragments.push('fluent native speaking tempo with authentic contractions and rhythm');
         break;
       case 'exam_standard':
-        fragments.push('clear exam standard speed with natural sentence breaks');
+        fragments.push('balanced examination testing pace, articulate enunciation, clear breath intervals');
         break;
     }
   }
@@ -320,7 +365,11 @@ export function resolveSpeakerProfiles(
 
 /**
  * Builds Google GenAI TTS request params.
- * Supports N speakers (1, 2, 3, ... N) and natural delivery styling via speechMetadata.
+ * Adheres strictly to Google GenAI TTS specifications:
+ * - Uses `gemini-3.8-flash-tts` by default for studio-grade acoustic fidelity.
+ * - Sets `temperature: 0.7` for rich natural prosody and responsive inline vocal tags.
+ * - Injects `languageCode` (e.g. `en-GB`, `en-US`, `zh-CN`) to anchor phonetics and prevent accent drift.
+ * - Adheres strictly to the Google MultiSpeakerVoiceConfig constraint: exactly two speaker voice configs.
  */
 export function buildListeningTtsRequest(
   input: string | ListeningPartTtsInput
@@ -330,6 +379,7 @@ export function buildListeningTtsRequest(
   config: {
     responseModalities: string[];
     speechConfig: SpeechConfig;
+    temperature: number;
   };
 } {
   const transcript = typeof input === 'string' ? input : input.transcript;
@@ -339,49 +389,86 @@ export function buildListeningTtsRequest(
   const { speakers, turns } = parseTranscriptDialogue(transcript);
   const resolvedSpeakers = resolveSpeakerProfiles(speakers, declaredSpeakers);
   const speakerProfileMap = new Map(resolvedSpeakers.map((s) => [s.name, s]));
+  const languageCode = resolveLanguageCode(audioConfig, transcript);
 
-  const isMultiSpeaker = resolvedSpeakers.length > 1;
+  const isMultiSpeaker = resolvedSpeakers.length >= 2;
+
+  // Google MultiSpeakerVoiceConfig strictly requires exactly two speaker voice configurations.
+  let activeTwoSpeakers: ResolvedSpeakerProfile[] = [];
+  const speakerAliasMapping = new Map<string, string>();
+
+  if (isMultiSpeaker) {
+    // Count turns per speaker to prioritize the two primary conversationalists
+    const speakerTurnCounts = new Map<string, number>();
+    for (const turn of turns) {
+      speakerTurnCounts.set(turn.speaker, (speakerTurnCounts.get(turn.speaker) || 0) + 1);
+    }
+
+    const sortedSpeakers = [...resolvedSpeakers].sort(
+      (a, b) => (speakerTurnCounts.get(b.name) || 0) - (speakerTurnCounts.get(a.name) || 0)
+    );
+
+    activeTwoSpeakers = sortedSpeakers.slice(0, 2);
+    const primaryNames = new Set(activeTwoSpeakers.map((s) => s.name));
+
+    // Map any minor auxiliary characters (e.g., a waiter with 1 line) to one of the 2 primary voice slots
+    for (const s of resolvedSpeakers) {
+      if (primaryNames.has(s.name)) {
+        speakerAliasMapping.set(s.name, s.name);
+      } else {
+        const genderMatch =
+          activeTwoSpeakers.find((prim) => prim.gender === s.gender) || activeTwoSpeakers[0];
+        speakerAliasMapping.set(s.name, genderMatch.name);
+      }
+    }
+  }
 
   // Build Turn Parts with speechMetadata
   const contents: string | Part[] = turns.map((turn) => {
     const profile = speakerProfileMap.get(turn.speaker);
     const turnStyle = buildAudioStyleDirective(audioConfig, profile?.style);
+    const effectiveSpeaker = isMultiSpeaker
+      ? (speakerAliasMapping.get(turn.speaker) || activeTwoSpeakers[0]?.name || turn.speaker)
+      : turn.speaker;
 
     return {
       text: turn.text,
       speechMetadata: {
-        speaker: turn.speaker,
+        speaker: effectiveSpeaker,
         ...(turnStyle ? { style: turnStyle } : {}),
       },
     };
   });
 
-  // Build SpeechConfig according to speaker count
+  // Build SpeechConfig according to speaker count and languageCode
   const speechConfig: SpeechConfig = isMultiSpeaker
     ? {
-        multiSpeakerVoiceConfig: {
-          speakerVoiceConfigs: resolvedSpeakers.map((s) => ({
-            speaker: s.name,
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: s.voiceName },
-            },
-          })),
-        },
-      }
-    : {
-        voiceConfig: {
-          prebuiltVoiceConfig: {
-            voiceName: resolvedSpeakers[0]?.voiceName || 'Kore',
+      languageCode,
+      multiSpeakerVoiceConfig: {
+        speakerVoiceConfigs: activeTwoSpeakers.map((s) => ({
+          speaker: s.name,
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: s.voiceName },
           },
+        })),
+      },
+    }
+    : {
+      languageCode,
+      voiceConfig: {
+        prebuiltVoiceConfig: {
+          voiceName: resolvedSpeakers[0]?.voiceName || 'Kore',
         },
-      };
+      },
+    };
 
   return {
-    model: LISTENING_TTS_MODEL,
+    model: getListeningTtsModel(),
     contents,
     config: {
       responseModalities: ['AUDIO'],
       speechConfig,
+      temperature: 0.7,
     },
   };
 }

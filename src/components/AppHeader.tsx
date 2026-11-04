@@ -33,11 +33,6 @@ export const AppHeader: React.FC = () => {
   }, []);
 
   const totalAttemptsCount = attempts.length;
-  const pendingReviewCount = attempts.reduce((acc, att) => {
-    const pendingSpeaking = att.speakingReviews.filter((r) => r.status === 'pending_review').length;
-    const pendingWriting = att.writingReviews.filter((r) => r.status === 'pending_review').length;
-    return acc + (pendingSpeaking > 0 || pendingWriting > 0 ? 1 : 0);
-  }, 0);
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, targetHref: string) => {
     if (pathname === targetHref) {
@@ -126,12 +121,9 @@ export const AppHeader: React.FC = () => {
                       ? 'border-[#fffdf5] bg-[#fffdf5] text-black'
                       : 'border-black bg-[#f4eed9] text-black'
                     }`}
-                  title={`Tổng ${totalAttemptsCount} bài đã nộp, ${pendingReviewCount} bài chờ chấm`}
+                  title={`Tổng ${totalAttemptsCount} bài đã nộp`}
                 >
                   {totalAttemptsCount}
-                  {pendingReviewCount > 0 && (
-                    <span className="hidden md:inline">{` (${pendingReviewCount})`}</span>
-                  )}
                 </span>
               )}
             </Link>

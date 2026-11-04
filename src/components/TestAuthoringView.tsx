@@ -548,7 +548,7 @@ export const TestAuthoringView: React.FC = () => {
                 'Quy chuẩn đề thi:\n' +
                 '1. id: Chỉ chứa chữ thường, số, dấu gạch nối (ví dụ: b1-test-05).\n' +
                 '2. Mỗi câu hỏi phải có id duy nhất toàn bài (ví dụ: r-q1, l-q1).\n' +
-                '3. Bốn kỹ năng bắt buộc: reading, listening, speaking, writing.\n' +
+                '3. Hai kỹ năng khảo thí bắt buộc: reading, listening.\n' +
                 '4. Các dạng câu hỏi hỗ trợ: multiple_choice, multiple_select, fill_blank, true_false_ng.\n' +
                 '5. Bảo vệ dữ liệu: Không cho phép ghi đè bài thi đã có ID trên hệ thống.'
               );
@@ -1052,7 +1052,7 @@ export const TestAuthoringView: React.FC = () => {
                       {parsedDoc.sections?.speaking?.instructions && (
                         <div className="p-2.5 bg-[#f4eed9] border border-black text-xs font-semibold">
                           <span className="font-bold">Hướng dẫn: </span>
-                          <span>{parsedDoc.sections.speaking.instructions}</span>
+                          <span>{parsedDoc.sections?.speaking?.instructions}</span>
                         </div>
                       )}
 
@@ -1124,7 +1124,7 @@ export const TestAuthoringView: React.FC = () => {
                       {parsedDoc.sections?.writing?.instructions && (
                         <div className="p-2.5 bg-[#f4eed9] border border-black text-xs font-semibold">
                           <span className="font-bold">Hướng dẫn: </span>
-                          <span>{parsedDoc.sections.writing.instructions}</span>
+                          <span>{parsedDoc.sections?.writing?.instructions}</span>
                         </div>
                       )}
 

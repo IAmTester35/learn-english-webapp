@@ -141,27 +141,29 @@ export function gradeTestAttempt(test: TestDocument, answers: UserAnswers): Test
   test.sections.listening.parts.forEach((p) => listeningQuestions.push(...p.questions));
   const listeningScore = gradeQuestionsList(listeningQuestions, answers.listening);
 
-  // 3. Speaking reviews
-  const speakingReviews: DeferredTaskReview[] = test.sections.speaking.tasks.map((task) => ({
-    taskId: task.id,
-    title: task.title,
-    prompt: task.prompt,
-    userText: answers.speaking[task.id] || '',
-    rubric: task.rubric,
-    sampleAnswer: task.sampleAnswer,
-    status: 'pending_review',
-  }));
+  // 3. Speaking reviews (optional / disabled)
+  const speakingReviews: DeferredTaskReview[] =
+    test.sections.speaking?.tasks?.map((task) => ({
+      taskId: task.id,
+      title: task.title,
+      prompt: task.prompt,
+      userText: answers.speaking[task.id] || '',
+      rubric: task.rubric,
+      sampleAnswer: task.sampleAnswer,
+      status: 'pending_review' as const,
+    })) || [];
 
-  // 4. Writing reviews
-  const writingReviews: DeferredTaskReview[] = test.sections.writing.tasks.map((task) => ({
-    taskId: task.id,
-    title: task.title,
-    prompt: task.prompt,
-    userText: answers.writing[task.id] || '',
-    rubric: task.rubric,
-    sampleAnswer: task.sampleAnswer,
-    status: 'pending_review',
-  }));
+  // 4. Writing reviews (optional / disabled)
+  const writingReviews: DeferredTaskReview[] =
+    test.sections.writing?.tasks?.map((task) => ({
+      taskId: task.id,
+      title: task.title,
+      prompt: task.prompt,
+      userText: answers.writing[task.id] || '',
+      rubric: task.rubric,
+      sampleAnswer: task.sampleAnswer,
+      status: 'pending_review' as const,
+    })) || [];
 
   return {
     id: `attempt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,

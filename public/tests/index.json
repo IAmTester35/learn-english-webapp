@@ -47,6 +47,12 @@
       "title": "HSK 2 级初级汉语综合能力考试",
       "description": "全面评估 HSK 2 级水平（掌握约 300 常用词）考生的阅读、听力、口语和书写四项语言技能，适合已学习汉语约 100–200 学时的初级学习者，重点考察日常生活话题中的理解与表达能力。",
       "file": "/tests/hsk2-elementary-chinese-test-02.json"
+    },
+    {
+      "id": "b2-upper-intermediate-english-test-02",
+      "title": "B2 Upper-Intermediate English Examination (CEFR / FCE Standard)",
+      "description": "Comprehensive CEFR B2 assessment evaluating upper-intermediate Reading and Listening comprehension across contemporary urban, scientific, psychological, and workplace contexts.",
+      "file": "/tests/b2-upper-intermediate-english-test-02.json"
     }
   ]
 }

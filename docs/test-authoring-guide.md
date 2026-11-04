@@ -1,24 +1,26 @@
 # Exam Authoring Guide: Creating Tests for L TestLab
 
-This guide is designed for **exam creators, teachers, and test authors**. It explains how to structure and author comprehensive 4-skill English examinations (Reading, Listening, Speaking, Writing) in standardized JSON format.
+This guide is designed for **exam creators, teachers, and test authors**. It explains how to structure and author comprehensive standardized English examinations focusing on objective **Reading and Listening** comprehension in standardized JSON format.
+
+> [!NOTE]
+> **Scope of Assessment:**
+> In accordance with standardized test automation, examinations focus strictly on **Reading and Listening comprehension**.
 
 ---
 
 ## 1. Test Overview & Metadata
 
-Each examination is authored as a single JSON file. The test file contains general information about the exam and separates content into four distinct skill sections:
+Each examination is authored as a single JSON file. The test file contains general information about the exam and structures content into core skill sections:
 
 ```json
 {
   "schemaVersion": "1.0",
   "id": "b1-intermediate-english-test-01",
   "title": "B1 Intermediate English Examination (CEFR / PET Standard)",
-  "description": "Comprehensive CEFR B1 assessment evaluating Reading, Listening, Speaking, and Writing.",
+  "description": "Comprehensive CEFR B1 assessment evaluating Reading and Listening comprehension.",
   "sections": {
     "reading": { ... },
-    "listening": { ... },
-    "speaking": { ... },
-    "writing": { ... }
+    "listening": { ... }
   }
 }
 ```
@@ -31,7 +33,7 @@ Each examination is authored as a single JSON file. The test file contains gener
 | `id`            | `string` | Yes      | A unique identifier in lowercase kebab-case (e.g., `b1-test-01`, `ielts-academic-02`). Name your file using this same ID (`b1-test-01.json`). |
 | `title`         | `string` | Yes      | The official exam title displayed to students (e.g., `"A2 Key English Comprehensive Test"`).                                                  |
 | `description`   | `string` | Yes      | A brief summary of the exam's level, skills covered, and target audience.                                                                     |
-| `sections`      | `object` | Yes      | Contains the four skill modules: `reading`, `listening`, `speaking`, and `writing`.                                                           |
+| `sections`      | `object` | Yes      | Contains the core assessed skill modules: `reading` and `listening` (Speaking and Writing are disabled and omitted).                          |
 
 ---
 
@@ -39,12 +41,12 @@ Each examination is authored as a single JSON file. The test file contains gener
 
 To maintain international validity and prevent cognitive fatigue, align your examination's volume, passage lengths, and audio durations with the target Common European Framework of Reference (CEFR) level:
 
-| CEFR Level | Benchmark Equivalent        | Reading Section                                                               | Listening Section                                                            | Speaking Section                                                             | Writing Section                                                                                      | Estimated Total Time |
-| :--------- | :-------------------------- | :---------------------------------------------------------------------------- | :--------------------------------------------------------------------------- | :--------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------- | :------------------- |
-| **A2**     | Cambridge Key (KET)         | **4–5 passages**<br>• 120–200 words per text<br>• 20–25 total questions       | **4–5 short audio parts**<br>• 45–90 seconds each<br>• 20–25 total questions | **2 tasks**<br>• Personal information<br>• Simple picture description        | **2 tasks**<br>• Short message/note (25–35 words)<br>• Short story (35–50 words)                     | ~60 mins             |
-| **B1**     | Cambridge Preliminary (PET) | **3–4 passages**<br>• 300–450 words per text<br>• 15–20 total questions       | **3–4 audio parts**<br>• 1.5–2.5 minutes each<br>• 15–20 total questions     | **2 tasks**<br>• Photo description<br>• Decision-making discussion           | **2 tasks**<br>• Informal email (100–120 words)<br>• Short article or story (100–120 words)          | ~90 mins             |
-| **B2**     | Cambridge First (FCE)       | **3–4 passages**<br>• 500–650 words per text<br>• 18–24 total questions       | **3–4 audio parts**<br>• 2.5–3.5 minutes each<br>• 15–20 total questions     | **2–3 tasks**<br>• Photo comparison<br>• Collaborative discussion            | **2 tasks**<br>• Compulsory essay (140–190 words)<br>• Situational article or report (140–190 words) | ~110 mins            |
-| **C1**     | Cambridge Advanced (CAE)    | **3–4 academic texts**<br>• 700–900 words per text<br>• 18–24 total questions | **3–4 audio parts**<br>• 3–4.5 minutes each<br>• 16–20 total questions       | **2–3 tasks**<br>• Long turn presentation<br>• Abstract & ethical discussion | **2 tasks**<br>• Discursive essay (220–260 words)<br>• Formal proposal or review (220–260 words)     | ~120 mins            |
+| CEFR Level | Benchmark Equivalent        | Reading Section                                                               | Listening Section                                                            | Target Total Questions | Estimated Total Time |
+| :--------- | :-------------------------- | :---------------------------------------------------------------------------- | :--------------------------------------------------------------------------- | :--------------------- | :------------------- |
+| **A2**     | Cambridge Key (KET)         | **4–5 passages**<br>• 120–200 words per text<br>• 20–25 total questions       | **4–5 short audio parts**<br>• 45–90 seconds each<br>• 20–25 total questions | **40–50 questions**    | ~45 mins             |
+| **B1**     | Cambridge Preliminary (PET) | **3–4 passages**<br>• 300–450 words per text<br>• 15–20 total questions       | **3–4 audio parts**<br>• 1.5–2.5 minutes each<br>• 15–20 total questions     | **30–40 questions**    | ~60 mins             |
+| **B2**     | Cambridge First (FCE)       | **3–4 passages**<br>• 500–650 words per text<br>• 18–24 total questions       | **3–4 audio parts**<br>• 2.5–3.5 minutes each<br>• 15–20 total questions     | **35–45 questions**    | ~75 mins             |
+| **C1**     | Cambridge Advanced (CAE)    | **3–4 academic texts**<br>• 700–900 words per text<br>• 18–24 total questions | **3–4 audio parts**<br>• 3–4.5 minutes each<br>• 16–20 total questions       | **35–45 questions**    | ~85 mins             |
 
 ### Structural Rules for Test Designers
 
@@ -257,6 +259,7 @@ The Listening section allows authors to create realistic audio tests. You only n
   Sam: Did you check the hotel prices?
   Chloe: Yes, they have two double rooms available.
   ```
+- **Two-Speaker API Rule:** For each audio part, structure conversations between **two primary interacting characters**. If a third auxiliary character speaks (e.g., a waiter with one line), the engine will map them to the closest voice persona, but sticking to two distinct characters ensures maximum vocal clarity and acoustic realism.
 - Keep character names simple and consistent so the system can match voices reliably.
 
 #### Monologues & Announcements (Single Speaker)
@@ -274,32 +277,52 @@ The Listening section allows authors to create realistic audio tests. You only n
   - Ellipses (`...`) and em-dashes (`—`) create natural pauses and hesitations.
   - Commas and periods control phrase cadence.
   - Question marks and exclamation points guide inflection and energy.
+  - **Avoid artificial fragmented periods:** Avoid breaking sentences with frequent periods (e.g., _"We. Must. Go."_), as this causes the acoustic synthesizer to produce choppy, unnatural micro-breaks.
+
+#### Conversational Backchanneling (`|...|`)
+
+```text
+Sam: We arrived at the station around dawn, |right| and the ticket office was already packed.
+Chloe: I warned you about the morning rush! |I know| But did you get the tickets?
+Sam: Yes, thankfully! |phew| The clerk found two remaining seats in coach B.
+```
+
+Common natural backchannels: `|mhm|`, `|yeah|`, `|right|`, `|I see|`, `|really?|`, `|sure|`, `|phew|`, `|exactly|`.
+
+#### Exact Pronunciation with IPA (`/.../`)
+
+For proper nouns, regional dialects, or exam-specific proper names that standard text-to-speech might mispronounce (e.g., Celtic place names, historical figures, or British place names with irregular spelling), enclose the **International Phonetic Alphabet (IPA)** transcription within forward slashes (`/.../`):
+
+```text
+Lecturer: Today we will explore the architectural history of Edinburgh /ˌedɪnbərə/ and its historic castle.
+Guide: Take the train toward Leicester /ˈlɛstər/, not toward Worcester /ˈwʊstər/.
+```
 
 #### Expressive Non-Speech Vocal Tags (Gemini TTS Vocal Events)
 
 The underlying audio engine (Google Gemini TTS) natively supports **inline vocal tags** enclosed in angle brackets (`<...>`). You can embed these directly into spoken lines to produce authentic human vocalizations, emotional nuances, and realistic conversational texture:
 
-| Category | Supported Tags | Description & Exam Use Case |
-| :--- | :--- | :--- |
-| **Laughter & Amusement** | `<laugh>`, `<chuckle>`, `<giggle>`, `<snicker>`, `<cackle>` | Natural chuckling or laughing during friendly, casual dialogues (e.g., PET/FCE Part 1 & 2). |
-| **Breathing & Relief** | `<breath>`, `<heavy breath>`, `<sigh>`, `<gasp>`, `<pant>`, `<exhales>` | Expresses relief, exhaustion, surprise, or realistic conversational intake of air. |
-| **Human Vocal Reactions** | `<cough>`, `<throat-clearing>`, `<yawn>`, `<sob>`, `<groan>`, `<whisper>` | Adds character realism for interviews, lectures, or emotional narratives. |
-| **Controlled Pauses** | `<short pause>`, `<long pause>` | Inserts precise timing pauses between statements beyond normal punctuation cadence. |
+| Category                  | Supported Tags                                                            | Description & Exam Use Case                                                                 |
+| :------------------------ | :------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------ |
+| **Laughter & Amusement**  | `<laugh>`, `<chuckle>`, `<giggle>`, `<snicker>`, `<cackle>`               | Natural chuckling or laughing during friendly, casual dialogues (e.g., PET/FCE Part 1 & 2). |
+| **Breathing & Relief**    | `<breath>`, `<heavy breath>`, `<sigh>`, `<gasp>`, `<pant>`, `<exhales>`   | Expresses relief, exhaustion, surprise, or realistic conversational intake of air.          |
+| **Human Vocal Reactions** | `<cough>`, `<throat-clearing>`, `<yawn>`, `<sob>`, `<groan>`, `<whisper>` | Adds character realism for interviews, lectures, or emotional narratives.                   |
+| **Controlled Pauses**     | `<short pause>`, `<long pause>`                                           | Inserts precise timing pauses between statements beyond normal punctuation cadence.         |
 
-- **Natural Interjections:** Spoken exclamations such as *"Argh!"*, *"Ugh"*, *"Hmm"*, *"Pfft"*, or *"Wow"* should simply be written as words with expressive punctuation:
+- **Natural Interjections:** Spoken exclamations such as _"Argh!"_, _"Ugh"_, _"Hmm"_, _"Pfft"_, or _"Wow"_ should simply be written as words with expressive punctuation:
   ```text
   Sam: Argh! I forgot my library card again. <sigh>
   ```
-- **Example Dialogue with Vocal Tags:**
+- **Example Dialogue with Backchanneling & Vocal Tags:**
   ```text
   Sam: Did you actually manage to book the morning train tickets?
-  Chloe: Yes! <chuckle> It was stressful, but we saved twenty-five pounds each.
+  Chloe: Yes! <chuckle> It was stressful, |oh really?| but we saved twenty-five pounds each.
   Sam: That's incredible... <sigh> What a relief. <short pause> Now we just need to pack.
   ```
 
 #### Spoken Tags vs. Ambient Sound Effects
 
-- **Angle Brackets `<tag>` (Vocal Events):** Performed directly by the speaker's voice (e.g., `<chuckle>`, `<sigh>`). Embed these inline within dialogue lines.
+- **Angle Brackets `<tag>` (Vocal Events):** Performed directly by the speaker's voice (e.g., `<chuckle>`, `<sigh>`). Embed these inline within dialogue lines. Always use English keywords for tags.
 - **Square Brackets `[Effect]` or `(Context)` (Stage Directions):** Setting notes or non-vocal ambient sound effects (e.g., `[Train whistle]` or `[Bell chimes]`). Write these **on their own separate line**; the audio generator automatically detects and excludes them so only spoken speech is heard.
 
 ---
@@ -308,24 +331,33 @@ The underlying audio engine (Google Gemini TTS) natively supports **inline vocal
 
 Use these settings to match the scenario and target difficulty of your exam:
 
-| Setting        | Options               | Best Used For                                                                                                    |
-| :------------- | :-------------------- | :--------------------------------------------------------------------------------------------------------------- |
-| `scenario`     | `everyday_dialogue`   | Everyday conversations, shopping, travel, asking directions (Part 1, Part 2).                                    |
-|                | `public_announcement` | Public notices at train stations, airports, museums, or schools.                                                 |
-|                | `interview`           | Job interviews, radio shows, or magazine podcasts.                                                               |
-|                | `academic_lecture`    | University lectures, science presentations (IELTS/TOEFL style).                                                  |
-|                | `group_discussion`    | Multiple students or colleagues discussing a project.                                                            |
-|                | `news_broadcast`      | Formal news reporting, financial bulletins, weather forecasts.                                                   |
-| `accent`       | `british`             | Received Pronunciation (Cambridge Key/PET/FCE/CAE & IELTS standard).                                             |
-|                | `american`            | General American (standard American English).                                                                    |
-|                | `australian`          | Australian English.                                                                                              |
-|                | `canadian`            | Canadian English.                                                                                                |
-|                | `standard`            | Neutral, international English.                                                                                  |
-| `pacing`       | `slow`                | Deliberate, clear pauses between sentences (CEFR A1–A2 elementary).                                              |
-|                | `moderate`            | Natural conversational speed (CEFR B1 intermediate).                                                             |
-|                | `fast`                | Natural native speaking speed (CEFR C1–C2 advanced).                                                             |
-|                | `exam_standard`       | Balanced testing pace with distinct articulation and pauses.                                                     |
-| `overallStyle` | _free text_           | Descriptive director notes (e.g., `"friendly and warm"`, `"urgent announcement"`, `"informative and academic"`). |
+| Setting        | Options               | Best Used For                                                                 |
+| :------------- | :-------------------- | :---------------------------------------------------------------------------- |
+| `scenario`     | `everyday_dialogue`   | Everyday conversations, shopping, travel, asking directions (Part 1, Part 2). |
+|                | `public_announcement` | Public notices at train stations, airports, museums, or schools.              |
+|                | `interview`           | Job interviews, radio shows, or magazine podcasts.                            |
+|                | `academic_lecture`    | University lectures, science presentations (IELTS/TOEFL style).               |
+|                | `group_discussion`    | Multiple students or colleagues discussing a project.                         |
+|                | `news_broadcast`      | Formal news reporting, financial bulletins, weather forecasts.                |
+| `accent`       | `british`             | Received Pronunciation (Cambridge Key/PET/FCE/CAE & IELTS standard).          |
+|                | `american`            | General American (standard American English).                                 |
+|                | `australian`          | Australian English.                                                           |
+|                | `canadian`            | Canadian English.                                                             |
+|                | `standard`            | Neutral, international English.                                               |
+| `pacing`       | `slow`                | Deliberate, clear pauses between sentences (CEFR A1–A2 elementary).           |
+|                | `moderate`            | Natural conversational speed (CEFR B1 intermediate).                          |
+|                | `fast`                | Natural native speaking speed (CEFR C1–C2 advanced).                          |
+|                | `exam_standard`       | Balanced testing pace with distinct articulation and pauses.                  |
+| `overallStyle` | _free text_           | Descriptive director notes and acoustic environment directives.               |
+
+> [!TIP]
+> **Acoustic Environment Staging in `overallStyle`:**
+> You can include physical acoustic descriptions in `overallStyle` to simulate authentic real-world exam test situations:
+>
+> - **Public Transit / Station Announcement:** `"PA loudspeaker announcement, vast transit terminal reverberation, authoritative projection"`
+> - **Radio / Podcast Interview:** `"soundproof broadcast studio, close-mic vocal warmth, dry acoustics, intimate clarity"`
+> - **Academic Lecture:** `"large university lecture theatre, subtle natural hall echo, formal educational projection"`
+> - **Casual Indoor Conversation:** `"quiet room acoustic, conversational proximity, natural speech dynamics"`
 
 ---
 
@@ -361,84 +393,7 @@ If you want to tailor specific vocal personalities, you can choose from the foll
 
 ---
 
-## 6. Speaking Section (`speaking`)
-
-The Speaking section presents interactive tasks, rubrics, and reference responses.
-
-```json
-"speaking": {
-  "instructions": "Read the tasks carefully and prepare your responses according to the rubrics.",
-  "tasks": [
-    {
-      "id": "s-t1",
-      "title": "Task 1: Describing a Memorable Journey",
-      "prompt": "Talk about a memorable trip you took in the past.\nYou should say:\n- Where you went and who accompanied you\n- What activities you did during the trip\n- Why this journey was particularly memorable for you.",
-      "rubric": [
-        {
-          "criterion": "Fluency and Coherence",
-          "description": "Ability to speak continuously with natural pacing and logical sequencing."
-        },
-        {
-          "criterion": "Lexical Resource",
-          "description": "Accurate and varied use of travel-related vocabulary."
-        },
-        {
-          "criterion": "Grammatical Range and Accuracy",
-          "description": "Effective use of past narrative tenses."
-        },
-        {
-          "criterion": "Pronunciation",
-          "description": "Clear articulation and natural intonation."
-        }
-      ],
-      "sampleAnswer": "Two summers ago, I took an unforgettable hiking trip to Sa Pa with three university friends..."
-    }
-  ]
-}
-```
-
----
-
-## 7. Writing Section (`writing`)
-
-The Writing section defines written tasks, word targets, evaluation criteria, and model reference responses displayed to students on their results page for feedback and self-study.
-
-```json
-"writing": {
-  "instructions": "Complete both writing tasks in the text areas provided.",
-  "tasks": [
-    {
-      "id": "w-t1",
-      "title": "Task 1: Informal Email to a Friend",
-      "prompt": "You received an email from your English friend, Alex:\n\n'I am visiting your hometown next month! Can you recommend places to visit and traditional dishes I should try?'\n\nWrite an email to Alex (100–120 words).",
-      "minWords": 100,
-      "rubric": [
-        {
-          "criterion": "Task Achievement",
-          "description": "Fully addresses all parts of the prompt (places to visit and food recommendations)."
-        },
-        {
-          "criterion": "Coherence and Cohesion",
-          "description": "Clear paragraph structure with appropriate greetings and sign-off."
-        },
-        {
-          "criterion": "Lexical Resource",
-          "description": "Varied vocabulary suited to an informal communicative email."
-        },
-        {
-          "criterion": "Grammatical Accuracy",
-          "description": "Accurate sentence construction, punctuation, and spelling."
-        }
-      ],
-      "sampleAnswer": "Hi Alex,\n\nI was thrilled to hear you are visiting next month!..."
-    }
-  ]
-}
-```
-
----
-
-## 8. Exam Author Quality Checklist
+## 6. Exam Author Quality Checklist
 
 Before submitting a new examination, review this pedagogical and quality checklist:
 
@@ -451,4 +406,3 @@ Before submitting a new examination, review this pedagogical and quality checkli
    - True/False/Not Given questions use exact values: `TRUE`, `FALSE`, or `NOT_GIVEN`.
    - Fill-in-the-blank questions include all common spelling, numerical, and article variants in `acceptedAnswers`.
 5. [ ] **Natural Dialogue Flow:** Listening transcripts sound authentic, utilizing natural punctuation (`...`, `—`) or supported inline vocal tags (`<chuckle>`, `<sigh>`, `<short pause>`) appropriately without overloading.
-6. [ ] **Transparent Assessment:** Speaking and Writing tasks provide clear prompts, realistic minimum word counts, and comprehensive scoring rubrics.

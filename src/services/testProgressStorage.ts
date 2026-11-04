@@ -58,17 +58,7 @@ export function calculateProgressStats(
     });
   });
 
-  // Speaking (Temporarily disabled - not included in progress calculation)
-
-
-  // Writing
-  test.sections.writing.tasks.forEach((t) => {
-    totalCount += 1;
-    const ans = answers.writing[t.id];
-    if (typeof ans === 'string' && ans.trim() !== '') {
-      answeredCount += 1;
-    }
-  });
+  // Speaking & Writing are disabled on the test runner (objective assessment: Reading & Listening only)
 
   return { answeredCount, totalCount };
 }

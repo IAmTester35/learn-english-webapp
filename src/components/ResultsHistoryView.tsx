@@ -1,10 +1,8 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
-import { Trash2, Sparkles, RefreshCw, FileQuestion, CheckCircle2 } from 'lucide-react';
+import React from 'react';
+import { Trash2, FileQuestion } from 'lucide-react';
 import type { TestAttempt } from '@/types/test';
-import { updateDeferredReview, deleteAttempt } from '@/services/attemptStorage';
-import { gradeWritingTaskWithServer } from '@/services/aiApi';
-import { countWordsOrCharacters, isCjkText } from '@/domain/grader';
+import { deleteAttempt } from '@/services/attemptStorage';
 
 interface ResultsHistoryViewProps {
   attempts: TestAttempt[];
@@ -21,149 +19,6 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
 }) => {
   const currentAttempt =
     attempts.find((a) => a.id === selectedAttemptId) || (attempts.length > 0 ? attempts[0] : null);
-
-  const [scoringFormState, setScoringFormState] = useState<
-    Record<string, { score: string; notes: string }>
-  >({});
-  const [regradingMap, setRegradingMap] = useState<Record<string, boolean>>({});
-  const [isRegradingAllWriting, setIsRegradingAllWriting] = useState(false);
-  const [isAutoGrading, setIsAutoGrading] = useState(false);
-  const autoGradedAttemptIdsRef = useRef<Set<string>>(new Set());
-
-  // Tự động kích hoạt chấm điểm Writing bằng AI nếu bài nộp có bài viết chưa được chấm
-  useEffect(() => {
-    if (!currentAttempt) return;
-    if (autoGradedAttemptIdsRef.current.has(currentAttempt.id)) return;
-
-    const pendingTasks = currentAttempt.writingReviews.filter((r) => r.status === 'pending_review');
-    if (pendingTasks.length === 0) return;
-
-    autoGradedAttemptIdsRef.current.add(currentAttempt.id);
-    setIsAutoGrading(true);
-
-    (async () => {
-      let anyGraded = false;
-      for (const rev of pendingTasks) {
-        setRegradingMap((prev) => ({ ...prev, [rev.taskId]: true }));
-        try {
-          const res = await gradeWritingTaskWithServer({
-            testId: currentAttempt.testId,
-            taskId: rev.taskId,
-            userText: rev.userText,
-          });
-          if (res) {
-            updateDeferredReview(currentAttempt.id, 'writing', rev.taskId, {
-              score: res.score,
-              notes: res.notes,
-              status: 'reviewed',
-            });
-            anyGraded = true;
-          }
-        } catch (err) {
-          console.error('Lỗi tự động chấm bài Writing:', err);
-        } finally {
-          setRegradingMap((prev) => ({ ...prev, [rev.taskId]: false }));
-        }
-      }
-      setIsAutoGrading(false);
-      if (anyGraded) {
-        onRefreshAttempts();
-      }
-    })();
-  }, [currentAttempt?.id, currentAttempt?.testId, currentAttempt?.writingReviews, onRefreshAttempts]);
-
-  const handleScoreChange = (taskId: string, field: 'score' | 'notes', val: string) => {
-    setScoringFormState((prev) => ({
-      ...prev,
-      [taskId]: {
-        score: field === 'score' ? val : prev[taskId]?.score || '',
-        notes: field === 'notes' ? val : prev[taskId]?.notes || '',
-      },
-    }));
-  };
-
-  const handleSaveReview = (
-    attemptId: string,
-    sectionType: 'speaking' | 'writing',
-    taskId: string
-  ) => {
-    const data = scoringFormState[taskId] || { score: '', notes: '' };
-    updateDeferredReview(attemptId, sectionType, taskId, {
-      score: data.score.trim() || undefined,
-      notes: data.notes.trim() || undefined,
-      status: 'reviewed',
-    });
-    onRefreshAttempts();
-    alert('Đã lưu kết quả chấm bài và nhận xét vào LocalStorage!');
-  };
-
-  const handleRegradeWriting = async (taskId: string, userText: string) => {
-    if (!currentAttempt) return;
-    setRegradingMap((prev) => ({ ...prev, [taskId]: true }));
-    try {
-      const res = await gradeWritingTaskWithServer({
-        testId: currentAttempt.testId,
-        taskId,
-        userText,
-      });
-      if (res) {
-        updateDeferredReview(currentAttempt.id, 'writing', taskId, {
-          score: res.score,
-          notes: res.notes,
-          status: 'reviewed',
-        });
-        setScoringFormState((prev) => ({
-          ...prev,
-          [taskId]: {
-            score: res.score,
-            notes: res.notes,
-          },
-        }));
-        onRefreshAttempts();
-        alert(`Đã hoàn tất chấm lại bài viết bằng AI Gemini!\nĐiểm: ${res.score}`);
-      } else {
-        alert('Không nhận được kết quả từ AI (dịch vụ AI có thể chưa được cấu hình).');
-      }
-    } catch (err: unknown) {
-      alert(`Lỗi khi gọi AI chấm lại: ${(err as Error)?.message || 'Không xác định'}`);
-    } finally {
-      setRegradingMap((prev) => ({ ...prev, [taskId]: false }));
-    }
-  };
-
-  const handleRegradeAllWriting = async () => {
-    if (!currentAttempt) return;
-    setIsRegradingAllWriting(true);
-    try {
-      for (const rev of currentAttempt.writingReviews) {
-        const res = await gradeWritingTaskWithServer({
-          testId: currentAttempt.testId,
-          taskId: rev.taskId,
-          userText: rev.userText,
-        });
-        if (res) {
-          updateDeferredReview(currentAttempt.id, 'writing', rev.taskId, {
-            score: res.score,
-            notes: res.notes,
-            status: 'reviewed',
-          });
-          setScoringFormState((prev) => ({
-            ...prev,
-            [rev.taskId]: {
-              score: res.score,
-              notes: res.notes,
-            },
-          }));
-        }
-      }
-      onRefreshAttempts();
-      alert('Đã hoàn tất chấm lại toàn bộ các bài viết Writing bằng AI Gemini!');
-    } catch (err: unknown) {
-      alert(`Lỗi khi chấm lại bài viết: ${(err as Error)?.message || 'Không xác định'}`);
-    } finally {
-      setIsRegradingAllWriting(false);
-    }
-  };
 
   const handleDelete = (attemptId: string) => {
     if (window.confirm('Bạn có chắc muốn xóa vĩnh viễn bài làm này khỏi LocalStorage?')) {
@@ -254,26 +109,7 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
         const listeningScore10 =
           listeningTotal > 0 ? ((listeningCorrect / listeningTotal) * 10).toFixed(1) : '0.0';
 
-        const writingReviews = currentAttempt.writingReviews || [];
-        const reviewedWriting = writingReviews.filter((r) => r.status === 'reviewed' && r.score);
-        const numericWritingScores: number[] = reviewedWriting
-          .map((r) => {
-            const match = String(r.score).match(/([0-9]+(?:\.[0-9]+)?)/);
-            return match ? parseFloat(match[1]) : null;
-          })
-          .filter((s): s is number => s !== null);
-
-        const writingScore10 =
-          numericWritingScores.length > 0
-            ? (numericWritingScores.reduce((a, b) => a + b, 0) / numericWritingScores.length).toFixed(1)
-            : null;
-
-        // Active skills evaluated for Overall Score
-        const activeScores: number[] = [parseFloat(readingScore10), parseFloat(listeningScore10)];
-        if (writingScore10 !== null) {
-          activeScores.push(parseFloat(writingScore10));
-        }
-        const overallScore10 = (activeScores.reduce((a, b) => a + b, 0) / activeScores.length).toFixed(1);
+        const overallScore10 = ((parseFloat(readingScore10) + parseFloat(listeningScore10)) / 2).toFixed(1);
 
         return (
           <div className="space-y-6 min-w-0 w-full">
@@ -325,20 +161,11 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                 </div>
                 <div className="text-xs font-mono font-bold text-neutral-800 sm:text-right">
                   <p>Reading: {readingScore10}/10 • Listening: {listeningScore10}/10</p>
-                  <p>
-                    Writing:{' '}
-                    {writingScore10 !== null
-                      ? `${writingScore10}/10 (AI chấm)`
-                      : isAutoGrading
-                        ? 'Đang tự động chấm bằng AI...'
-                        : 'Chờ chấm AI'}
-                  </p>
-                  <p className="text-[11px] text-neutral-600 font-sans">Speaking: Tạm khóa (không tính vào điểm)</p>
                 </div>
               </div>
 
-              {/* 4 Skill Cards on Scale 10 */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+              {/* 2 Skill Cards on Scale 10 */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-center">
                 {/* Reading */}
                 <div className="border-2 border-black p-3 bg-[#fcf8ed] flex flex-col justify-between">
                   <div>
@@ -368,53 +195,6 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                   </div>
                   <span className="text-[11px] block text-neutral-800 font-mono font-bold border-t border-black/20 pt-1">
                     {listeningCorrect}/{listeningTotal} câu ({Math.round((listeningCorrect / (listeningTotal || 1)) * 100)}%)
-                  </span>
-                </div>
-
-                {/* Writing */}
-                <div className="border-2 border-black p-3 bg-[#fcf8ed] flex flex-col justify-between">
-                  <div>
-                    <span className="text-xs font-black block uppercase text-neutral-800">Writing (AI)</span>
-                    <div className="my-1">
-                      {writingScore10 !== null ? (
-                        <>
-                          <span className="text-2xl sm:text-3xl font-black font-mono text-black">
-                            {writingScore10}
-                          </span>
-                          <span className="text-xs font-bold font-mono text-neutral-700"> / 10</span>
-                        </>
-                      ) : isAutoGrading ? (
-                        <span className="text-xs font-black font-mono inline-block px-2 py-1 border-2 border-black bg-amber-200 animate-pulse">
-                          ĐANG CHẤM AI...
-                        </span>
-                      ) : (
-                        <span className="text-xs font-black font-mono inline-block px-2 py-1 border-2 border-black bg-[#fffdf5]">
-                          CHỜ CHẤM
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <span className="text-[11px] block text-neutral-800 font-mono font-bold border-t border-black/20 pt-1 truncate">
-                    {reviewedWriting.length > 0
-                      ? reviewedWriting.map((r) => r.score || 'ĐÃ CHẤM').join(' | ')
-                      : isAutoGrading
-                        ? 'Đang chấm...'
-                        : 'Chưa có điểm'}
-                  </span>
-                </div>
-
-                {/* Speaking */}
-                <div className="border-2 border-black p-3 bg-[#fcf8ed] opacity-80 flex flex-col justify-between">
-                  <div>
-                    <span className="text-xs font-black block uppercase text-neutral-800">Speaking</span>
-                    <div className="my-1">
-                      <span className="text-xs font-black font-mono inline-block px-2 py-1 border-2 border-black bg-[#f4eed9] text-black">
-                        COMING SOON
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-[10px] block text-neutral-600 font-bold border-t border-black/20 pt-1">
-                    Tạm khóa (N/A)
                   </span>
                 </div>
               </div>
@@ -669,225 +449,6 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                     </div>
                   );
                 })}
-              </div>
-            </section>
-
-            {/* SECTION 3: WRITING DEFERRED REVIEW */}
-            <section aria-labelledby="writing-results-heading" className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-black pb-2">
-                <h3 id="writing-results-heading" className="text-base sm:text-lg font-black text-black">
-                  3. Chấm bài Writing (AI Rubric)
-                </h3>
-                <button
-                  type="button"
-                  onClick={handleRegradeAllWriting}
-                  disabled={isRegradingAllWriting}
-                  className="px-3 py-1.5 bg-[#f4eed9] text-black font-black text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
-                  title="Gọi AI Gemini chấm lại toàn bộ các task Writing"
-                >
-                  {isRegradingAllWriting ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Đang chấm lại...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Chấm lại tất cả (AI)</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {isAutoGrading && (
-                <div className="p-2.5 bg-amber-50 border-2 border-black flex items-center gap-2 text-xs font-bold text-amber-950">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-900 shrink-0" />
-                  <span>AI đang tự động chấm bài viết trong nền.</span>
-                </div>
-              )}
-
-              <div className="space-y-6">
-                {currentAttempt.writingReviews.map((rev) => {
-                  const currentScore = String(scoringFormState[rev.taskId]?.score ?? rev.score ?? '');
-                  const currentNotes = scoringFormState[rev.taskId]?.notes ?? rev.notes ?? '';
-                  const isCjk = isCjkText(rev.prompt + rev.userText);
-                  const wordCount = countWordsOrCharacters(rev.userText);
-                  const unitLabel = isCjk ? 'chữ' : 'từ';
-                  const isTaskGrading = Boolean(regradingMap[rev.taskId]);
-
-                  return (
-                    <article key={rev.taskId} className="border-2 border-black p-5 bg-[#fffdf5] space-y-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h4 className="font-black text-base text-black">{rev.title}</h4>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <button
-                            type="button"
-                            onClick={() => handleRegradeWriting(rev.taskId, rev.userText)}
-                            disabled={isTaskGrading}
-                            className="px-2.5 py-1 bg-[#f4eed9] text-black font-black text-xs border-2 border-black hover:bg-black hover:text-[#fffdf5] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1"
-                            title="Gọi AI Gemini chấm lại bài viết này"
-                          >
-                            {isTaskGrading ? (
-                              <>
-                                <RefreshCw className="w-3 h-3 animate-spin" />
-                                <span>Đang chấm...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles className="w-3 h-3" />
-                                <span>Chấm AI</span>
-                              </>
-                            )}
-                          </button>
-                          <span
-                            className={`text-xs px-2 py-0.5 border-2 font-mono font-bold ${
-                              isTaskGrading
-                                ? 'bg-amber-200 text-black border-black animate-pulse'
-                                : rev.status === 'reviewed'
-                                ? 'bg-black text-[#fffdf5] border-black'
-                                : 'bg-[#f4eed9] text-black border-black'
-                            }`}
-                          >
-                            {isTaskGrading
-                              ? '[ĐANG CHẤM AI...]'
-                              : rev.status === 'reviewed'
-                              ? `[ĐÃ CHẤM${rev.score ? `: ${rev.score}` : ''}]`
-                              : '[CHỜ CHẤM]'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="text-xs text-black bg-[#f4eed9] p-3 border-2 border-black whitespace-pre-line font-medium">
-                        <strong className="block mb-1 uppercase font-mono font-bold">Đề bài:</strong> {rev.prompt}
-                      </div>
-
-                      {/* User response */}
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide text-black">
-                          <span>Bài viết của bạn:</span>
-                          <span className="font-mono">Số {unitLabel}: {wordCount}</span>
-                        </div>
-                        <div className="p-4 border-2 border-black bg-[#fcf8ed] text-sm whitespace-pre-line leading-relaxed font-serif text-black">
-                          {rev.userText || '(Bạn chưa viết bài luận nào khi làm bài)'}
-                        </div>
-                      </div>
-
-                      {/* Rubric Table */}
-                      <div className="space-y-2">
-                        <p className="text-xs font-bold uppercase tracking-wide text-black">
-                          Tiêu chí chấm bài (Rubric quy định trong JSON):
-                        </p>
-                        <div className="border-2 border-black overflow-x-auto">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                              <tr className="bg-[#f4eed9] border-b-2 border-black">
-                                <th className="p-2.5 border-r-2 border-black font-black text-black">Tiêu chí</th>
-                                <th className="p-2.5 font-black text-black">Yêu cầu đạt được</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {rev.rubric.map((r, rIdx) => (
-                                <tr key={rIdx} className="border-b border-black">
-                                  <td className="p-2.5 border-r-2 border-black font-bold whitespace-nowrap text-black">
-                                    {r.criterion}
-                                  </td>
-                                  <td className="p-2.5 text-neutral-900 font-medium">{r.description}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                      {/* Sample Answer */}
-                      {rev.sampleAnswer && (
-                        <div className="space-y-1">
-                          <p className="text-xs font-bold uppercase tracking-wide text-black">Bài viết mẫu tham khảo:</p>
-                          <div className="p-3 border-2 border-black bg-[#f4eed9] text-xs italic leading-relaxed whitespace-pre-line text-black">
-                            {rev.sampleAnswer}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Self-grading form */}
-                      <div className="border-t-2 border-black pt-4 space-y-3 bg-[#fcf8ed] p-4 border-2">
-                        <h5 className="text-sm font-black text-black">Đánh giá & Ghi chú chấm bài:</h5>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div>
-                            <label
-                              htmlFor={`writing_score_${rev.taskId}`}
-                              className="block text-xs font-bold mb-1 text-black"
-                            >
-                              Điểm đánh giá (VD: 8.0 hoặc 85/100):
-                            </label>
-                            <input
-                              id={`writing_score_${rev.taskId}`}
-                              type="text"
-                              value={currentScore}
-                              placeholder="Nhập điểm..."
-                              onChange={(e) => handleScoreChange(rev.taskId, 'score', e.target.value)}
-                              className="w-full p-2 border-2 border-black text-sm bg-[#fffdf5] font-semibold text-black focus-visible:outline-2"
-                            />
-                          </div>
-
-                          <div className="sm:col-span-2">
-                            <label
-                              htmlFor={`writing_notes_${rev.taskId}`}
-                              className="block text-xs font-bold mb-1 text-black"
-                            >
-                              Nhận xét chi tiết (AI / Ghi chú):
-                            </label>
-                            <textarea
-                              id={`writing_notes_${rev.taskId}`}
-                              rows={6}
-                              value={currentNotes}
-                              placeholder="Ghi chú nhận xét của bạn..."
-                              onChange={(e) => handleScoreChange(rev.taskId, 'notes', e.target.value)}
-                              className="w-full p-2 border-2 border-black text-sm bg-[#fffdf5] font-semibold text-black focus-visible:outline-2 whitespace-pre-line"
-                            />
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => handleSaveReview(currentAttempt.id, 'writing', rev.taskId)}
-                          className="px-4 py-2 bg-black text-[#fffdf5] font-bold text-xs border-2 border-black hover:bg-[#fffdf5] hover:text-black transition-colors cursor-pointer"
-                        >
-                          Lưu đánh giá Writing
-                        </button>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </section>
-
-            {/* SECTION 4: SPEAKING (DISABLED / COMING SOON) */}
-            <section aria-labelledby="speaking-results-heading" className="space-y-4">
-              <h3 id="speaking-results-heading" className="text-lg font-black border-b-2 border-black pb-1 text-black flex items-center justify-between">
-                <span>4. Bài thi Speaking</span>
-                <span className="text-xs font-mono font-bold px-2 py-0.5 border border-black bg-[#f4eed9]">TẠM KHÓA</span>
-              </h3>
-
-              <div className="border-2 border-black p-6 sm:p-8 bg-[#fffdf5] text-center space-y-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                <span className="inline-block text-xs font-mono font-bold px-2.5 py-1 border-2 border-black bg-[#f4eed9] text-black">
-                  COMING SOON
-                </span>
-                <h4 className="text-base sm:text-lg font-black text-black">
-                  Kỹ năng Speaking đang hoàn thiện
-                </h4>
-                <p className="text-xs sm:text-sm font-semibold text-neutral-700 max-w-md mx-auto">
-                  Module nhận diện giọng nói và chấm phát âm AI sẽ ra mắt trong bản cập nhật tiếp theo.
-                </p>
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={() => alert('Tính năng xem chi tiết và đối chiếu bài thi Speaking đang được phát triển (Coming Soon)!')}
-                    className="px-4 py-2 border-2 border-black bg-[#fcf8ed] text-black text-xs font-bold hover:bg-black hover:text-[#fffdf5] transition-colors cursor-pointer"
-                  >
-                    Chi tiết kỹ năng Speaking (Coming soon)
-                  </button>
-                </div>
               </div>
             </section>
           </div>

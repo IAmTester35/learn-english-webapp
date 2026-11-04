@@ -101,41 +101,6 @@ export const SAMPLE_TEST_TEMPLATE: TestDocument = {
           ]
         }
       ]
-    },
-    speaking: {
-      instructions: 'Hoàn thành các bài nói theo hướng dẫn. Chuẩn bị ghi chú hoặc dàn ý và luyện nói theo thời gian quy định.',
-      tasks: [
-        {
-          id: 's-t1',
-          title: 'Task 1: Personal Experience & Daily Habits',
-          prompt: 'Talk about a hobby or leisure activity that you enjoy doing in your free time.\n\nYou should state:\n- What the activity is and when you started doing it\n- How often you practice or do it\n- Why this activity is important or relaxing to you.',
-          rubric: [
-            { criterion: 'Fluency & Coherence', description: 'Trình bày trôi chảy, mạch lạc, kết nối ý tốt và ít ngập ngừng.' },
-            { criterion: 'Lexical Resource', description: 'Vốn từ vựng phù hợp chủ đề giải trí và đời sống hàng ngày.' },
-            { criterion: 'Grammatical Range', description: 'Sử dụng đúng các thì hiện tại đơn, quá khứ đơn và cấu trúc câu phức.' },
-            { criterion: 'Pronunciation', description: 'Phát âm rõ ràng, ngữ điệu tự nhiên và chuẩn âm cuối.' }
-          ],
-          sampleAnswer: 'One of my favorite hobbies is landscape photography. I first started taking photos about three years ago when I received my first camera as a graduation gift. Whenever I have free weekends, I travel to nearby countryside areas or coastal parks to capture scenic views. Photography helps me relax after intensive study sessions because it encourages me to observe nature closely and appreciate peaceful moments.'
-        }
-      ]
-    },
-    writing: {
-      instructions: 'Viết bài luận hoặc đoạn văn theo yêu cầu của từng đề bài. Chú ý số lượng từ tối thiểu.',
-      tasks: [
-        {
-          id: 'w-t1',
-          title: 'Task 1: Informal Email to a Friend',
-          prompt: 'You received an email from your English friend, David:\n\n"I am planning a 3-day holiday in your city next month! Could you suggest the best places to stay, popular attractions to visit, and local dishes I must try?"\n\nWrite an email to David responding to all his questions (100–120 words).',
-          minWords: 100,
-          rubric: [
-            { criterion: 'Task Achievement', description: 'Trả lời đầy đủ các câu hỏi (nơi ở, điểm tham quan, ẩm thực địa phương).' },
-            { criterion: 'Coherence & Cohesion', description: 'Bố cục thư thân mật chuẩn mực (lời chào, phần thân, kết thư), liên kết câu mạch lạc.' },
-            { criterion: 'Lexical Resource', description: 'Từ vựng đa dạng, tự nhiên và phù hợp ngữ cảnh giao tiếp thân thiện.' },
-            { criterion: 'Grammatical Accuracy', description: 'Đúng ngữ pháp, dấu câu và chính tả.' }
-          ],
-          sampleAnswer: 'Hi David,\n\nIt was great to hear from you! I am delighted that you are visiting my hometown next month.\n\nFor accommodation, I recommend staying near the Old Quarter where you can easily walk to famous cultural landmarks and lakes. During your 3-day trip, you should definitely explore the National Museum, take a walking tour around the historic streets, and spend an evening enjoying water puppet performances.\n\nAs for local cuisine, you cannot miss tasting our signature noodle soup and crispy spring rolls at traditional street eateries.\n\nLet me know your flight details so I can pick you up at the airport!\n\nBest regards,\nNam'
-        }
-      ]
     }
   }
 };
