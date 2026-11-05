@@ -48,6 +48,9 @@ interface GeminiKeyRow {
 const clientCache = new Map<string, GoogleGenAI>();
 // In-memory fallback cooldown tracker when DB is unreachable
 const memoryCooldownMap = new Map<string, number>();
+// Track keys currently executing requests to avoid parallel collision between workers
+const inFlightKeys = new Set<string>();
+let keyRobinOffset = 0;
 
 export function getOrCreateGenAIClient(apiKey: string): GoogleGenAI {
   let client = clientCache.get(apiKey);
@@ -396,6 +399,7 @@ export async function toggleGeminiKeyStatusInSupabase(
  */
 export async function resetAllKeyCooldownsInSupabase(): Promise<void> {
   memoryCooldownMap.clear();
+  inFlightKeys.clear();
   const supabase = getSupabaseAdminClient();
   if (!supabase) return;
 
@@ -562,7 +566,16 @@ async function getCandidateKeysForExecution(): Promise<CandidateKeyItem[]> {
       }
 
       if (healthy.length > 0) {
-        return healthy.sort(() => Math.random() - 0.5);
+        // Round-robin xoay vòng để chia đều tải giữa các luồng
+        keyRobinOffset = (keyRobinOffset + 1) % healthy.length;
+        const rotated = [
+          ...healthy.slice(keyRobinOffset),
+          ...healthy.slice(0, keyRobinOffset),
+        ];
+        // Ưu tiên key đang hoàn toàn rảnh (không bị worker khác chiếm dụng cùng lúc)
+        const idle = rotated.filter((c) => !inFlightKeys.has(c.plainKey));
+        const busy = rotated.filter((c) => inFlightKeys.has(c.plainKey));
+        return [...idle, ...busy];
       }
 
       cooling.sort((a, b) => a.expiresAt - b.expiresAt);
@@ -574,10 +587,18 @@ async function getCandidateKeysForExecution(): Promise<CandidateKeyItem[]> {
   const envKeys = loadEnvGeminiKeys();
   const now = Date.now();
   const healthy = envKeys.filter((k) => (memoryCooldownMap.get(k.apiKey) || 0) <= now);
-  const chosen = healthy.length > 0 ? healthy : envKeys;
-  return chosen
-    .sort(() => Math.random() - 0.5)
-    .map((k) => ({ label: k.label, plainKey: k.apiKey }));
+  const pool = healthy.length > 0 ? healthy : envKeys;
+  if (pool.length > 0) {
+    keyRobinOffset = (keyRobinOffset + 1) % pool.length;
+    const rotated = [
+      ...pool.slice(keyRobinOffset),
+      ...pool.slice(0, keyRobinOffset),
+    ];
+    const idle = rotated.filter((k) => !inFlightKeys.has(k.apiKey));
+    const busy = rotated.filter((c) => inFlightKeys.has(c.apiKey));
+    return [...idle, ...busy].map((k) => ({ label: k.label, plainKey: k.apiKey }));
+  }
+  return [];
 }
 
 export interface KeyRotationOptions {
@@ -617,6 +638,7 @@ export async function executeWithGeminiKeyRotation<T>(
 
     const client = getOrCreateGenAIClient(candidate.plainKey);
     const startMs = Date.now();
+    inFlightKeys.add(candidate.plainKey);
 
     try {
       const result = await operation(client, candidate.label);
@@ -712,6 +734,8 @@ export async function executeWithGeminiKeyRotation<T>(
           .eq('id', candidate.id);
       }
       continue;
+    } finally {
+      inFlightKeys.delete(candidate.plainKey);
     }
   }
 

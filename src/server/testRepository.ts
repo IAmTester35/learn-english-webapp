@@ -565,6 +565,33 @@ export async function updateTestListeningPartAudioUrl(
 }
 
 /**
+ * Cập nhật nội dung JSONB `content` và metadata của đề thi.
+ * Được dùng sau khi xử lý song song nhiều phần nghe để lưu đồng bộ một lần,
+ * ngăn chặn hoàn toàn race condition ghi đè JSON khi nhiều luồng cùng cập nhật audioUrl.
+ */
+export async function updateTestDocumentContent(
+  testId: string,
+  content: TestDocument
+): Promise<void> {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  const meta = extractTestDocumentMetadata(content);
+  const nowIso = new Date().toISOString();
+
+  await supabase
+    .from('tests')
+    .update({
+      content,
+      metadata: meta.metadataJson,
+      updated_at: nowIso,
+    })
+    .eq('id', testId);
+
+  revalidateTestCatalogCache(testId);
+}
+
+/**
  * Lưu hoặc cập nhật bản ghi metadata của file audio vào bảng `public.test_audio`.
  */
 export async function upsertTestAudioMetadata(
@@ -663,11 +690,12 @@ export interface TestAudioSummaryItem {
   transcriptHash: string;
   fileSizeBytes: number;
   durationSeconds: number | null;
+  publicUrl: string | null;
 }
 
 /**
  * Lấy tóm tắt metadata audio chỉ gồm các trường phục vụ kiểm tra/so khớp transcript hash cho TTS.
- * Chỉ select đúng 4 trường cần thiết (part_id, transcript_hash, file_size_bytes, duration_seconds),
+ * Chỉ select đúng 5 trường cần thiết (part_id, transcript_hash, file_size_bytes, duration_seconds, public_url),
  * loại bỏ hoàn toàn việc truyền tải 25 trường metadata chi tiết và JSON speakers nặng.
  */
 export async function getTestAudioSummaryMap(
@@ -678,7 +706,7 @@ export async function getTestAudioSummaryMap(
 
   const { data, error } = await supabase
     .from('test_audio')
-    .select('part_id, transcript_hash, file_size_bytes, duration_seconds')
+    .select('part_id, transcript_hash, file_size_bytes, duration_seconds, public_url')
     .eq('test_id', testId);
 
   if (error || !data) return new Map();
@@ -692,6 +720,7 @@ export async function getTestAudioSummaryMap(
         fileSizeBytes: Number(row.file_size_bytes || 0),
         durationSeconds:
           row.duration_seconds !== null ? Number(row.duration_seconds) : null,
+        publicUrl: row.public_url || null,
       },
     ])
   );

@@ -11,7 +11,7 @@ import { SAMPLE_TEST_TEMPLATE } from '@/services/testTemplate';
 import { verifyAdminSession } from '@/server/auth';
 import { generateAudioForTest } from '@/server/ttsService';
 
-export const maxDuration = 90;
+export const maxDuration = 300;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

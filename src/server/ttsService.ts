@@ -29,7 +29,9 @@ import {
 import {
   getTestAudioSummaryMap,
   getTestById,
+  updateTestDocumentContent,
   updateTestListeningPartAudioUrl,
+  upsertTestAudioMetadata,
 } from './testRepository';
 import { getSupabaseAdminClient } from '@/lib/supabase/admin';
 import { AUDIO_STORAGE_BUCKET } from '@/lib/supabase/config';
@@ -276,16 +278,22 @@ export async function generateAudioBytesWithKeyRotation(
   );
 }
 
+let cachedFfmpegAvailable: boolean | null = null;
+
 /**
- * Checks if ffmpeg is available on the host machine.
+ * Checks if ffmpeg is available on the host machine (cached in-memory).
  */
 export function isFfmpegAvailable(): boolean {
+  if (cachedFfmpegAvailable !== null) {
+    return cachedFfmpegAvailable;
+  }
   try {
     const res = spawnSync('ffmpeg', ['-version'], { stdio: 'ignore' });
-    return res.status === 0;
+    cachedFfmpegAvailable = res.status === 0;
   } catch {
-    return false;
+    cachedFfmpegAvailable = false;
   }
+  return cachedFfmpegAvailable;
 }
 
 /**
@@ -658,75 +666,120 @@ export async function generateAudioForTest(
     errors: [] as string[],
   };
 
-  for (let idx = 0; idx < partsWithTranscript.length; idx++) {
-    // Check if safe stop was requested before allocating keys or processing this part
-    if (await isTtsStopRequestedAsync(cleanTestId)) {
-      console.log(`[TTS Engine] 🛑 Đã nhận tín hiệu dừng an toàn cho "${cleanTestId}". Dừng xử lý các phần tiếp theo.`);
-      for (let r = idx; r < partsWithTranscript.length; r++) {
-        const remainingPart = partsWithTranscript[r];
-        stats.skipped++;
-        const j = ttsJobStore.get(cleanTestId);
-        if (j) {
-          const target = j.parts.find((p) => p.id === remainingPart.id);
-          if (target && target.status === 'pending') {
-            target.status = 'skipped';
-            target.error = 'Đã dừng an toàn theo yêu cầu.';
-          }
-        }
-      }
-      break;
-    }
+  if (partsWithTranscript.length === 0) {
+    return stats;
+  }
 
-    const part = partsWithTranscript[idx];
+  // Khởi tạo Worker Pool Producer-Consumer song song
+  // Concurrency tối đa 4 luồng song song (phù hợp với pool 7 Gemini keys trên server)
+  const CONCURRENCY = Math.min(partsWithTranscript.length, 4);
+  const queue = partsWithTranscript.map((part, queueIndex) => ({
+    part,
+    queueIndex,
+  }));
+  let hasNewGeneratedAudio = false;
+
+  // Chuỗi lưu tài liệu an toàn tuần tự (in-memory Promise chain),
+  // đảm bảo vừa lưu tức thời ngay khi xong mỗi part (chống mất link khi timeout giữa chừng),
+  // vừa không xảy ra race condition ghi đè JSON giữa các workers.
+  let saveDocChain = Promise.resolve();
+  const persistDocSnapshot = () => {
+    saveDocChain = saveDocChain.then(async () => {
+      try {
+        await updateTestDocumentContent(cleanTestId, doc);
+      } catch (saveErr) {
+        console.warn(`[TTS Engine] Lỗi lưu cập nhật tiến trình đề thi "${cleanTestId}":`, saveErr);
+      }
+    });
+  };
+
+  async function processPartTask(
+    item: { part: ListeningPart; queueIndex: number },
+    workerId: number
+  ): Promise<void> {
+    const { part, queueIndex } = item;
     const partIndexInDoc = allParts.findIndex((p) => p.id === part.id);
     const currentHash = computeListeningTranscriptHash(part);
     const existingMeta = existingAudioMap.get(part.id);
 
+    // Kiểm tra tín hiệu dừng an toàn
+    if (await isTtsStopRequestedAsync(cleanTestId)) {
+      stats.skipped++;
+      const currentJob = ttsJobStore.get(cleanTestId);
+      if (currentJob) {
+        currentJob.completed++;
+        currentJob.percent = Math.round((currentJob.completed / currentJob.total) * 100);
+        const targetPart = currentJob.parts.find((p) => p.id === part.id);
+        if (targetPart && targetPart.status === 'pending') {
+          targetPart.status = 'skipped';
+          targetPart.error = 'Đã dừng an toàn theo yêu cầu.';
+        }
+        await syncJobToSupabase(currentJob);
+      }
+      return;
+    }
+
     const currentJob = ttsJobStore.get(cleanTestId);
     if (currentJob) {
-      currentJob.currentPartIndex = idx + 1;
-      currentJob.currentPartId = part.id;
-      currentJob.currentPartTitle = part.title || part.id;
-      currentJob.currentMessage = `Đang kiểm tra ${part.id} - ${part.title || ''}...`;
       const targetPart = currentJob.parts.find((p) => p.id === part.id);
       if (targetPart) {
         targetPart.status = 'processing';
       }
+      currentJob.currentPartId = part.id;
+      currentJob.currentPartTitle = part.title || part.id;
+      currentJob.currentMessage = `Worker ${workerId}: Đang xử lý ${part.id} - ${part.title || ''}...`;
       currentJob.updatedAt = new Date().toISOString();
       await syncJobToSupabase(currentJob);
     }
 
-    const hasValidSupabaseAudio =
+    const hasValidAudioInDoc =
       !options?.force &&
       typeof part.audioUrl === 'string' &&
       part.audioUrl.startsWith('http') &&
       (!existingMeta || existingMeta.transcriptHash === currentHash);
 
-    if (hasValidSupabaseAudio) {
+    // Tự phục hồi: Nếu trong DB public.test_audio đã có file hoàn chỉnh và hash trùng khớp
+    // (phòng trường hợp lần trước bị timeout ở part khác nên doc chưa lưu, không cần sinh lại)
+    const hasValidExistingAudioInDb =
+      !options?.force &&
+      Boolean(
+        existingMeta &&
+        typeof existingMeta.publicUrl === 'string' &&
+        existingMeta.publicUrl.startsWith('http') &&
+        existingMeta.transcriptHash === currentHash
+      );
+
+    if (hasValidAudioInDoc || hasValidExistingAudioInDb) {
+      if (!part.audioUrl && existingMeta?.publicUrl) {
+        part.audioUrl = existingMeta.publicUrl;
+        hasNewGeneratedAudio = true;
+        persistDocSnapshot();
+      }
+
       stats.skipped++;
-      if (currentJob) {
-        currentJob.completed++;
-        currentJob.percent = Math.round(
-          (currentJob.completed / currentJob.total) * 100
-        );
-        const targetPart = currentJob.parts.find((p) => p.id === part.id);
+      const cJob = ttsJobStore.get(cleanTestId);
+      if (cJob) {
+        cJob.completed++;
+        cJob.percent = Math.round((cJob.completed / cJob.total) * 100);
+        const targetPart = cJob.parts.find((p) => p.id === part.id);
         if (targetPart) {
           targetPart.status = 'skipped';
-          targetPart.webUrl = part.audioUrl;
+          targetPart.webUrl = part.audioUrl || existingMeta?.publicUrl || undefined;
           targetPart.byteLength = existingMeta?.fileSizeBytes;
           targetPart.durationSeconds = existingMeta?.durationSeconds;
         }
-        currentJob.updatedAt = new Date().toISOString();
-        await syncJobToSupabase(currentJob);
+        cJob.updatedAt = new Date().toISOString();
+        await syncJobToSupabase(cJob);
       }
-      continue;
+      return;
     }
 
     try {
-      if (currentJob) {
-        currentJob.currentMessage = `Đang gọi Gemini TTS tạo giọng đọc cho ${part.id}...`;
-        currentJob.updatedAt = new Date().toISOString();
-        await syncJobToSupabase(currentJob);
+      const cJob = ttsJobStore.get(cleanTestId);
+      if (cJob) {
+        cJob.currentMessage = `Worker ${workerId}: Đang gọi Gemini TTS tạo giọng đọc cho ${part.id}...`;
+        cJob.updatedAt = new Date().toISOString();
+        await syncJobToSupabase(cJob);
       }
 
       const wavBytes = await generateAudioBytesWithKeyRotation(
@@ -735,12 +788,6 @@ export async function generateAudioForTest(
         part.speakers,
         { isStopRequested: () => isTtsStopRequested(cleanTestId) }
       );
-
-      if (currentJob) {
-        currentJob.currentMessage = `Đang mã hóa MP3 & tải lên Supabase Storage cho ${part.id}...`;
-        currentJob.updatedAt = new Date().toISOString();
-        await syncJobToSupabase(currentJob);
-      }
 
       const encoded = convertWavBytesToMp3Buffer(wavBytes);
       const uploaded = await uploadAudioBytesToSupabase({
@@ -755,7 +802,7 @@ export async function generateAudioForTest(
       const audioMeta = buildListeningAudioMetadata({
         testId: cleanTestId,
         part,
-        partIndex: partIndexInDoc >= 0 ? partIndexInDoc : idx,
+        partIndex: partIndexInDoc >= 0 ? partIndexInDoc : queueIndex,
         storageBucket: uploaded.storageBucket,
         storagePath: uploaded.storagePath,
         publicUrl: uploaded.publicUrl,
@@ -766,47 +813,80 @@ export async function generateAudioForTest(
         ttsModel: getListeningTtsModel(),
       });
 
-      await updateTestListeningPartAudioUrl(
-        cleanTestId,
-        part.id,
-        uploaded.publicUrl,
-        audioMeta
-      );
+      // 1. Lưu ngay bản ghi chi tiết vào public.test_audio (DB Trigger trg_sync_test_audio_ready_count tự tăng audio_ready_count)
+      await upsertTestAudioMetadata(audioMeta);
+
+      // 2. Gán link audio vào bản document in-memory (không ghi đè race condition qua HTTP)
+      part.audioUrl = uploaded.publicUrl;
+      hasNewGeneratedAudio = true;
+
+      // 3. Lưu tiến trình JSONB ngay lập tức (tuần tự qua promise chain, không race condition)
+      persistDocSnapshot();
 
       stats.generated++;
-      if (currentJob) {
-        currentJob.completed++;
-        currentJob.percent = Math.round(
-          (currentJob.completed / currentJob.total) * 100
-        );
-        const targetPart = currentJob.parts.find((p) => p.id === part.id);
+      const successJob = ttsJobStore.get(cleanTestId);
+      if (successJob) {
+        successJob.completed++;
+        successJob.percent = Math.round((successJob.completed / successJob.total) * 100);
+        const targetPart = successJob.parts.find((p) => p.id === part.id);
         if (targetPart) {
           targetPart.status = 'completed';
           targetPart.webUrl = uploaded.publicUrl;
           targetPart.byteLength = uploaded.byteLength;
           targetPart.durationSeconds = audioMeta.durationSeconds;
         }
-        currentJob.updatedAt = new Date().toISOString();
-        await syncJobToSupabase(currentJob);
+        successJob.currentMessage = `Worker ${workerId}: Đã tạo xong ${part.id}.`;
+        successJob.updatedAt = new Date().toISOString();
+        await syncJobToSupabase(successJob);
       }
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : String(err);
-      console.error(`[TTS Engine] ❌ Lỗi tạo audio cho part "${part.id}":`, errMsg);
+      console.error(`[TTS Engine] ❌ Worker ${workerId} lỗi part "${part.id}":`, errMsg);
       stats.errors.push(`Phần ${part.id}: ${errMsg}`);
-      if (currentJob) {
-        currentJob.completed++;
-        currentJob.percent = Math.round(
-          (currentJob.completed / currentJob.total) * 100
-        );
-        currentJob.errors.push(`Phần ${part.id}: ${errMsg}`);
-        const targetPart = currentJob.parts.find((p) => p.id === part.id);
+      const errJob = ttsJobStore.get(cleanTestId);
+      if (errJob) {
+        errJob.completed++;
+        errJob.percent = Math.round((errJob.completed / errJob.total) * 100);
+        errJob.errors.push(`Phần ${part.id}: ${errMsg}`);
+        const targetPart = errJob.parts.find((p) => p.id === part.id);
         if (targetPart) {
           targetPart.status = 'failed';
           targetPart.error = errMsg;
         }
-        currentJob.updatedAt = new Date().toISOString();
-        await syncJobToSupabase(currentJob);
+        errJob.updatedAt = new Date().toISOString();
+        await syncJobToSupabase(errJob);
       }
+    }
+  }
+
+  async function runWorker(workerId: number): Promise<void> {
+    while (queue.length > 0) {
+      if (isTtsStopRequested(cleanTestId)) {
+        break;
+      }
+      const task = queue.shift();
+      if (!task) break;
+      await processPartTask(task, workerId);
+    }
+  }
+
+  console.log(
+    `[TTS Engine] ⚡ Khởi chạy Worker Pool song song: ${CONCURRENCY} workers cho ${partsWithTranscript.length} phần nghe của "${cleanTestId}".`
+  );
+
+  const workerPromises = Array.from({ length: CONCURRENCY }, (_, i) => runWorker(i + 1));
+  await Promise.all(workerPromises);
+
+  // Chờ chuỗi lưu snapshot cuối cùng hoàn tất
+  await saveDocChain;
+
+  // Lưu đồng bộ toàn bộ nội dung JSONB của đề thi một lần duy nhất, loại bỏ hoàn toàn race condition
+  if (hasNewGeneratedAudio) {
+    try {
+      await updateTestDocumentContent(cleanTestId, doc);
+      console.log(`[TTS Engine] 💾 Đã lưu đồng bộ nội dung đề thi "${cleanTestId}" vào public.tests.`);
+    } catch (saveErr) {
+      console.error(`[TTS Engine] Lỗi lưu content đề thi "${cleanTestId}":`, saveErr);
     }
   }
 
