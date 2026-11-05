@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { getTestCatalog, saveTestDocument } from '@/server/testRepository';
+import {
+  deleteTestById,
+  getTestById,
+  getTestCatalog,
+  saveTestDocument,
+} from '@/server/testRepository';
 import { validateTestDocument } from '@/domain/validator';
 import { SAMPLE_TEST_TEMPLATE } from '@/services/testTemplate';
 import { verifyAdminSession } from '@/server/auth';
@@ -11,6 +16,7 @@ export const maxDuration = 30;
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const isTemplateRequest = searchParams.get('template') === 'true';
+  const singleTestId = searchParams.get('id');
 
   if (isTemplateRequest) {
     return NextResponse.json(SAMPLE_TEST_TEMPLATE, {
@@ -22,6 +28,18 @@ export async function GET(request: NextRequest) {
 
   try {
     const isAdmin = await verifyAdminSession();
+
+    if (singleTestId) {
+      const doc = await getTestById(singleTestId.trim(), { allowHidden: isAdmin });
+      if (!doc) {
+        return NextResponse.json(
+          { error: `Không tìm thấy đề thi "${singleTestId}".` },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json({ test: doc });
+    }
+
     const wantsAdmin = searchParams.get('admin') === 'true';
     const includeHidden = isAdmin || (wantsAdmin && isAdmin);
 
@@ -69,8 +87,8 @@ export async function POST(request: NextRequest) {
 
   const payload = body as Record<string, unknown>;
   const rawTest = ('test' in payload ? payload.test : payload) as unknown;
+  const overwrite = Boolean(payload.overwrite);
 
-  // Validate on the server side (Verification gate / Never trust client)
   const validation = validateTestDocument(rawTest);
   if (!validation.valid || !validation.data) {
     return NextResponse.json(
@@ -83,9 +101,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await saveTestDocument(validation.data);
+    const result = await saveTestDocument(validation.data, { overwrite });
 
-    // Invalidate cached catalog and pages
     try {
       revalidatePath('/', 'layout');
       revalidatePath('/test');
@@ -95,9 +112,11 @@ export async function POST(request: NextRequest) {
       // Revalidation might be skipped in non-cache contexts
     }
 
-    // Auto-run Pipeline: Tự động chạy TTS nền nếu đề thi có phần nghe
+    // Auto-run Pipeline: Tự động chạy TTS nền trên Supabase nếu đề thi có phần nghe
     try {
-      if (validation.data.sections?.listening?.parts?.some((p) => p.transcript?.trim())) {
+      if (
+        validation.data.sections?.listening?.parts?.some((p) => p.transcript?.trim())
+      ) {
         triggerBackgroundTts(result.id);
       }
     } catch (ttsErr) {
@@ -111,7 +130,8 @@ export async function POST(request: NextRequest) {
       message: result.message,
     });
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Lỗi hệ thống khi lưu đề thi.';
+    const errorMessage =
+      err instanceof Error ? err.message : 'Lỗi hệ thống khi lưu đề thi.';
     const isConflict = errorMessage.includes('đã tồn tại');
     return NextResponse.json(
       {
@@ -120,6 +140,43 @@ export async function POST(request: NextRequest) {
         existingId: validation.data.id,
       },
       { status: isConflict ? 409 : 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const isAdmin = await verifyAdminSession();
+  if (!isAdmin) {
+    return NextResponse.json(
+      { error: 'Yêu cầu quyền quản trị viên để xóa đề thi.' },
+      { status: 401 }
+    );
+  }
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  if (!id || !id.trim()) {
+    return NextResponse.json(
+      { error: 'Thiếu mã ID đề thi cần xóa.' },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const result = await deleteTestById(id.trim());
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/test');
+      revalidatePath(`/test/${result.id}`);
+      revalidatePath('/admin');
+    } catch {
+      // ignore revalidate error
+    }
+    return NextResponse.json(result);
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Không thể xóa đề thi.' },
+      { status: 500 }
     );
   }
 }

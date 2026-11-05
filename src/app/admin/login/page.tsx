@@ -2,21 +2,22 @@
 
 import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Lock, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 
 function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/admin';
 
+  const [email, setEmail] = useState('admin@ltestlab.local');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password) {
-      setError('Vui lòng nhập mật khẩu quản trị viên.');
+    if (!email.trim() || !password) {
+      setError('Vui lòng nhập đầy đủ Email và Mật khẩu quản trị.');
       return;
     }
 
@@ -27,7 +28,7 @@ function AdminLoginForm() {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
       const data = await res.json();
@@ -39,7 +40,7 @@ function AdminLoginForm() {
       router.push(redirectUrl);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi xác thực.');
+      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi xác thực với Supabase Auth.');
     } finally {
       setIsLoading(false);
     }
@@ -47,13 +48,16 @@ function AdminLoginForm() {
 
   return (
     <div className="w-full max-w-md border-2 border-black bg-[#fffdf5] shadow-[6px_6px_0px_0px_#000] p-6 sm:p-8">
-      <div className="flex items-center gap-2 mb-2 text-black">
+      <div className="flex items-center gap-2 mb-1 text-black">
         <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
         <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight">Khu Vực Quản Trị</h1>
       </div>
+      <p className="text-xs text-neutral-600 mb-5 font-medium">
+        Xác thực qua hệ thống Supabase Auth.
+      </p>
 
       {error && (
-        <div className="mb-6 p-3 bg-red-100 border-2 border-red-600 text-red-900 text-sm flex items-start gap-2 font-medium">
+        <div className="mb-5 p-3 bg-red-100 border-2 border-red-600 text-red-900 text-xs sm:text-sm flex items-start gap-2 font-medium">
           <AlertCircle className="w-5 h-5 shrink-0 text-red-700" />
           <span>{error}</span>
         </div>
@@ -61,8 +65,33 @@ function AdminLoginForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="admin-password" className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-black">
-            Mật khẩu quản trị (Admin Password)
+          <label
+            htmlFor="admin-email"
+            className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-black"
+          >
+            Email Quản trị (Supabase Auth)
+          </label>
+          <div className="relative">
+            <input
+              id="admin-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@ltestlab.local"
+              className="w-full border-2 border-black bg-white px-3.5 py-2.5 pr-9 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-black"
+              disabled={isLoading}
+              required
+            />
+            <Mail className="w-4 h-4 text-neutral-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="admin-password"
+            className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-black"
+          >
+            Mật khẩu quản trị
           </label>
           <div className="relative">
             <input
@@ -71,9 +100,10 @@ function AdminLoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Nhập mật khẩu quản trị..."
-              className="w-full border-2 border-black bg-white px-3.5 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full border-2 border-black bg-white px-3.5 py-2.5 pr-9 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-black"
               disabled={isLoading}
               autoFocus
+              required
             />
             <Lock className="w-4 h-4 text-neutral-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>

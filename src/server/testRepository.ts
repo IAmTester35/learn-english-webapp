@@ -1,8 +1,18 @@
-import 'server-only';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { TestCatalog, TestCatalogItem, TestDocument } from '../types/test';
+import type {
+  TestAudioAssetMetadata,
+  TestCatalog,
+  TestCatalogItem,
+  TestDocument,
+} from '../types/test';
 import { validateTestDocument } from '../domain/validator';
+import {
+  computeListeningTranscriptHash,
+  extractTestDocumentMetadata,
+} from '../domain/testMetadata';
+import { getSupabaseAdminClient } from '@/lib/supabase/admin';
+import { AUDIO_STORAGE_BUCKET } from '@/lib/supabase/config';
 
 const TESTS_DIR = path.join(process.cwd(), 'public', 'tests');
 
@@ -13,87 +23,156 @@ const LEGACY_ID_ALIASES: Record<string, string> = {
   'test-04': 'b1-intermediate-english-test-01',
 };
 
+interface SupabaseTestRow {
+  id: string;
+  schema_version: string;
+  title: string;
+  description: string;
+  hidden: boolean;
+  language: 'en' | 'zh' | 'other';
+  exam_system: 'CEFR' | 'HSK' | 'OTHER';
+  level: string;
+  reading_passage_count: number;
+  reading_question_count: number;
+  listening_part_count: number;
+  listening_question_count: number;
+  speaking_task_count: number;
+  writing_task_count: number;
+  total_questions: number;
+  audio_ready_count: number;
+  metadata: Record<string, unknown>;
+  content: TestDocument;
+  created_at: string;
+  updated_at: string;
+}
+
 /**
- * Lấy danh mục bài thi từ public/tests/index.json.
- * Mặc định lọc bỏ các bài bị ẩn trừ khi options.includeHidden = true.
+ * Fallback helper to read local static tests only when Supabase is unreachable.
  */
-export async function getTestCatalog(options?: { includeHidden?: boolean }): Promise<TestCatalog> {
+async function getLocalTestCatalogFallback(options?: {
+  includeHidden?: boolean;
+}): Promise<TestCatalog> {
   const indexPath = path.join(TESTS_DIR, 'index.json');
   try {
     const raw = await fs.readFile(indexPath, 'utf-8');
     const parsed = JSON.parse(raw);
     if (!parsed || !Array.isArray(parsed.tests)) {
-      throw new Error('Định dạng public/tests/index.json không hợp lệ: thiếu mảng "tests".');
+      return { tests: [] };
     }
-
     const allTests = parsed.tests as TestCatalogItem[];
     const tests = options?.includeHidden
       ? allTests
       : allTests.filter((item) => item.hidden !== true);
-
     return { tests };
-  } catch (err) {
-    console.error('Lỗi khi đọc danh mục bài thi:', err);
-    throw new Error('Không thể nạp danh mục bài thi từ server.');
+  } catch {
+    return { tests: [] };
   }
 }
 
 /**
- * Lấy nội dung chi tiết bài thi theo ID.
+ * Lấy danh mục bài thi kèm metadata đầy đủ từ bảng `public.tests` trên Supabase.
+ * Mặc định lọc bỏ các bài bị ẩn trừ khi options.includeHidden = true.
+ */
+export async function getTestCatalog(options?: {
+  includeHidden?: boolean;
+}): Promise<TestCatalog> {
+  const supabase = getSupabaseAdminClient();
+  if (supabase) {
+    let query = supabase
+      .from('tests')
+      .select(
+        'id, title, description, hidden, language, exam_system, level, reading_passage_count, reading_question_count, listening_part_count, listening_question_count, speaking_task_count, writing_task_count, total_questions, audio_ready_count, updated_at'
+      )
+      .order('created_at', { ascending: true });
+
+    if (!options?.includeHidden) {
+      query = query.eq('hidden', false);
+    }
+
+    const { data, error } = await query;
+    if (!error && data && data.length > 0) {
+      const tests: TestCatalogItem[] = data.map((row) => ({
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        file: `supabase://tests/${row.id}`,
+        hidden: Boolean(row.hidden),
+        language: row.language,
+        examSystem: row.exam_system,
+        level: row.level,
+        readingPassageCount: row.reading_passage_count,
+        readingQuestionCount: row.reading_question_count,
+        listeningPartCount: row.listening_part_count,
+        listeningQuestionCount: row.listening_question_count,
+        speakingTaskCount: row.speaking_task_count,
+        writingTaskCount: row.writing_task_count,
+        totalQuestions: row.total_questions,
+        audioReadyCount: row.audio_ready_count,
+        updatedAt: row.updated_at,
+      }));
+      return { tests };
+    }
+  }
+
+  return getLocalTestCatalogFallback(options);
+}
+
+/**
+ * Lấy nội dung chi tiết bài thi theo ID từ Supabase `public.tests`.
  * Nếu bài bị ẩn mà không có options.allowHidden = true, trả về null để bảo mật.
  */
 export async function getTestById(
   id: string,
   options?: { allowHidden?: boolean }
 ): Promise<TestDocument | null> {
-  // Validate id: only alphanumeric, dashes and underscores, no slashes or dots
   if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(id)) {
     return null;
   }
 
   const resolvedId = LEGACY_ID_ALIASES[id] || id;
-  // Đọc danh mục đầy đủ (gồm bài ẩn) để kiểm tra chính xác trạng thái ẩn/hiện
-  const catalog = await getTestCatalog({ includeHidden: true });
+  const supabase = getSupabaseAdminClient();
 
-  // 1. Match directly against catalog item ID (e.g., "a2-key-english-test-01")
-  let catalogItem = catalog.tests.find((item) => item.id === resolvedId);
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('tests')
+      .select('id, hidden, content')
+      .eq('id', resolvedId)
+      .maybeSingle();
 
-  // 2. Fallback: match by catalog item's file basename without extension
-  if (!catalogItem) {
-    catalogItem = catalog.tests.find((item) => {
-      const base = path.basename(item.file, path.extname(item.file));
-      return base === resolvedId || base === id;
-    });
-  }
-
-  // 3. Fallback: match by internal document id within the JSON files
-  if (!catalogItem) {
-    for (const item of catalog.tests) {
-      try {
-        const itemFilename = path.basename(item.file);
-        const itemPath = path.join(TESTS_DIR, itemFilename);
-        const itemRaw = await fs.readFile(itemPath, 'utf-8');
-        const itemParsed = JSON.parse(itemRaw);
-        if (itemParsed && (itemParsed.id === resolvedId || itemParsed.id === id)) {
-          catalogItem = item;
-          break;
-        }
-      } catch {
-        // Continue searching
+    if (!error && data) {
+      const row = data as Pick<SupabaseTestRow, 'id' | 'hidden' | 'content'>;
+      if (row.hidden && !options?.allowHidden) {
+        return null;
       }
+
+      const validation = validateTestDocument(row.content);
+      if (!validation.valid || !validation.data) {
+        console.error(`Lỗi quy chuẩn JSON bài thi ${id} trong Supabase:`, validation.errors);
+        throw new Error(`Đề thi "${id}" không đạt chuẩn dữ liệu.`);
+      }
+
+      validation.data.id = row.id;
+      return validation.data;
     }
   }
+
+  // Fallback to local filesystem only if Supabase does not have the test
+  const catalog = await getLocalTestCatalogFallback({ includeHidden: true });
+  const catalogItem = catalog.tests.find(
+    (item) =>
+      item.id === resolvedId ||
+      item.id === id ||
+      path.basename(item.file, path.extname(item.file)) === resolvedId
+  );
 
   if (!catalogItem) {
     return null;
   }
 
-  // Nếu bài đang ở trạng thái ẩn và không được phép truy cập bài ẩn, trả về null
   if (catalogItem.hidden === true && !options?.allowHidden) {
     return null;
   }
 
-  // Ensure filePath resolves inside TESTS_DIR
   const filename = path.basename(catalogItem.file);
   const targetPath = path.join(TESTS_DIR, filename);
 
@@ -102,24 +181,17 @@ export async function getTestById(
     const parsed = JSON.parse(raw);
     const validation = validateTestDocument(parsed);
     if (!validation.valid || !validation.data) {
-      console.error(`Lỗi quy chuẩn JSON bài thi ${id}:`, validation.errors);
       throw new Error(`Đề thi "${id}" không đạt chuẩn dữ liệu.`);
     }
-
-    // SSOT: Normalize document ID to match catalogItem.id so all URLs,
-    // progress storage keys, and router navigation remain consistent.
     validation.data.id = catalogItem.id;
     return validation.data;
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
-      return null;
-    }
-    throw err;
+  } catch {
+    return null;
   }
 }
 
 /**
- * Đảo ngược trạng thái hiển thị (hidden) của đề thi trong public/tests/index.json
+ * Đảo ngược trạng thái hiển thị (hidden) của đề thi trong Supabase `public.tests`.
  */
 export async function toggleTestVisibility(
   id: string
@@ -128,96 +200,310 @@ export async function toggleTestVisibility(
     throw new Error(`Mã bài thi "${id}" không hợp lệ.`);
   }
 
-  const indexPath = path.join(TESTS_DIR, 'index.json');
-  let raw: string;
-  try {
-    raw = await fs.readFile(indexPath, 'utf-8');
-  } catch {
-    throw new Error('Không thể đọc file danh mục bài thi public/tests/index.json.');
-  }
-
-  let catalog: TestCatalog;
-  try {
-    catalog = JSON.parse(raw) as TestCatalog;
-  } catch {
-    throw new Error('Dữ liệu public/tests/index.json không đúng định dạng JSON.');
-  }
-
-  if (!catalog || !Array.isArray(catalog.tests)) {
-    throw new Error('Định dạng public/tests/index.json không hợp lệ: thiếu danh mục "tests".');
-  }
-
   const resolvedId = LEGACY_ID_ALIASES[id] || id;
-  const index = catalog.tests.findIndex(
-    (item) =>
-      item.id === resolvedId ||
-      item.id === id ||
-      path.basename(item.file, path.extname(item.file)) === resolvedId
-  );
-
-  if (index === -1) {
-    throw new Error(`Không tìm thấy bài thi với mã ID "${id}".`);
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) {
+    throw new Error('Chưa cấu hình kết nối Supabase Admin.');
   }
 
-  const targetItem = catalog.tests[index];
-  const newHidden = !targetItem.hidden;
-  targetItem.hidden = newHidden;
+  const { data: current, error: fetchErr } = await supabase
+    .from('tests')
+    .select('id, hidden')
+    .eq('id', resolvedId)
+    .maybeSingle();
 
-  await fs.writeFile(indexPath, JSON.stringify(catalog, null, 2) + '\n', 'utf-8');
+  if (fetchErr || !current) {
+    throw new Error(`Không tìm thấy bài thi với mã ID "${id}" trên Supabase.`);
+  }
+
+  const newHidden = !current.hidden;
+  const { error: updateErr } = await supabase
+    .from('tests')
+    .update({
+      hidden: newHidden,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', current.id);
+
+  if (updateErr) {
+    throw new Error(`Lỗi khi cập nhật trạng thái ẩn/hiện: ${updateErr.message}`);
+  }
 
   return {
     success: true,
-    id: targetItem.id,
+    id: current.id,
     hidden: newHidden,
   };
 }
 
+/**
+ * Lưu đề thi mới (hoặc cập nhật nếu options.overwrite = true) kèm metadata đầy đủ vào Supabase `public.tests`.
+ */
 export async function saveTestDocument(
   doc: unknown,
-  _options?: { overwrite?: boolean }
+  options?: { overwrite?: boolean; hidden?: boolean }
 ): Promise<{ success: boolean; isNew: boolean; message: string; id: string }> {
-  // 1. Validate against Domain Validator (SSOT)
   const validation = validateTestDocument(doc);
   if (!validation.valid || !validation.data) {
-    throw new Error(`Dữ liệu đề thi không đạt chuẩn quy định:\n- ${validation.errors.join('\n- ')}`);
+    throw new Error(
+      `Dữ liệu đề thi không đạt chuẩn quy định:\n- ${validation.errors.join('\n- ')}`
+    );
   }
 
   const validDoc = validation.data;
-
-  // 2. Read existing catalog (bao gồm cả bài ẩn để tránh trùng ID)
-  const catalog = await getTestCatalog({ includeHidden: true });
-  const existingIdx = catalog.tests.findIndex(
-    (t) => t.id === validDoc.id || path.basename(t.file, path.extname(t.file)) === validDoc.id
-  );
-
-  if (existingIdx >= 0) {
-    throw new Error(`Đề thi với mã ID "${validDoc.id}" đã tồn tại trên hệ thống. Hệ thống không cho phép ghi đè bài thi đã có.`);
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) {
+    throw new Error('Chưa cấu hình kết nối Supabase Admin.');
   }
 
-  const filename = `${validDoc.id}.json`;
-  const filePath = path.join(TESTS_DIR, filename);
+  const { data: existing } = await supabase
+    .from('tests')
+    .select('id, hidden, content')
+    .eq('id', validDoc.id)
+    .maybeSingle();
 
-  // 3. Write individual test JSON file
-  await fs.writeFile(filePath, JSON.stringify(validDoc, null, 2), 'utf-8');
+  if (existing && !options?.overwrite) {
+    throw new Error(
+      `Đề thi với mã ID "${validDoc.id}" đã tồn tại trên hệ thống. Bật tùy chọn ghi đè hoặc đổi mã ID khác.`
+    );
+  }
 
-  // 4. Update catalog
-  const catalogEntry: TestCatalogItem = {
-    id: validDoc.id,
-    title: validDoc.title,
-    description: validDoc.description,
-    file: `/tests/${filename}`,
-  };
+  // If overwriting an existing test, preserve existing Supabase Storage audioUrl on parts whose transcript has not changed
+  if (existing?.content) {
+    const prevDoc = existing.content as TestDocument;
+    const prevParts = prevDoc.sections?.listening?.parts || [];
+    const nextParts = validDoc.sections?.listening?.parts || [];
 
-  catalog.tests.push(catalogEntry);
+    for (const nextPart of nextParts) {
+      if (!nextPart.audioUrl || nextPart.audioUrl.startsWith('/tests/audio/')) {
+        const prevPart = prevParts.find((p) => p.id === nextPart.id);
+        if (
+          prevPart?.audioUrl &&
+          prevPart.audioUrl.startsWith('http') &&
+          computeListeningTranscriptHash(prevPart) ===
+            computeListeningTranscriptHash(nextPart)
+        ) {
+          nextPart.audioUrl = prevPart.audioUrl;
+        }
+      }
+    }
+  }
 
-  // 5. Write updated index.json
-  const indexPath = path.join(TESTS_DIR, 'index.json');
-  await fs.writeFile(indexPath, JSON.stringify(catalog, null, 2) + '\n', 'utf-8');
+  const meta = extractTestDocumentMetadata(validDoc);
+  const nowIso = new Date().toISOString();
+
+  const { error } = await supabase.from('tests').upsert(
+    {
+      id: validDoc.id,
+      schema_version: validDoc.schemaVersion || '1.0.0',
+      title: validDoc.title,
+      description: validDoc.description,
+      hidden:
+        typeof options?.hidden === 'boolean'
+          ? options.hidden
+          : existing
+          ? existing.hidden
+          : false,
+      language: meta.language,
+      exam_system: meta.examSystem,
+      level: meta.level,
+      reading_passage_count: meta.readingPassageCount,
+      reading_question_count: meta.readingQuestionCount,
+      listening_part_count: meta.listeningPartCount,
+      listening_question_count: meta.listeningQuestionCount,
+      speaking_task_count: meta.speakingTaskCount,
+      writing_task_count: meta.writingTaskCount,
+      total_questions: meta.totalQuestions,
+      audio_ready_count: meta.audioReadyCount,
+      metadata: meta.metadataJson,
+      content: validDoc,
+      updated_at: nowIso,
+    },
+    { onConflict: 'id' }
+  );
+
+  if (error) {
+    throw new Error(`Lỗi khi lưu đề thi vào Supabase: ${error.message}`);
+  }
 
   return {
     success: true,
-    isNew: true,
+    isNew: !existing,
     id: validDoc.id,
-    message: `Đã thêm thành công đề thi "${validDoc.title}" (ID: ${validDoc.id}).`,
+    message: existing
+      ? `Đã cập nhật thành công đề thi "${validDoc.title}" (ID: ${validDoc.id}) trên Supabase.`
+      : `Đã lưu thành công đề thi "${validDoc.title}" (ID: ${validDoc.id}) lên Supabase.`,
   };
+}
+
+/**
+ * Xóa đề thi khỏi Supabase `public.tests` và dọn dẹp các file audio trong bucket `test-audio`.
+ */
+export async function deleteTestById(id: string): Promise<{ success: boolean; id: string }> {
+  if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(id)) {
+    throw new Error(`Mã bài thi "${id}" không hợp lệ.`);
+  }
+
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) {
+    throw new Error('Chưa cấu hình kết nối Supabase Admin.');
+  }
+
+  // Query storage paths from test_audio before deleting
+  const { data: audioRows } = await supabase
+    .from('test_audio')
+    .select('storage_path')
+    .eq('test_id', id);
+
+  if (audioRows && audioRows.length > 0) {
+    const paths = audioRows.map((r) => r.storage_path).filter(Boolean);
+    if (paths.length > 0) {
+      await supabase.storage.from(AUDIO_STORAGE_BUCKET).remove(paths);
+    }
+  }
+
+  const { error } = await supabase.from('tests').delete().eq('id', id);
+  if (error) {
+    throw new Error(`Lỗi khi xóa đề thi "${id}": ${error.message}`);
+  }
+
+  return { success: true, id };
+}
+
+/**
+ * Cập nhật đường dẫn audioUrl của một phần nghe cụ thể trong cột JSONB `content` của `public.tests`,
+ * đồng thời cập nhật metadata tổng quan và lưu bản ghi chi tiết vào `public.test_audio`.
+ */
+export async function updateTestListeningPartAudioUrl(
+  testId: string,
+  partId: string,
+  audioUrl: string,
+  audioMeta?: TestAudioAssetMetadata
+): Promise<void> {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  const { data, error } = await supabase
+    .from('tests')
+    .select('content')
+    .eq('id', testId)
+    .maybeSingle();
+
+  if (error || !data?.content) return;
+
+  const content = data.content as TestDocument;
+  const parts = content.sections?.listening?.parts;
+  if (!Array.isArray(parts)) return;
+
+  const targetPart = parts.find((p) => p.id === partId);
+  if (!targetPart) return;
+
+  targetPart.audioUrl = audioUrl;
+  const meta = extractTestDocumentMetadata(content);
+  const nowIso = new Date().toISOString();
+
+  await supabase
+    .from('tests')
+    .update({
+      content,
+      audio_ready_count: meta.audioReadyCount,
+      metadata: meta.metadataJson,
+      updated_at: nowIso,
+    })
+    .eq('id', testId);
+
+  if (audioMeta) {
+    await upsertTestAudioMetadata(audioMeta);
+  }
+}
+
+/**
+ * Lưu hoặc cập nhật bản ghi metadata của file audio vào bảng `public.test_audio`.
+ */
+export async function upsertTestAudioMetadata(
+  audioMeta: TestAudioAssetMetadata
+): Promise<void> {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  const nowIso = new Date().toISOString();
+  await supabase.from('test_audio').upsert(
+    {
+      test_id: audioMeta.testId,
+      part_id: audioMeta.partId,
+      part_index: audioMeta.partIndex,
+      part_title: audioMeta.partTitle,
+      storage_bucket: audioMeta.storageBucket,
+      storage_path: audioMeta.storagePath,
+      public_url: audioMeta.publicUrl,
+      mime_type: audioMeta.mimeType,
+      format: audioMeta.format,
+      file_size_bytes: audioMeta.fileSizeBytes,
+      duration_seconds: audioMeta.durationSeconds,
+      sample_rate: audioMeta.sampleRate,
+      bitrate_kbps: audioMeta.bitrateKbps,
+      channels: audioMeta.channels,
+      language_code: audioMeta.languageCode,
+      scenario: audioMeta.scenario || null,
+      accent: audioMeta.accent || null,
+      pacing: audioMeta.pacing || null,
+      speakers: audioMeta.speakers,
+      transcript_hash: audioMeta.transcriptHash,
+      transcript_char_count: audioMeta.transcriptCharCount,
+      turn_count: audioMeta.turnCount,
+      tts_model: audioMeta.ttsModel,
+      metadata: {
+        overallStyle: undefined,
+        updatedAt: nowIso,
+      },
+      updated_at: nowIso,
+    },
+    { onConflict: 'test_id,part_id' }
+  );
+}
+
+/**
+ * Lấy danh sách metadata audio của một đề thi từ bảng `public.test_audio`.
+ */
+export async function getTestAudioMetadataList(
+  testId: string
+): Promise<TestAudioAssetMetadata[]> {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('test_audio')
+    .select('*')
+    .eq('test_id', testId)
+    .order('part_index', { ascending: true });
+
+  if (error || !data) return [];
+
+  return data.map((row) => ({
+    id: row.id,
+    testId: row.test_id,
+    partId: row.part_id,
+    partIndex: row.part_index,
+    partTitle: row.part_title,
+    storageBucket: row.storage_bucket,
+    storagePath: row.storage_path,
+    publicUrl: row.public_url,
+    mimeType: row.mime_type,
+    format: row.format,
+    fileSizeBytes: Number(row.file_size_bytes || 0),
+    durationSeconds: row.duration_seconds !== null ? Number(row.duration_seconds) : null,
+    sampleRate: row.sample_rate,
+    bitrateKbps: row.bitrate_kbps,
+    channels: row.channels,
+    languageCode: row.language_code,
+    scenario: row.scenario || undefined,
+    accent: row.accent || undefined,
+    pacing: row.pacing || undefined,
+    speakers: Array.isArray(row.speakers) ? row.speakers : [],
+    transcriptHash: row.transcript_hash,
+    transcriptCharCount: row.transcript_char_count,
+    turnCount: row.turn_count,
+    ttsModel: row.tts_model,
+    updatedAt: row.updated_at,
+  }));
 }

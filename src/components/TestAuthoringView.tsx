@@ -129,23 +129,35 @@ export const TestAuthoringView: React.FC = () => {
   const [isCopyingDoc, setIsCopyingDoc] = useState<'cefr' | 'hsk' | null>(null);
   const [activeTtsModalTestId, setActiveTtsModalTestId] = useState<string | null>(null);
 
-  // Fetch catalog on mount to know existing test IDs
+  // Fetch catalog on mount to know existing test IDs, and load test if ?edit=<id> is provided
   useEffect(() => {
     let isMounted = true;
-    async function loadCatalog() {
+    async function loadCatalogAndEditTarget() {
       try {
-        const res = await fetch('/api/tests');
+        const res = await fetch('/api/tests?admin=true');
         if (res.ok) {
           const catalog: TestCatalog = await res.json();
           if (isMounted && catalog && Array.isArray(catalog.tests)) {
             setExistingIds(catalog.tests.map((t) => t.id));
           }
         }
+
+        const params = new URLSearchParams(window.location.search);
+        const editId = params.get('edit');
+        if (editId && editId.trim()) {
+          const editRes = await fetch(`/api/tests?id=${encodeURIComponent(editId.trim())}`);
+          if (editRes.ok) {
+            const editData = await editRes.json();
+            if (isMounted && editData?.test) {
+              setJsonText(JSON.stringify(editData.test, null, 2));
+            }
+          }
+        }
       } catch {
         // Fallback silently if offline or catalog not ready
       }
     }
-    loadCatalog();
+    loadCatalogAndEditTarget();
     return () => {
       isMounted = false;
     };
@@ -273,7 +285,7 @@ export const TestAuthoringView: React.FC = () => {
   };
 
   // Core execution of saving a verified test document
-  const executeSave = async (docToSave: TestDocument) => {
+  const executeSave = async (docToSave: TestDocument, overwrite = false) => {
     setIsSaving(true);
     setSaveError(null);
     setSaveSuccess(null);
@@ -282,7 +294,7 @@ export const TestAuthoringView: React.FC = () => {
       const res = await fetch('/api/tests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ test: docToSave }),
+        body: JSON.stringify({ test: docToSave, overwrite }),
       });
 
       const data = await res.json();
@@ -1065,16 +1077,28 @@ export const TestAuthoringView: React.FC = () => {
             </div>
 
             <p className="text-xs text-neutral-800 leading-relaxed">
-              Mã <code className="bg-amber-100 px-1 border border-black font-bold font-mono">{conflictModal.currentId}</code> đã tồn tại. Đổi sang <code className="bg-amber-200 px-1 border border-black font-bold font-mono">{conflictModal.suggestedId}</code> để lưu?
+              Mã <code className="bg-amber-100 px-1 border border-black font-bold font-mono">{conflictModal.currentId}</code> đã tồn tại trên Supabase. Bạn muốn ghi đè (cập nhật) đề thi này hay tự động tăng mã sang <code className="bg-amber-200 px-1 border border-black font-bold font-mono">{conflictModal.suggestedId}</code>?
             </p>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-200">
+            <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-neutral-200">
               <button
                 type="button"
                 onClick={() => setConflictModal(null)}
                 className="border border-black px-2.5 py-1 bg-[#fffdf5] text-black text-xs font-semibold cursor-pointer"
               >
                 Hủy
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setConflictModal(null);
+                  if (parsedDoc) {
+                    void executeSave(parsedDoc, true);
+                  }
+                }}
+                className="border border-black px-2.5 py-1 bg-[#e6f4ea] text-[#137333] text-xs font-bold cursor-pointer"
+              >
+                Ghi đè (Cập nhật)
               </button>
               <button
                 type="button"
@@ -1088,7 +1112,7 @@ export const TestAuthoringView: React.FC = () => {
                 onClick={() => handleApplyNewId(conflictModal.suggestedId, true)}
                 className="border border-black px-3 py-1 bg-black text-[#fffdf5] text-xs font-bold cursor-pointer"
               >
-                Đổi &amp; Lưu
+                Đổi &amp; Lưu mới
               </button>
             </div>
           </div>

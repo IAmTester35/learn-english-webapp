@@ -46,3 +46,5 @@ next-env.d.ts
 # audio raw archive & media binaries
 *.wav
 /archive/
+
+/supabase/

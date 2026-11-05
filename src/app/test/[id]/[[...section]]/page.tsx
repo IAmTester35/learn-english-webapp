@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getTestById, getTestCatalog } from '@/server/testRepository';
+import { verifyAdminSession } from '@/server/auth';
 import { hasGeminiApiKey } from '@/server/gemini';
 import { TestRunnerView } from '@/components/TestRunnerView';
 import type { SkillSection } from '@/types/test';
@@ -22,7 +23,14 @@ export default async function TestPage(props: {
   params: Promise<{ id: string; section?: string[] }>;
 }) {
   const { id, section } = await props.params;
-  const test = await getTestById(id);
+  let test = await getTestById(id);
+
+  if (!test) {
+    const isAdmin = await verifyAdminSession();
+    if (isAdmin) {
+      test = await getTestById(id, { allowHidden: true });
+    }
+  }
 
   if (!test) {
     notFound();

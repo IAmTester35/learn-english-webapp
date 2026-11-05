@@ -148,12 +148,74 @@ export interface TestDocument {
   };
 }
 
+export interface TestMetadataSummary {
+  language: 'en' | 'zh' | 'other';
+  examSystem: 'CEFR' | 'HSK' | 'OTHER';
+  level: string;
+  readingPassageCount: number;
+  readingQuestionCount: number;
+  listeningPartCount: number;
+  listeningQuestionCount: number;
+  speakingTaskCount: number;
+  writingTaskCount: number;
+  totalQuestions: number;
+  audioReadyCount: number;
+  audioComplete: boolean;
+  estimatedDurationMinutes: number;
+  sectionsAvailable: SkillSection[];
+}
+
+export interface TestAudioAssetMetadata {
+  id?: string;
+  testId: string;
+  partId: string;
+  partIndex: number;
+  partTitle: string;
+  storageBucket: string;
+  storagePath: string;
+  publicUrl: string;
+  mimeType: string;
+  format: 'mp3' | 'wav';
+  fileSizeBytes: number;
+  durationSeconds: number | null;
+  sampleRate: number;
+  bitrateKbps: number;
+  channels: number;
+  languageCode: string;
+  scenario?: string;
+  accent?: string;
+  pacing?: string;
+  speakers: Array<{
+    name: string;
+    gender: 'female' | 'male';
+    voiceName: string;
+    style?: string;
+  }>;
+  transcriptHash: string;
+  transcriptCharCount: number;
+  turnCount: number;
+  ttsModel: string;
+  updatedAt?: string;
+}
+
 export interface TestCatalogItem {
   id: string;
   title: string;
   description: string;
   file: string;
   hidden?: boolean;
+  language?: 'en' | 'zh' | 'other';
+  examSystem?: 'CEFR' | 'HSK' | 'OTHER';
+  level?: string;
+  readingPassageCount?: number;
+  readingQuestionCount?: number;
+  listeningPartCount?: number;
+  listeningQuestionCount?: number;
+  speakingTaskCount?: number;
+  writingTaskCount?: number;
+  totalQuestions?: number;
+  audioReadyCount?: number;
+  updatedAt?: string;
 }
 
 export interface TestCatalog {

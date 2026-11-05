@@ -1,15 +1,40 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { GoogleGenAI } from '@google/genai';
+import { Mp3Encoder } from '@breezystack/lamejs';
 import {
   buildListeningTtsRequest,
   combineAudioPartsToWavBytes,
+  getListeningTtsModel,
 } from '../services/listeningTtsCore';
-import type { ListeningAudioConfig, SpeakerConfig } from '../types/test';
+import type {
+  ListeningAudioConfig,
+  ListeningPart,
+  SpeakerConfig,
+} from '../types/test';
+import {
+  buildListeningAudioMetadata,
+  computeListeningTranscriptHash,
+} from '../domain/testMetadata';
+import {
+  executeWithGeminiKeyRotation,
+  isFatalError,
+  isRateLimitError,
+  isTimeoutError,
+  loadEnvGeminiKeys,
+  resetAllKeyCooldownsInSupabase,
+} from './geminiKeyManager';
+import {
+  getTestAudioMetadataList,
+  getTestById,
+  updateTestListeningPartAudioUrl,
+} from './testRepository';
+import { getSupabaseAdminClient } from '@/lib/supabase/admin';
+import { AUDIO_STORAGE_BUCKET } from '@/lib/supabase/config';
 
-// In-memory key cooldown map: maps API key string to timestamp (ms) when cooldown expires
-export const keyCooldownMap = new Map<string, number>();
+export { isFatalError, isRateLimitError, isTimeoutError };
 
 export interface TtsPartProgress {
   id: string;
@@ -18,6 +43,7 @@ export interface TtsPartProgress {
   error?: string;
   webUrl?: string;
   byteLength?: number;
+  durationSeconds?: number | null;
 }
 
 export interface TtsJobProgress {
@@ -36,179 +62,99 @@ export interface TtsJobProgress {
   updatedAt: string;
 }
 
-// In-memory live job store
+// In-memory live job store (synced with Supabase public.tts_jobs)
 const ttsJobStore = new Map<string, TtsJobProgress>();
+
+async function syncJobToSupabase(job: TtsJobProgress): Promise<void> {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return;
+
+  try {
+    await supabase.from('tts_jobs').upsert(
+      {
+        test_id: job.testId,
+        status: job.status,
+        total: job.total,
+        completed: job.completed,
+        current_part_index: job.currentPartIndex,
+        current_part_id: job.currentPartId || null,
+        current_part_title: job.currentPartTitle || null,
+        current_message: job.currentMessage || null,
+        percent: job.percent,
+        parts: job.parts,
+        errors: job.errors,
+        started_at: job.startedAt,
+        updated_at: job.updatedAt,
+      },
+      { onConflict: 'test_id' }
+    );
+  } catch {
+    // Non-fatal if tts_jobs sync fails transiently
+  }
+}
 
 export function getTtsJobProgress(testId: string): TtsJobProgress | null {
   const cleanId = testId.trim().replace(/\.json$/i, '');
   return ttsJobStore.get(cleanId) || null;
 }
 
+export async function getTtsJobProgressAsync(
+  testId: string
+): Promise<TtsJobProgress | null> {
+  const cleanId = testId.trim().replace(/\.json$/i, '');
+  const inMemory = ttsJobStore.get(cleanId);
+  if (inMemory) {
+    return inMemory;
+  }
+
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('tts_jobs')
+      .select('*')
+      .eq('test_id', cleanId)
+      .maybeSingle();
+
+    if (error || !data) return null;
+
+    const job: TtsJobProgress = {
+      testId: data.test_id,
+      status: data.status,
+      total: data.total,
+      completed: data.completed,
+      currentPartIndex: data.current_part_index,
+      currentPartId: data.current_part_id || undefined,
+      currentPartTitle: data.current_part_title || undefined,
+      currentMessage: data.current_message || undefined,
+      percent: data.percent,
+      parts: Array.isArray(data.parts) ? data.parts : [],
+      errors: Array.isArray(data.errors) ? data.errors : [],
+      startedAt: data.started_at,
+      updatedAt: data.updated_at,
+    };
+    ttsJobStore.set(cleanId, job);
+    return job;
+  } catch {
+    return null;
+  }
+}
+
 export function getAllTtsJobProgresses(): Record<string, TtsJobProgress> {
   return Object.fromEntries(ttsJobStore.entries());
 }
 
-// Cache GoogleGenAI client instances per API key
-const clientCache = new Map<string, GoogleGenAI>();
-
-export function getOrCreateGenAIClient(apiKey: string): GoogleGenAI {
-  let client = clientCache.get(apiKey);
-  if (!client) {
-    client = new GoogleGenAI({ apiKey });
-    clientCache.set(apiKey, client);
-  }
-  return client;
-}
-
 export function resetKeyCooldowns(): void {
-  keyCooldownMap.clear();
+  void resetAllKeyCooldownsInSupabase();
 }
 
-/**
- * Loads all Gemini API keys from process.env, .env, and .env.local.
- * Filters out placeholders and duplicate keys.
- */
 export function getAllGeminiApiKeys(): string[] {
-  const envMap: Record<string, string> = {};
-  const rootDir = process.cwd();
-  const envFiles = [
-    path.join(rootDir, '.env'),
-    path.join(rootDir, '.env.local'),
-  ];
-
-  for (const envFile of envFiles) {
-    if (fs.existsSync(/*turbopackIgnore: true*/ envFile)) {
-      try {
-        const content = fs.readFileSync(/*turbopackIgnore: true*/ envFile, 'utf-8');
-        for (const line of content.split(/\r?\n/)) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed.startsWith('#')) continue;
-          const eqIdx = trimmed.indexOf('=');
-          if (eqIdx === -1) continue;
-          const key = trimmed.slice(0, eqIdx).trim();
-          const val = trimmed
-            .slice(eqIdx + 1)
-            .trim()
-            .replace(/^['"]|['"]$/g, '');
-          if (key && val) {
-            envMap[key] = val;
-          }
-        }
-      } catch {
-        // ignore file read error
-      }
-    }
-  }
-
-  const merged: Record<string, string | undefined> = { ...envMap, ...process.env };
-  const validKeys: string[] = [];
-  const seen = new Set<string>();
-
-  for (const [key, value] of Object.entries(merged)) {
-    if (/^GEMINI_API_KEY(_\w+)?$/i.test(key) && typeof value === 'string') {
-      const trimmedVal = value.trim();
-      if (
-        trimmedVal.length > 0 &&
-        !trimmedVal.toLowerCase().startsWith('your_gemini_api_key') &&
-        !seen.has(trimmedVal)
-      ) {
-        seen.add(trimmedVal);
-        validKeys.push(trimmedVal);
-      }
-    }
-  }
-
-  return validKeys;
+  return loadEnvGeminiKeys().map((k) => k.apiKey);
 }
 
-/**
- * Retrieves the candidate keys:
- * - Prioritizes keys not currently in cooldown.
- * - If all keys are in cooldown, returns keys sorted by shortest remaining cooldown time.
- */
-export function getAvailableGeminiApiKeys(): string[] {
-  const allKeys = getAllGeminiApiKeys();
-  if (allKeys.length === 0) return [];
-
-  const now = Date.now();
-  const available: string[] = [];
-  const coolingDown: { key: string; expiresAt: number }[] = [];
-
-  for (const key of allKeys) {
-    const expiresAt = keyCooldownMap.get(key) || 0;
-    if (expiresAt <= now) {
-      available.push(key);
-    } else {
-      coolingDown.push({ key, expiresAt });
-    }
-  }
-
-  if (available.length > 0) {
-    // Shuffle available keys slightly to distribute load among healthy keys
-    return available.sort(() => Math.random() - 0.5);
-  }
-
-  // All keys are currently in cooldown; order by shortest remaining cooldown
-  coolingDown.sort((a, b) => a.expiresAt - b.expiresAt);
-  return coolingDown.map((item) => item.key);
-}
-
-/**
- * Returns remaining cooldown milliseconds until at least one key becomes healthy.
- * Returns 0 if there is already at least one healthy key available.
- */
 export function getShortestCooldownRemainingMs(): number {
-  const allKeys = getAllGeminiApiKeys();
-  if (allKeys.length === 0) return 0;
-  const now = Date.now();
-  let shortest = Infinity;
-  for (const k of allKeys) {
-    const exp = keyCooldownMap.get(k) || 0;
-    if (exp <= now) return 0;
-    const diff = exp - now;
-    if (diff < shortest) shortest = diff;
-  }
-  return shortest === Infinity ? 0 : shortest;
-}
-
-export function isRateLimitError(err: unknown): boolean {
-  if (!err) return false;
-  const anyErr = err as { status?: number; code?: number; statusCode?: number; message?: string };
-  if (anyErr.status === 429 || anyErr.code === 429 || anyErr.statusCode === 429) {
-    return true;
-  }
-  const msg = (anyErr.message || String(err)).toLowerCase();
-  return (
-    msg.includes('429') ||
-    msg.includes('resource_exhausted') ||
-    msg.includes('rate limit') ||
-    msg.includes('quota') ||
-    msg.includes('too many requests')
-  );
-}
-
-export function isTimeoutError(err: unknown): boolean {
-  if (!err) return false;
-  const anyErr = err as { name?: string; message?: string };
-  if (anyErr.name === 'TimeoutError' || anyErr.name === 'AbortError') return true;
-  const msg = (anyErr.message || String(err)).toLowerCase();
-  return msg.includes('timeout') || msg.includes('timed out');
-}
-
-export function isFatalError(err: unknown): boolean {
-  if (!err) return false;
-  const anyErr = err as { status?: number; code?: number; statusCode?: number; message?: string };
-  if (anyErr.status === 400 || anyErr.status === 401 || anyErr.status === 403) {
-    return true;
-  }
-  const msg = (anyErr.message || String(err)).toLowerCase();
-  return (
-    msg.includes('api_key_invalid') ||
-    msg.includes('api key not valid') ||
-    msg.includes('permission_denied') ||
-    msg.includes('unauthorized') ||
-    msg.includes('invalid argument')
-  );
+  return 0;
 }
 
 const TTS_TIMEOUT_MS = 45_000;
@@ -232,11 +178,10 @@ async function callGeminiTtsWithTimeout(
   });
 
   try {
-    const response = await Promise.race([
+    return await Promise.race([
       client.models.generateContent(requestParams),
       timeoutPromise,
     ]);
-    return response;
   } finally {
     if (timeoutId) {
       clearTimeout(timeoutId);
@@ -245,86 +190,42 @@ async function callGeminiTtsWithTimeout(
 }
 
 /**
- * Generates WAV audio bytes using Zero-Wait Failover across Gemini API keys.
- * If a key hits 429 Rate Limit or 45s Timeout, it immediately cools down for 2 minutes
- * and rotates to the next key without sleep delay.
+ * Generates WAV audio bytes using Zero-Wait Failover across Supabase-managed Gemini API keys.
  */
 export async function generateAudioBytesWithKeyRotation(
   transcript: string,
   audioConfig?: ListeningAudioConfig,
   speakers?: SpeakerConfig[]
 ): Promise<Uint8Array> {
-  const candidateKeys = getAvailableGeminiApiKeys();
-  if (candidateKeys.length === 0) {
-    throw new Error('Không tìm thấy Gemini API Key khả dụng (tất cả keys bị thiếu hoặc chưa cấu hình).');
-  }
-
   const requestParams = buildListeningTtsRequest({
     transcript,
     audioConfig,
     speakers,
   });
 
-  let lastError: unknown = null;
+  return executeWithGeminiKeyRotation(async (client) => {
+    const response = await callGeminiTtsWithTimeout(
+      client,
+      requestParams,
+      TTS_TIMEOUT_MS
+    );
+    const parts =
+      response.candidates?.[0]?.content?.parts
+        ?.map((p) => p.inlineData)
+        .filter((d): d is { data: string; mimeType?: string } => Boolean(d?.data)) ||
+      [];
 
-  for (const key of candidateKeys) {
-    const keyShort = key.slice(0, 6) + '...' + key.slice(-4);
-    const client = getOrCreateGenAIClient(key);
-
-    try {
-      const response = await callGeminiTtsWithTimeout(client, requestParams, TTS_TIMEOUT_MS);
-      const parts =
-        response.candidates?.[0]?.content?.parts
-          ?.map((p) => p.inlineData)
-          .filter((d): d is { data: string; mimeType?: string } => Boolean(d?.data)) || [];
-
-      if (parts.length === 0) {
-        throw new Error('Gemini API không trả về dữ liệu audio inlineData.');
-      }
-
-      const { bytes } = combineAudioPartsToWavBytes(parts);
-
-      // On success: remove key from cooldown if it was degraded
-      keyCooldownMap.delete(key);
-      return bytes;
-    } catch (err: unknown) {
-      lastError = err;
-
-      // 1. Fatal Error (401, 403, api_key_invalid): Cooldown 24h & rotate immediately
-      if (isFatalError(err)) {
-        console.warn(
-          `[TTS Engine] Key ${keyShort} gặp lỗi Fatal (401/403): ${(err as Error)?.message}. Cooldown 24h. Chuyển key tiếp theo...`
-        );
-        keyCooldownMap.set(key, Date.now() + 24 * 60 * 60 * 1000);
-        continue;
-      }
-
-      // 2. Rate Limit (429) OR Timeout (45s): Cooldown 2 min & ZERO-WAIT FAILOVER (0ms delay)
-      if (isRateLimitError(err) || isTimeoutError(err)) {
-        const reason = isTimeoutError(err) ? 'Timeout 45s' : 'Rate Limit (429)';
-        console.warn(
-          `[TTS Engine] Key ${keyShort} gặp ${reason}. Đặt cooldown 2 phút & Zero-wait failover ngay sang key tiếp theo!`
-        );
-        keyCooldownMap.set(key, Date.now() + 2 * 60 * 1000);
-        continue;
-      }
-
-      // 3. Other unexpected transient errors: Cooldown 1 minute and failover
-      console.warn(
-        `[TTS Engine] Key ${keyShort} gặp lỗi: ${(err as Error)?.message}. Tạm cooldown 1 phút và thử key tiếp theo...`
-      );
-      keyCooldownMap.set(key, Date.now() + 60 * 1000);
-      continue;
+    if (parts.length === 0) {
+      throw new Error('Gemini API không trả về dữ liệu audio inlineData.');
     }
-  }
 
-  throw lastError instanceof Error
-    ? lastError
-    : new Error('Tất cả API keys đều thất bại hoặc đang trong thời gian cooldown.');
+    const { bytes } = combineAudioPartsToWavBytes(parts);
+    return bytes;
+  });
 }
 
 /**
- * Checks if ffmpeg is available on the machine.
+ * Checks if ffmpeg is available on the host machine.
  */
 export function isFfmpegAvailable(): boolean {
   try {
@@ -335,6 +236,183 @@ export function isFfmpegAvailable(): boolean {
   }
 }
 
+/**
+ * Encodes a WAV buffer (16-bit PCM) into an MP3 buffer in-memory.
+ * - Uses ffmpeg via OS temp directory (192kbps, 24kHz) when available on host.
+ * - Falls back to pure-JS @breezystack/lamejs in-memory encoder (128kbps, 24kHz) on serverless/Vercel.
+ */
+export function convertWavBytesToMp3Buffer(rawWavBytes: Uint8Array): {
+  buffer: Uint8Array;
+  format: 'mp3';
+  bitrateKbps: number;
+  sampleRate: number;
+} {
+  let sampleRate = 24000;
+  if (rawWavBytes.byteLength > 44) {
+    const headerView = new DataView(
+      rawWavBytes.buffer,
+      rawWavBytes.byteOffset,
+      44
+    );
+    const parsedRate = headerView.getUint32(24, true);
+    if (parsedRate >= 8000 && parsedRate <= 96000) {
+      sampleRate = parsedRate;
+    }
+  }
+
+  // 1. Try ffmpeg via OS temp dir if available for 192kbps studio encoding
+  if (isFfmpegAvailable()) {
+    const tmpId = `tts-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const tmpWav = path.join(os.tmpdir(), `${tmpId}.wav`);
+    const tmpMp3 = path.join(os.tmpdir(), `${tmpId}.mp3`);
+    try {
+      fs.writeFileSync(tmpWav, rawWavBytes);
+      const proc = spawnSync(
+        'ffmpeg',
+        ['-y', '-i', tmpWav, '-b:a', '192k', '-ar', String(sampleRate), tmpMp3],
+        { stdio: 'ignore' }
+      );
+      if (proc.status === 0 && fs.existsSync(tmpMp3)) {
+        const mp3Buf = new Uint8Array(fs.readFileSync(tmpMp3));
+        if (mp3Buf.byteLength > 44) {
+          return {
+            buffer: mp3Buf,
+            format: 'mp3',
+            bitrateKbps: 192,
+            sampleRate,
+          };
+        }
+      }
+    } catch {
+      // Fall through to pure-JS lamejs encoder
+    } finally {
+      try {
+        if (fs.existsSync(tmpWav)) fs.unlinkSync(tmpWav);
+        if (fs.existsSync(tmpMp3)) fs.unlinkSync(tmpMp3);
+      } catch {
+        // ignore temp cleanup errors
+      }
+    }
+  }
+
+  // 2. Pure-JS in-memory MP3 encoding via @breezystack/lamejs (works on Vercel & serverless Next.js)
+  const pcmBytes =
+    rawWavBytes.byteLength > 44 ? rawWavBytes.subarray(44) : rawWavBytes;
+  const sampleCount = Math.floor(pcmBytes.byteLength / 2);
+  const samples = new Int16Array(sampleCount);
+  const pcmView = new DataView(
+    pcmBytes.buffer,
+    pcmBytes.byteOffset,
+    pcmBytes.byteLength
+  );
+  for (let i = 0; i < sampleCount; i++) {
+    samples[i] = pcmView.getInt16(i * 2, true);
+  }
+
+  const bitrateKbps = 128;
+  const encoder = new Mp3Encoder(1, sampleRate, bitrateKbps);
+  const chunkSize = 1152;
+  const mp3Chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  for (let i = 0; i < samples.length; i += chunkSize) {
+    const sampleChunk = samples.subarray(i, i + chunkSize);
+    const mp3buf = encoder.encodeBuffer(sampleChunk);
+    if (mp3buf.length > 0) {
+      const copy = new Uint8Array(mp3buf.buffer, mp3buf.byteOffset, mp3buf.byteLength);
+      mp3Chunks.push(new Uint8Array(copy));
+      totalBytes += copy.byteLength;
+    }
+  }
+
+  const flushed = encoder.flush();
+  if (flushed.length > 0) {
+    const copy = new Uint8Array(flushed.buffer, flushed.byteOffset, flushed.byteLength);
+    mp3Chunks.push(new Uint8Array(copy));
+    totalBytes += copy.byteLength;
+  }
+
+  const finalMp3 = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of mp3Chunks) {
+    finalMp3.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  return {
+    buffer: finalMp3,
+    format: 'mp3',
+    bitrateKbps,
+    sampleRate,
+  };
+}
+
+export interface UploadedAudioResult {
+  storageBucket: string;
+  storagePath: string;
+  publicUrl: string;
+  format: 'mp3' | 'wav';
+  byteLength: number;
+  bitrateKbps: number;
+  sampleRate: number;
+}
+
+/**
+ * Uploads encoded audio bytes directly to Supabase Storage bucket `test-audio`
+ * and returns the public CDN URL + technical audio metadata.
+ */
+export async function uploadAudioBytesToSupabase(params: {
+  testId: string;
+  partId: string;
+  audioBytes: Uint8Array;
+  format?: 'mp3' | 'wav';
+  bitrateKbps?: number;
+  sampleRate?: number;
+}): Promise<UploadedAudioResult> {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) {
+    throw new Error('Chưa cấu hình kết nối Supabase Admin để lưu trữ audio.');
+  }
+
+  const format = params.format || 'mp3';
+  const mimeType = format === 'mp3' ? 'audio/mpeg' : 'audio/wav';
+  const storagePath = `${params.testId}/${params.partId}.${format}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(AUDIO_STORAGE_BUCKET)
+    .upload(storagePath, params.audioBytes, {
+      contentType: mimeType,
+      cacheControl: '31536000',
+      upsert: true,
+    });
+
+  if (uploadError) {
+    throw new Error(
+      `Lỗi tải file audio lên Supabase Storage (${storagePath}): ${uploadError.message}`
+    );
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from(AUDIO_STORAGE_BUCKET)
+    .getPublicUrl(storagePath);
+
+  // Append cache-busting version query parameter when regenerating so browsers fetch latest audio
+  const publicUrl = `${publicUrlData.publicUrl}?v=${Date.now()}`;
+
+  return {
+    storageBucket: AUDIO_STORAGE_BUCKET,
+    storagePath,
+    publicUrl,
+    format,
+    byteLength: params.audioBytes.byteLength,
+    bitrateKbps: params.bitrateKbps || (format === 'mp3' ? 192 : 384),
+    sampleRate: params.sampleRate || 24000,
+  };
+}
+
+/**
+ * Legacy helper retained for CLI compatibility (`scripts/generate-tts.ts`).
+ */
 export interface SavedAudioResult {
   diskPath: string;
   webUrl: string;
@@ -342,150 +420,138 @@ export interface SavedAudioResult {
   byteLength: number;
 }
 
-/**
- * Saves raw WAV audio bytes:
- * 1. Archives raw WAV copy to archive/audio/<filenameBase>.wav.
- * 2. If ffmpeg is available, converts to 192kbps MP3 (24kHz) at public/tests/audio/<filenameBase>.mp3.
- * 3. Fallback to saving WAV directly at public/tests/audio/<filenameBase>.wav.
- */
 export function saveAudioBytes(
   filenameBase: string,
   rawWavBytes: Uint8Array
 ): SavedAudioResult {
-  const rootDir = process.cwd();
-  const archiveDir = path.join(rootDir, 'archive', 'audio');
-  const testsAudioDir = path.join(rootDir, 'public', 'tests', 'audio');
-
-  fs.mkdirSync(archiveDir, { recursive: true });
-  fs.mkdirSync(testsAudioDir, { recursive: true });
-
   const cleanBase = filenameBase.replace(/\.(mp3|wav)$/i, '');
-
-  // 1. Luôn lưu bản WAV raw vào thư mục lưu trữ archive/audio/
-  const archiveWavPath = path.join(archiveDir, `${cleanBase}.wav`);
-  try {
-    fs.writeFileSync(archiveWavPath, rawWavBytes);
-  } catch (err) {
-    console.warn('[TTS Engine] Không thể ghi bản archive:', err);
-  }
-
-  // 2. Chuyển đổi sang MP3 192kbps (24000Hz) nếu có ffmpeg
-  const hasFfmpeg = isFfmpegAvailable();
-  if (hasFfmpeg) {
-    const mp3DiskPath = path.join(testsAudioDir, `${cleanBase}.mp3`);
-    const tempWav = path.join(testsAudioDir, `${cleanBase}.tmp.wav`);
-
-    try {
-      fs.writeFileSync(tempWav, rawWavBytes);
-      const proc = spawnSync(
-        'ffmpeg',
-        ['-y', '-i', tempWav, '-b:a', '192k', '-ar', '24000', mp3DiskPath],
-        { stdio: 'ignore' }
-      );
-      try {
-        fs.unlinkSync(tempWav);
-      } catch {
-        // ignore unlink error
-      }
-
-      if (proc.status === 0 && fs.existsSync(mp3DiskPath) && fs.statSync(mp3DiskPath).size > 44) {
-        return {
-          diskPath: mp3DiskPath,
-          webUrl: `/tests/audio/${cleanBase}.mp3`,
-          format: 'mp3',
-          byteLength: fs.statSync(mp3DiskPath).size,
-        };
-      }
-    } catch (err) {
-      console.warn('[TTS Engine] Lỗi khi convert MP3 qua ffmpeg, fallback sang WAV:', err);
-    }
-  }
-
-  // 3. Fallback: lưu trực tiếp file WAV
-  const wavDiskPath = path.join(testsAudioDir, `${cleanBase}.wav`);
-  fs.writeFileSync(wavDiskPath, rawWavBytes);
+  const encoded = convertWavBytesToMp3Buffer(rawWavBytes);
+  const testsAudioDir = path.join(process.cwd(), 'public', 'tests', 'audio');
+  fs.mkdirSync(testsAudioDir, { recursive: true });
+  const mp3DiskPath = path.join(testsAudioDir, `${cleanBase}.mp3`);
+  fs.writeFileSync(mp3DiskPath, encoded.buffer);
   return {
-    diskPath: wavDiskPath,
-    webUrl: `/tests/audio/${cleanBase}.wav`,
-    format: 'wav',
-    byteLength: rawWavBytes.byteLength,
+    diskPath: mp3DiskPath,
+    webUrl: `/tests/audio/${cleanBase}.mp3`,
+    format: 'mp3',
+    byteLength: encoded.buffer.byteLength,
   };
 }
 
-// Mutex lock map to prevent concurrent writes corrupting individual test JSON documents
-const fileMutexMap = new Map<string, Promise<void>>();
-
-async function withFileLock<T>(filePath: string, fn: () => Promise<T>): Promise<T> {
-  const prevLock = fileMutexMap.get(filePath) || Promise.resolve();
-  let releaseLock: () => void;
-  const currentLock = new Promise<void>((resolve) => {
-    releaseLock = resolve;
-  });
-  fileMutexMap.set(filePath, currentLock);
-
-  await prevLock;
-  try {
-    return await fn();
-  } finally {
-    releaseLock!();
+/**
+ * Allows Admin to manually upload an MP3 or WAV audio file for a specific listening part
+ * directly to Supabase Storage and updates `public.tests` + `public.test_audio`.
+ */
+export async function uploadManualPartAudioToSupabase(params: {
+  testId: string;
+  partId: string;
+  fileBuffer: Uint8Array;
+  format: 'mp3' | 'wav';
+}): Promise<{
+  publicUrl: string;
+  byteLength: number;
+  durationSeconds: number | null;
+}> {
+  const cleanTestId = params.testId.trim();
+  const doc = await getTestById(cleanTestId, { allowHidden: true });
+  if (!doc) {
+    throw new Error(`Không tìm thấy đề thi "${cleanTestId}" trên Supabase.`);
   }
+
+  const parts = doc.sections?.listening?.parts || [];
+  const partIndex = parts.findIndex((p) => p.id === params.partId);
+  if (partIndex === -1) {
+    throw new Error(
+      `Không tìm thấy phần nghe "${params.partId}" trong đề thi "${cleanTestId}".`
+    );
+  }
+  const part = parts[partIndex];
+
+  // If user uploaded WAV, convert to MP3 in-memory for optimal streaming
+  let targetBuffer = params.fileBuffer;
+  let targetFormat: 'mp3' | 'wav' = params.format;
+  let bitrateKbps = 192;
+  let sampleRate = 24000;
+
+  if (params.format === 'wav') {
+    const converted = convertWavBytesToMp3Buffer(params.fileBuffer);
+    targetBuffer = converted.buffer;
+    targetFormat = 'mp3';
+    bitrateKbps = converted.bitrateKbps;
+    sampleRate = converted.sampleRate;
+  }
+
+  const uploaded = await uploadAudioBytesToSupabase({
+    testId: cleanTestId,
+    partId: part.id,
+    audioBytes: targetBuffer,
+    format: targetFormat,
+    bitrateKbps,
+    sampleRate,
+  });
+
+  const audioMeta = buildListeningAudioMetadata({
+    testId: cleanTestId,
+    part,
+    partIndex,
+    storageBucket: uploaded.storageBucket,
+    storagePath: uploaded.storagePath,
+    publicUrl: uploaded.publicUrl,
+    format: uploaded.format,
+    fileSizeBytes: uploaded.byteLength,
+    bitrateKbps: uploaded.bitrateKbps,
+    sampleRate: uploaded.sampleRate,
+    ttsModel: 'manual-upload',
+  });
+
+  await updateTestListeningPartAudioUrl(
+    cleanTestId,
+    part.id,
+    uploaded.publicUrl,
+    audioMeta
+  );
+
+  return {
+    publicUrl: uploaded.publicUrl,
+    byteLength: uploaded.byteLength,
+    durationSeconds: audioMeta.durationSeconds,
+  };
 }
 
 /**
- * Generates audio files for all listening parts of a specified test.
- * Incremental and atomic: updates the test JSON document immediately upon each completed part.
+ * Generates audio files for listening parts of a specified test directly in Supabase:
+ * - Reads TestDocument from `public.tests`
+ * - Generates audio via Gemini TTS with Zero-Wait Key Rotation
+ * - Encodes to MP3 in-memory
+ * - Uploads MP3 to Supabase Storage bucket `test-audio`
+ * - Updates `public.tests.content`, `public.test_audio` metadata, and `public.tts_jobs` progress
  */
-export async function generateAudioForTest(testId: string): Promise<{
+export async function generateAudioForTest(
+  testId: string,
+  options?: { force?: boolean; partId?: string }
+): Promise<{
   total: number;
   generated: number;
   skipped: number;
   errors: string[];
 }> {
   const cleanTestId = testId.trim().replace(/\.json$/i, '');
-  const rootDir = process.cwd();
-  const testsDir = path.join(rootDir, 'public', 'tests');
-  const directPath = path.join(testsDir, `${cleanTestId}.json`);
+  const doc = await getTestById(cleanTestId, { allowHidden: true });
 
-  let targetFilePath = directPath;
-  if (!fs.existsSync(targetFilePath)) {
-    // Tìm kiếm trong thư mục tests nếu ID khác tên file
-    const files = fs
-      .readdirSync(testsDir)
-      .filter((f) => f.endsWith('.json') && f !== 'index.json');
-    let found = false;
-    for (const f of files) {
-      const p = path.join(testsDir, f);
-      try {
-        const raw = fs.readFileSync(p, 'utf-8');
-        const parsed = JSON.parse(raw);
-        if (parsed.id === cleanTestId || path.basename(f, '.json') === cleanTestId) {
-          targetFilePath = p;
-          found = true;
-          break;
-        }
-      } catch {
-        // continue
-      }
-    }
-    if (!found) {
-      throw new Error(`Không tìm thấy file đề thi cho testId: "${testId}"`);
-    }
+  if (!doc) {
+    throw new Error(`Không tìm thấy đề thi "${cleanTestId}" trên Supabase.`);
   }
 
-  const rawJson = fs.readFileSync(targetFilePath, 'utf-8');
-  const doc = JSON.parse(rawJson);
-  const parts: Array<{
-    id: string;
-    title?: string;
-    transcript?: string;
-    audioUrl?: string;
-    audioConfig?: ListeningAudioConfig;
-    speakers?: SpeakerConfig[];
-  }> = doc.sections?.listening?.parts || [];
+  const allParts: ListeningPart[] = doc.sections?.listening?.parts || [];
+  const existingAudioList = await getTestAudioMetadataList(cleanTestId);
+  const existingAudioMap = new Map(existingAudioList.map((a) => [a.partId, a]));
 
-  const partsWithTranscript = parts.filter((p) => p.transcript && p.transcript.trim().length > 0);
+  const partsWithTranscript = allParts.filter((p) => {
+    if (!p.transcript || !p.transcript.trim()) return false;
+    if (options?.partId && p.id !== options.partId) return false;
+    return true;
+  });
 
-  // Initialize or update live job progress
   const nowIso = new Date().toISOString();
   const initialJob: TtsJobProgress = {
     testId: cleanTestId,
@@ -503,7 +569,9 @@ export async function generateAudioForTest(testId: string): Promise<{
     startedAt: nowIso,
     updatedAt: nowIso,
   };
+
   ttsJobStore.set(cleanTestId, initialJob);
+  await syncJobToSupabase(initialJob);
 
   const stats = {
     total: partsWithTranscript.length,
@@ -512,82 +580,57 @@ export async function generateAudioForTest(testId: string): Promise<{
     errors: [] as string[],
   };
 
-  const testsAudioDir = path.join(rootDir, 'public', 'tests', 'audio');
-  fs.mkdirSync(testsAudioDir, { recursive: true });
-
-  const fileBase = path.basename(targetFilePath, '.json');
-
   for (let idx = 0; idx < partsWithTranscript.length; idx++) {
     const part = partsWithTranscript[idx];
-    const baseName = `${fileBase}-${part.id}`;
-    const mp3Path = path.join(testsAudioDir, `${baseName}.mp3`);
-    const wavPath = path.join(testsAudioDir, `${baseName}.wav`);
+    const partIndexInDoc = allParts.findIndex((p) => p.id === part.id);
+    const currentHash = computeListeningTranscriptHash(part);
+    const existingMeta = existingAudioMap.get(part.id);
 
-    // Update job tracking
     const currentJob = ttsJobStore.get(cleanTestId);
     if (currentJob) {
       currentJob.currentPartIndex = idx + 1;
       currentJob.currentPartId = part.id;
       currentJob.currentPartTitle = part.title || part.id;
-      currentJob.currentMessage = `Đang xử lý ${part.id} - ${part.title || ''}...`;
+      currentJob.currentMessage = `Đang kiểm tra ${part.id} - ${part.title || ''}...`;
       const targetPart = currentJob.parts.find((p) => p.id === part.id);
       if (targetPart) {
         targetPart.status = 'processing';
       }
       currentJob.updatedAt = new Date().toISOString();
+      await syncJobToSupabase(currentJob);
     }
 
-    // Kiểm tra xem file âm thanh đã tồn tại trên đĩa hay chưa
-    const existingDiskPath =
-      fs.existsSync(mp3Path) && fs.statSync(mp3Path).size > 44
-        ? mp3Path
-        : fs.existsSync(wavPath) && fs.statSync(wavPath).size > 44
-        ? wavPath
-        : null;
+    const hasValidSupabaseAudio =
+      !options?.force &&
+      typeof part.audioUrl === 'string' &&
+      part.audioUrl.startsWith('http') &&
+      (!existingMeta || existingMeta.transcriptHash === currentHash);
 
-    if (existingDiskPath && part.audioUrl) {
+    if (hasValidSupabaseAudio) {
       stats.skipped++;
       if (currentJob) {
         currentJob.completed++;
-        currentJob.percent = Math.round((currentJob.completed / currentJob.total) * 100);
+        currentJob.percent = Math.round(
+          (currentJob.completed / currentJob.total) * 100
+        );
         const targetPart = currentJob.parts.find((p) => p.id === part.id);
         if (targetPart) {
           targetPart.status = 'skipped';
           targetPart.webUrl = part.audioUrl;
-          targetPart.byteLength = fs.statSync(existingDiskPath).size;
+          targetPart.byteLength = existingMeta?.fileSizeBytes;
+          targetPart.durationSeconds = existingMeta?.durationSeconds;
         }
         currentJob.updatedAt = new Date().toISOString();
+        await syncJobToSupabase(currentJob);
       }
       continue;
     }
 
-    if (existingDiskPath && !part.audioUrl) {
-      const ext = path.extname(existingDiskPath);
-      part.audioUrl = `/tests/audio/${baseName}${ext}`;
-      await withFileLock(targetFilePath, async () => {
-        fs.writeFileSync(targetFilePath, JSON.stringify(doc, null, 2) + '\n', 'utf-8');
-      });
-      stats.skipped++;
-      if (currentJob) {
-        currentJob.completed++;
-        currentJob.percent = Math.round((currentJob.completed / currentJob.total) * 100);
-        const targetPart = currentJob.parts.find((p) => p.id === part.id);
-        if (targetPart) {
-          targetPart.status = 'skipped';
-          targetPart.webUrl = part.audioUrl;
-          targetPart.byteLength = fs.statSync(existingDiskPath).size;
-        }
-        currentJob.updatedAt = new Date().toISOString();
-      }
-      continue;
-    }
-
-    // Chưa có file âm thanh: thực hiện tạo audio với Zero-Wait Rotation
     try {
-      console.log(`[TTS Engine] Đang tạo audio cho ${baseName}...`);
       if (currentJob) {
-        currentJob.currentMessage = `Đang gọi Gemini AI tạo giọng đọc cho ${part.id}...`;
+        currentJob.currentMessage = `Đang gọi Gemini TTS tạo giọng đọc cho ${part.id}...`;
         currentJob.updatedAt = new Date().toISOString();
+        await syncJobToSupabase(currentJob);
       }
 
       const wavBytes = await generateAudioBytesWithKeyRotation(
@@ -597,40 +640,67 @@ export async function generateAudioForTest(testId: string): Promise<{
       );
 
       if (currentJob) {
-        currentJob.currentMessage = `Đang lưu và convert MP3 cho ${part.id}...`;
+        currentJob.currentMessage = `Đang mã hóa MP3 & tải lên Supabase Storage cho ${part.id}...`;
         currentJob.updatedAt = new Date().toISOString();
+        await syncJobToSupabase(currentJob);
       }
 
-      const saved = saveAudioBytes(baseName, wavBytes);
-      part.audioUrl = saved.webUrl;
-
-      // Cập nhật JSON ngay lập tức (Incremental Save)
-      await withFileLock(targetFilePath, async () => {
-        fs.writeFileSync(targetFilePath, JSON.stringify(doc, null, 2) + '\n', 'utf-8');
+      const encoded = convertWavBytesToMp3Buffer(wavBytes);
+      const uploaded = await uploadAudioBytesToSupabase({
+        testId: cleanTestId,
+        partId: part.id,
+        audioBytes: encoded.buffer,
+        format: encoded.format,
+        bitrateKbps: encoded.bitrateKbps,
+        sampleRate: encoded.sampleRate,
       });
+
+      const audioMeta = buildListeningAudioMetadata({
+        testId: cleanTestId,
+        part,
+        partIndex: partIndexInDoc >= 0 ? partIndexInDoc : idx,
+        storageBucket: uploaded.storageBucket,
+        storagePath: uploaded.storagePath,
+        publicUrl: uploaded.publicUrl,
+        format: uploaded.format,
+        fileSizeBytes: uploaded.byteLength,
+        bitrateKbps: uploaded.bitrateKbps,
+        sampleRate: uploaded.sampleRate,
+        ttsModel: getListeningTtsModel(),
+      });
+
+      await updateTestListeningPartAudioUrl(
+        cleanTestId,
+        part.id,
+        uploaded.publicUrl,
+        audioMeta
+      );
 
       stats.generated++;
       if (currentJob) {
         currentJob.completed++;
-        currentJob.percent = Math.round((currentJob.completed / currentJob.total) * 100);
+        currentJob.percent = Math.round(
+          (currentJob.completed / currentJob.total) * 100
+        );
         const targetPart = currentJob.parts.find((p) => p.id === part.id);
         if (targetPart) {
           targetPart.status = 'completed';
-          targetPart.webUrl = saved.webUrl;
-          targetPart.byteLength = saved.byteLength;
+          targetPart.webUrl = uploaded.publicUrl;
+          targetPart.byteLength = uploaded.byteLength;
+          targetPart.durationSeconds = audioMeta.durationSeconds;
         }
         currentJob.updatedAt = new Date().toISOString();
+        await syncJobToSupabase(currentJob);
       }
-      console.log(
-        `[TTS Engine] ✅ Hoàn thành ${baseName} -> ${saved.webUrl} (${(saved.byteLength / 1024).toFixed(1)} KB)`
-      );
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : String(err);
       console.error(`[TTS Engine] ❌ Lỗi tạo audio cho part "${part.id}":`, errMsg);
       stats.errors.push(`Phần ${part.id}: ${errMsg}`);
       if (currentJob) {
         currentJob.completed++;
-        currentJob.percent = Math.round((currentJob.completed / currentJob.total) * 100);
+        currentJob.percent = Math.round(
+          (currentJob.completed / currentJob.total) * 100
+        );
         currentJob.errors.push(`Phần ${part.id}: ${errMsg}`);
         const targetPart = currentJob.parts.find((p) => p.id === part.id);
         if (targetPart) {
@@ -638,11 +708,11 @@ export async function generateAudioForTest(testId: string): Promise<{
           targetPart.error = errMsg;
         }
         currentJob.updatedAt = new Date().toISOString();
+        await syncJobToSupabase(currentJob);
       }
     }
   }
 
-  // Finalize job status
   const finalJob = ttsJobStore.get(cleanTestId);
   if (finalJob) {
     finalJob.percent = 100;
@@ -656,9 +726,12 @@ export async function generateAudioForTest(testId: string): Promise<{
         : 'failed';
     finalJob.currentMessage =
       finalJob.status === 'completed'
-        ? `Hoàn tất! Đã tạo ${stats.generated} phần, bỏ qua ${stats.skipped} phần.${stats.errors.length ? ` (${stats.errors.length} lỗi)` : ''}`
+        ? `Hoàn tất trên Supabase! Đã tạo mới ${stats.generated} phần, có sẵn ${stats.skipped} phần.${
+            stats.errors.length ? ` (${stats.errors.length} lỗi)` : ''
+          }`
         : `Tạo audio thất bại (${stats.errors.length} lỗi).`;
     finalJob.updatedAt = new Date().toISOString();
+    await syncJobToSupabase(finalJob);
   }
 
   return stats;
@@ -667,14 +740,23 @@ export async function generateAudioForTest(testId: string): Promise<{
 /**
  * Triggers background TTS generation without blocking the HTTP request/response.
  */
-export function triggerBackgroundTts(testId: string): void {
+export function triggerBackgroundTts(
+  testId: string,
+  options?: { force?: boolean; partId?: string }
+): void {
   setImmediate(() => {
-    generateAudioForTest(testId)
+    generateAudioForTest(testId, options)
       .then((stats) => {
-        console.log(`[TTS Engine] Background TTS hoàn tất cho "${testId}":`, stats);
+        console.log(
+          `[TTS Engine] Background TTS hoàn tất trên Supabase cho "${testId}":`,
+          stats
+        );
       })
       .catch((err) => {
-        console.error(`[TTS Engine] Background TTS thất bại cho "${testId}":`, err);
+        console.error(
+          `[TTS Engine] Background TTS thất bại cho "${testId}":`,
+          err
+        );
       });
   });
 }
