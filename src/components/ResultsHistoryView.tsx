@@ -21,7 +21,7 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
     attempts.find((a) => a.id === selectedAttemptId) || (attempts.length > 0 ? attempts[0] : null);
 
   const handleDelete = (attemptId: string) => {
-    if (window.confirm('Bạn có chắc muốn xóa vĩnh viễn bài làm này khỏi LocalStorage?')) {
+    if (window.confirm('Bạn có chắc muốn xóa vĩnh viễn bài làm này?')) {
       deleteAttempt(attemptId);
       onRefreshAttempts();
     }
@@ -252,8 +252,8 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                           onClick={() => scrollToQuestion(res.questionId)}
                           title={`Câu R${idx + 1}: ${res.isCorrect ? 'ĐÚNG' : 'CHƯA ĐÚNG'}`}
                           className={`min-w-9 h-9 px-2 border-2 border-black text-xs font-black font-mono cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-0.5 ${res.isCorrect
-                              ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                              : 'bg-red-600 text-white hover:bg-red-700'
+                            ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                            : 'bg-red-600 text-white hover:bg-red-700'
                             }`}
                         >
                           <span>R{idx + 1}</span>
@@ -283,8 +283,8 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                           onClick={() => scrollToQuestion(res.questionId)}
                           title={`Câu L${idx + 1}: ${res.isCorrect ? 'ĐÚNG' : 'CHƯA ĐÚNG'}`}
                           className={`min-w-9 h-9 px-2 border-2 border-black text-xs font-black font-mono cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-0.5 ${res.isCorrect
-                              ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                              : 'bg-red-600 text-white hover:bg-red-700'
+                            ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                            : 'bg-red-600 text-white hover:bg-red-700'
                             }`}
                         >
                           <span>L{idx + 1}</span>
@@ -316,8 +316,8 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                       key={res.questionId}
                       id={`q-res-${res.questionId}`}
                       className={`border-2 border-black p-4 space-y-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all scroll-mt-20 sm:scroll-mt-24 ${isCorrect
-                          ? 'bg-[#f6fbf7] border-l-8 border-l-emerald-600'
-                          : 'bg-[#fff8f8] border-l-8 border-l-red-600'
+                        ? 'bg-[#f6fbf7] border-l-8 border-l-emerald-600'
+                        : 'bg-[#fff8f8] border-l-8 border-l-red-600'
                         }`}
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -326,8 +326,8 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                         </span>
                         <span
                           className={`text-xs px-2.5 py-0.5 border-2 border-black font-black font-mono flex items-center gap-1 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${isCorrect
-                              ? 'bg-emerald-600 text-white'
-                              : 'bg-red-600 text-white'
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-red-600 text-white'
                             }`}
                         >
                           {isCorrect ? '✓ ĐÚNG' : '✕ CHƯA ĐÚNG'}
@@ -394,8 +394,8 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                       key={res.questionId}
                       id={`q-res-${res.questionId}`}
                       className={`border-2 border-black p-4 space-y-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all scroll-mt-20 sm:scroll-mt-24 ${isCorrect
-                          ? 'bg-[#f6fbf7] border-l-8 border-l-emerald-600'
-                          : 'bg-[#fff8f8] border-l-8 border-l-red-600'
+                        ? 'bg-[#f6fbf7] border-l-8 border-l-emerald-600'
+                        : 'bg-[#fff8f8] border-l-8 border-l-red-600'
                         }`}
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -404,8 +404,8 @@ export const ResultsHistoryView: React.FC<ResultsHistoryViewProps> = ({
                         </span>
                         <span
                           className={`text-xs px-2.5 py-0.5 border-2 border-black font-black font-mono flex items-center gap-1 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${isCorrect
-                              ? 'bg-emerald-600 text-white'
-                              : 'bg-red-600 text-white'
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-red-600 text-white'
                             }`}
                         >
                           {isCorrect ? '✓ ĐÚNG' : '✕ CHƯA ĐÚNG'}

@@ -19,7 +19,7 @@ const TestAuthoringView = dynamic(
 
 export const metadata: Metadata = {
   title: 'Thêm Đề Thi Mới | L TestLab',
-  description: 'Giao diện tạo và tải đề thi tiếng Anh 4 kỹ năng chuẩn CEFR vào hệ thống (Chỉ dành cho quản trị viên).',
+  description: 'Giao diện tạo và tải đề thi vào hệ thống.',
 };
 
 export default async function CreateTestPage() {

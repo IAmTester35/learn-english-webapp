@@ -5,6 +5,7 @@ import React, {
   useContext,
   useRef,
   useState,
+  useReducer,
   useEffect,
   useCallback,
   ReactNode,
@@ -17,6 +18,90 @@ export function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+export type PlaybackStatus = 'idle' | 'buffering' | 'playing';
+
+export interface AudioPlaybackState {
+  activePartId: string;
+  status: PlaybackStatus;
+  currentTime: number;
+  duration: number;
+}
+
+export type AudioPlaybackAction =
+  | { type: 'SWITCH_PART'; partId: string; initialDuration?: number }
+  | { type: 'BUFFERING' }
+  | { type: 'PLAYING' }
+  | { type: 'PAUSE' }
+  | { type: 'ENDED' }
+  | { type: 'RESET_PLAYBACK' }
+  | { type: 'TIME_UPDATE'; currentTime: number }
+  | { type: 'DURATION_UPDATE'; duration: number };
+
+function audioPlaybackReducer(
+  state: AudioPlaybackState,
+  action: AudioPlaybackAction
+): AudioPlaybackState {
+  switch (action.type) {
+    case 'SWITCH_PART':
+      return {
+        ...state,
+        activePartId: action.partId,
+        status: 'buffering',
+        currentTime: 0,
+        duration: action.initialDuration || 0,
+      };
+
+    case 'BUFFERING':
+      if (state.status === 'buffering') return state;
+      return {
+        ...state,
+        status: 'buffering',
+      };
+
+    case 'PLAYING':
+      if (state.status === 'playing') return state;
+      return {
+        ...state,
+        status: 'playing',
+      };
+
+    case 'PAUSE':
+    case 'RESET_PLAYBACK':
+      if (state.status === 'idle') return state;
+      return {
+        ...state,
+        status: 'idle',
+      };
+
+    case 'ENDED':
+      return {
+        ...state,
+        status: 'idle',
+        currentTime: 0,
+      };
+
+    case 'TIME_UPDATE':
+      // Avoid re-rendering if integer milliseconds haven't meaningfully drifted
+      if (Math.abs(state.currentTime - action.currentTime) < 0.05) {
+        return state;
+      }
+      return {
+        ...state,
+        currentTime: action.currentTime,
+      };
+
+    case 'DURATION_UPDATE':
+      if (state.duration === action.duration) return state;
+      return {
+        ...state,
+        duration: action.duration,
+      };
+
+    default:
+      return state;
+  }
 }
 
 interface ListeningAudioContextType {
@@ -65,17 +150,36 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
 }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playbackIntentRef = useRef<string | null>(null);
-  const [activePartId, setActivePartId] = useState<string>(() => parts[0]?.id || '');
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [isBuffering, setIsBuffering] = useState<boolean>(false);
-  const [currentTime, setCurrentTime] = useState<number>(0);
-  const [duration, setDuration] = useState<number>(0);
+  const requestCounterRef = useRef<number>(0);
+  const activeLoadedPartIdRef = useRef<string | null>(null);
+  const durationCacheRef = useRef<Map<string, number>>(new Map());
+
+  const [state, dispatch] = useReducer(audioPlaybackReducer, undefined, () => ({
+    activePartId: parts[0]?.id || '',
+    status: 'idle' as PlaybackStatus,
+    currentTime: 0,
+    duration: 0,
+  }));
+
+  const { activePartId, status, currentTime, duration } = state;
+  const isPlaying = status === 'playing';
+  const isBuffering = status === 'buffering';
+
   const [playbackRate, setPlaybackRate] = useState<number>(1.0);
   const [volume, setVolume] = useState<number>(1.0);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isStickyVisible, setIsStickyVisible] = useState<boolean>(false);
   const [isStickyDismissed, setIsStickyDismissed] = useState<boolean>(false);
   const [announcement, setAnnouncement] = useState<string>('');
+
+  const playbackRateRef = useRef<number>(1.0);
+  const volumeRef = useRef<number>(1.0);
+  const isMutedRef = useRef<boolean>(false);
+  const activePartIdRef = useRef<string>(parts[0]?.id || '');
+
+  useEffect(() => {
+    activePartIdRef.current = activePartId;
+  }, [activePartId]);
 
   const activePart = parts.find((p) => p.id === activePartId) || parts[0];
 
@@ -87,230 +191,177 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
     setIsStickyDismissed(true);
   }, []);
 
-  // Proactively prefetch all listening parts into browser cache
+  // Initialize singleton HTMLAudioElement with native HTTP 206 streaming support
   useEffect(() => {
-    if (!parts || parts.length === 0) return;
-    const prefetchElements: HTMLAudioElement[] = [];
+    const audio = new Audio();
+    audio.preload = 'metadata';
+    audioRef.current = audio;
 
-    parts.forEach((p) => {
-      if (p.audioUrl) {
-        const audio = new Audio();
-        audio.preload = 'auto';
-        audio.src = p.audioUrl;
-        audio.load();
-        prefetchElements.push(audio);
-      }
-    });
-
-    return () => {
-      prefetchElements.forEach((el) => {
-        el.src = '';
-      });
+    const handleTimeUpdate = () => {
+      dispatch({ type: 'TIME_UPDATE', currentTime: audio.currentTime });
     };
-  }, [parts]);
 
-  // Initialize or update audio element when activePart changes
-  useEffect(() => {
-    if (!audioRef.current) {
-      const audio = new Audio();
-      audio.preload = 'auto';
-      if (activePart?.audioUrl) {
-        audio.src = activePart.audioUrl;
-        audio.load();
-      }
-      audioRef.current = audio;
-    }
-
-    const audio = audioRef.current;
-    if (
-      activePart?.audioUrl &&
-      audio.src !== window.location.origin + activePart.audioUrl &&
-      !audio.src.endsWith(activePart.audioUrl)
-    ) {
-      audio.src = activePart.audioUrl;
-      audio.preload = 'auto';
-      audio.load();
-      audio.playbackRate = playbackRate;
-      audio.volume = isMuted ? 0 : volume;
-      setCurrentTime(0);
-      setDuration(0);
-    }
-  }, [activePart, playbackRate, volume, isMuted]);
-
-  // Handle audio element events
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleLoadedMetadata = () => {
-      if (audio.duration && !isNaN(audio.duration)) {
-        setDuration(audio.duration);
+    const syncDuration = () => {
+      if (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
+        dispatch({ type: 'DURATION_UPDATE', duration: audio.duration });
+        if (activeLoadedPartIdRef.current) {
+          durationCacheRef.current.set(activeLoadedPartIdRef.current, audio.duration);
+        }
       }
     };
-    const handleDurationChange = () => {
-      if (audio.duration && !isNaN(audio.duration)) {
-        setDuration(audio.duration);
-      }
-    };
-    const handlePlay = () => {
-      if (audio.readyState < 3) {
-        setIsBuffering(true);
-      }
-    };
+
     const handlePause = () => {
-      // Only clear playing/buffering if there is no active intent to play
+      // Do not flip to Play while waiting for buffer/stream
       if (!playbackIntentRef.current) {
-        setIsPlaying(false);
-        setIsBuffering(false);
+        dispatch({ type: 'PAUSE' });
       }
     };
+
     const handleWaiting = () => {
       if (playbackIntentRef.current || !audio.paused) {
-        setIsBuffering(true);
+        dispatch({ type: 'BUFFERING' });
       }
     };
+
+    // The 'playing' event is ONLY fired when audio frames actually begin outputting sound to speakers
     const handlePlaying = () => {
-      setIsPlaying(true);
-      setIsBuffering(false);
-    };
-    const handleCanPlay = () => {
-      if (audio.duration && !isNaN(audio.duration)) {
-        setDuration(audio.duration);
-      }
-      // If user intended to play and audio is currently paused, auto-start immediately
-      if (playbackIntentRef.current && audio.paused) {
-        audio.play().catch(() => {});
+      if (playbackIntentRef.current === activeLoadedPartIdRef.current) {
+        dispatch({ type: 'PLAYING' });
       }
     };
+
     const handleEnded = () => {
       playbackIntentRef.current = null;
-      setIsPlaying(false);
-      setIsBuffering(false);
+      dispatch({ type: 'ENDED' });
       audio.currentTime = 0;
-      setCurrentTime(0);
       announce('Bài nghe đã kết thúc');
     };
+
     const handleError = () => {
       playbackIntentRef.current = null;
-      setIsPlaying(false);
-      setIsBuffering(false);
+      dispatch({ type: 'RESET_PLAYBACK' });
     };
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('durationchange', handleDurationChange);
-    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('loadedmetadata', syncDuration);
+    audio.addEventListener('durationchange', syncDuration);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('waiting', handleWaiting);
     audio.addEventListener('playing', handlePlaying);
-    audio.addEventListener('canplay', handleCanPlay);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('durationchange', handleDurationChange);
-      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('loadedmetadata', syncDuration);
+      audio.removeEventListener('durationchange', syncDuration);
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('waiting', handleWaiting);
       audio.removeEventListener('playing', handlePlaying);
-      audio.removeEventListener('canplay', handleCanPlay);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
+
+      audio.pause();
+      audio.removeAttribute('src');
+      audioRef.current = null;
     };
   }, [announce]);
 
+  // Preload metadata for activePart so duration is available upfront
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !activePart?.audioUrl) return;
+
+    if (!playbackIntentRef.current && activeLoadedPartIdRef.current !== activePart.id) {
+      activeLoadedPartIdRef.current = activePart.id;
+      audio.src = activePart.audioUrl;
+      audio.preload = 'metadata';
+      audio.playbackRate = playbackRateRef.current;
+      audio.volume = isMutedRef.current ? 0 : volumeRef.current;
+      audio.muted = isMutedRef.current;
+    }
+  }, [activePart]);
+
   // Pause audio automatically if user leaves the listening tab
   useEffect(() => {
-    if (!isCurrentTab && (isPlaying || isBuffering) && audioRef.current) {
+    if (!isCurrentTab && status !== 'idle' && audioRef.current) {
+      requestCounterRef.current += 1;
       playbackIntentRef.current = null;
       audioRef.current.pause();
-      setIsPlaying(false);
-      setIsBuffering(false);
+      dispatch({ type: 'RESET_PLAYBACK' });
     }
-  }, [isCurrentTab, isPlaying, isBuffering]);
+  }, [isCurrentTab, status]);
 
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
-      }
-    };
-  }, []);
-
+  // Stream audio instantly using native HTTP 206 Partial Content
   const startPlayback = useCallback(
     async (targetPart: ListeningPart) => {
       const audio = audioRef.current;
       if (!audio || !targetPart.audioUrl) return;
 
+      const requestId = ++requestCounterRef.current;
       playbackIntentRef.current = targetPart.id;
-      setIsBuffering(true);
+
+      const isSwitchingPart = targetPart.id !== activePartIdRef.current;
+      if (isSwitchingPart) {
+        activePartIdRef.current = targetPart.id;
+        setIsStickyDismissed(false);
+        dispatch({
+          type: 'SWITCH_PART',
+          partId: targetPart.id,
+          initialDuration: durationCacheRef.current.get(targetPart.id) || 0,
+        });
+      } else {
+        dispatch({ type: 'BUFFERING' });
+      }
 
       const isDifferentSrc =
-        audio.src !== window.location.origin + targetPart.audioUrl &&
-        !audio.src.endsWith(targetPart.audioUrl);
+        activeLoadedPartIdRef.current !== targetPart.id ||
+        (audio.src !== targetPart.audioUrl && !audio.src.endsWith(targetPart.audioUrl));
 
       if (isDifferentSrc) {
+        if (!audio.paused) {
+          audio.pause();
+        }
+        activeLoadedPartIdRef.current = targetPart.id;
         audio.src = targetPart.audioUrl;
         audio.preload = 'auto';
-        audio.load();
-        audio.playbackRate = playbackRate;
-        audio.volume = isMuted ? 0 : volume;
-        audio.currentTime = 0;
-        setCurrentTime(0);
-        setDuration(0);
+        if (isSwitchingPart) {
+          dispatch({ type: 'TIME_UPDATE', currentTime: 0 });
+        }
       }
 
-      if (targetPart.id !== activePartId) {
-        setActivePartId(targetPart.id);
-        setIsStickyDismissed(false);
-      }
+      audio.playbackRate = playbackRateRef.current;
+      audio.volume = isMutedRef.current ? 0 : volumeRef.current;
+      audio.muted = isMutedRef.current;
 
-      const executePlay = async () => {
-        if (playbackIntentRef.current !== targetPart.id) return;
-        try {
-          await audio.play();
-          if (playbackIntentRef.current === targetPart.id) {
-            setIsPlaying(true);
-            setIsBuffering(false);
-            announce(`Đang phát âm thanh ${targetPart.title}`);
+      try {
+        // audio.play() called synchronously inside user click gesture satisfies browser autoplay policy.
+        // The browser queues playback and emits 'playing' as soon as the first few streaming frames buffer.
+        await audio.play();
+        if (
+          requestCounterRef.current === requestId &&
+          playbackIntentRef.current === targetPart.id
+        ) {
+          // If already playing audio frames (buffer was instantaneous), update state immediately
+          if (!audio.paused && audio.readyState >= 3) {
+            dispatch({ type: 'PLAYING' });
           }
-        } catch (err: unknown) {
-          if (playbackIntentRef.current !== targetPart.id) return;
+          announce(`Đang phát âm thanh ${targetPart.title}`);
+        }
+      } catch (err: unknown) {
+        if (
+          requestCounterRef.current === requestId &&
+          playbackIntentRef.current === targetPart.id
+        ) {
           const error = err as Error;
-          if (error.name === 'AbortError') {
-            // Keep buffering true while waiting for resource to become playable
-            setIsBuffering(true);
-            const onPlayable = () => {
-              audio.removeEventListener('canplay', onPlayable);
-              audio.removeEventListener('canplaythrough', onPlayable);
-              if (playbackIntentRef.current === targetPart.id) {
-                audio.play().catch(() => {
-                  if (playbackIntentRef.current === targetPart.id) {
-                    setIsBuffering(false);
-                    setIsPlaying(false);
-                    playbackIntentRef.current = null;
-                  }
-                });
-              }
-            };
-            audio.addEventListener('canplay', onPlayable);
-            audio.addEventListener('canplaythrough', onPlayable);
-          } else {
-            setIsBuffering(false);
-            setIsPlaying(false);
+          if (error.name !== 'AbortError') {
             playbackIntentRef.current = null;
+            dispatch({ type: 'RESET_PLAYBACK' });
           }
         }
-      };
-
-      await executePlay();
+      }
     },
-    [activePartId, playbackRate, volume, isMuted, announce]
+    [announce]
   );
 
   const playPart = useCallback(
@@ -324,39 +375,45 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
 
   const togglePlayPause = useCallback(
     (partId?: string) => {
-      const targetId = partId || activePartId;
+      const targetId = partId || activePartIdRef.current;
       const target = parts.find((p) => p.id === targetId);
       if (!target || !target.audioUrl) return;
 
       const audio = audioRef.current;
       if (!audio) return;
 
-      if (targetId !== activePartId) {
+      if (targetId !== activePartIdRef.current) {
         startPlayback(target);
         return;
       }
 
-      // If currently playing or buffering this part, clicking cancels/pauses
-      if (isPlaying || isBuffering || playbackIntentRef.current === targetId) {
+      // If currently playing or loading/buffering this part, clicking cancels/pauses immediately
+      if (status !== 'idle' || playbackIntentRef.current === targetId) {
+        requestCounterRef.current += 1;
         playbackIntentRef.current = null;
         audio.pause();
-        setIsPlaying(false);
-        setIsBuffering(false);
+        dispatch({ type: 'PAUSE' });
         announce(`Đã tạm dừng âm thanh ${target.title}`);
       } else {
         startPlayback(target);
       }
     },
-    [activePartId, isPlaying, isBuffering, parts, startPlayback, announce]
+    [status, parts, startPlayback, announce]
   );
 
   const seek = useCallback(
     (time: number) => {
       const audio = audioRef.current;
       if (!audio) return;
-      const validTime = Math.max(0, Math.min(time, duration || 0));
-      audio.currentTime = validTime;
-      setCurrentTime(validTime);
+      const maxDur = duration || audio.duration || 0;
+      const validTime = maxDur > 0 ? Math.max(0, Math.min(time, maxDur)) : Math.max(0, time);
+      dispatch({ type: 'TIME_UPDATE', currentTime: validTime });
+
+      try {
+        audio.currentTime = validTime;
+      } catch {
+        // Browser handles seek when ready
+      }
       announce(`Tua đến ${formatTime(validTime)}`);
     },
     [duration, announce]
@@ -366,16 +423,27 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
     (delta: number) => {
       const audio = audioRef.current;
       if (!audio) return;
-      const newTime = Math.max(0, Math.min(audio.currentTime + delta, duration || 0));
-      audio.currentTime = newTime;
-      setCurrentTime(newTime);
+      const baseTime =
+        activeLoadedPartIdRef.current === activePartIdRef.current
+          ? audio.currentTime
+          : currentTime;
+      const maxDur = duration || audio.duration || 0;
+      const newTime = maxDur > 0 ? Math.max(0, Math.min(baseTime + delta, maxDur)) : Math.max(0, baseTime + delta);
+      dispatch({ type: 'TIME_UPDATE', currentTime: newTime });
+
+      try {
+        audio.currentTime = newTime;
+      } catch {
+        // Browser handles seek when ready
+      }
       announce(delta > 0 ? `Tua tới ${delta} giây` : `Tua lùi ${Math.abs(delta)} giây`);
     },
-    [duration, announce]
+    [currentTime, duration, announce]
   );
 
   const setRate = useCallback(
     (rate: number) => {
+      playbackRateRef.current = rate;
       const audio = audioRef.current;
       if (audio) {
         audio.playbackRate = rate;
@@ -390,9 +458,11 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
     (vol: number) => {
       const audio = audioRef.current;
       const clamped = Math.max(0, Math.min(1, vol));
+      volumeRef.current = clamped;
       if (audio) {
         audio.volume = clamped;
         if (clamped > 0 && isMuted) {
+          isMutedRef.current = false;
           audio.muted = false;
           setIsMuted(false);
         }
@@ -407,6 +477,7 @@ export const ListeningAudioProvider: React.FC<ListeningAudioProviderProps> = ({
     const audio = audioRef.current;
     if (!audio) return;
     const newMuted = !isMuted;
+    isMutedRef.current = newMuted;
     audio.muted = newMuted;
     setIsMuted(newMuted);
     announce(newMuted ? 'Đã tắt tiếng' : 'Đã bật âm thanh');

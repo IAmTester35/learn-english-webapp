@@ -1,7 +1,4 @@
 import React from 'react';
-import Link from 'next/link';
-import { Plus } from 'lucide-react';
-
 interface TestCatalogOverviewProps {
   totalTests: number;
 }
@@ -17,14 +14,6 @@ export const TestCatalogOverview: React.FC<TestCatalogOverviewProps> = ({ totalT
           {totalTests}
         </span>
       </div>
-
-      <Link
-        href="/test/create"
-        className="border-2 border-black px-3 py-1.5 bg-black text-[#fffdf5] font-bold text-xs sm:text-sm hover:bg-[#fffdf5] hover:text-black transition-colors cursor-pointer flex items-center gap-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
-      >
-        <Plus className="w-3.5 h-3.5 shrink-0" />
-        <span>Thêm đề</span>
-      </Link>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { unstable_cache, revalidateTag } from 'next/cache';
 import type {
   TestAudioAssetMetadata,
   TestCatalog,
@@ -69,13 +70,18 @@ async function getLocalTestCatalogFallback(options?: {
   }
 }
 
-/**
- * Lấy danh mục bài thi kèm metadata đầy đủ từ bảng `public.tests` trên Supabase.
- * Mặc định lọc bỏ các bài bị ẩn trừ khi options.includeHidden = true.
- */
-export async function getTestCatalog(options?: {
-  includeHidden?: boolean;
-}): Promise<TestCatalog> {
+export function revalidateTestCatalogCache(testId?: string): void {
+  try {
+    revalidateTag('test-catalog', 'max');
+    if (testId) {
+      revalidateTag(`test-${testId}`, 'max');
+    }
+  } catch {
+    // Graceful fallback when called outside Next.js request lifecycle
+  }
+}
+
+async function fetchTestCatalogFromSource(includeHidden: boolean): Promise<TestCatalog> {
   const supabase = getSupabaseAdminClient();
   if (supabase) {
     let query = supabase
@@ -85,7 +91,7 @@ export async function getTestCatalog(options?: {
       )
       .order('created_at', { ascending: true });
 
-    if (!options?.includeHidden) {
+    if (!includeHidden) {
       query = query.eq('hidden', false);
     }
 
@@ -114,8 +120,59 @@ export async function getTestCatalog(options?: {
     }
   }
 
-  return getLocalTestCatalogFallback(options);
+  return getLocalTestCatalogFallback({ includeHidden });
 }
+
+const getCachedTestCatalog = unstable_cache(
+  async (includeHidden: boolean) => fetchTestCatalogFromSource(includeHidden),
+  ['test-catalog'],
+  {
+    revalidate: 60,
+    tags: ['test-catalog'],
+  }
+);
+
+/**
+ * Lấy danh mục bài thi kèm metadata đầy đủ từ bảng `public.tests` trên Supabase.
+ * Mặc định lọc bỏ các bài bị ẩn trừ khi options.includeHidden = true.
+ */
+export async function getTestCatalog(options?: {
+  includeHidden?: boolean;
+}): Promise<TestCatalog> {
+  const includeHidden = Boolean(options?.includeHidden);
+  try {
+    return await getCachedTestCatalog(includeHidden);
+  } catch {
+    return fetchTestCatalogFromSource(includeHidden);
+  }
+}
+
+async function fetchTestByIdFromSource(
+  resolvedId: string
+): Promise<Pick<SupabaseTestRow, 'id' | 'hidden' | 'content'> | null> {
+  const supabase = getSupabaseAdminClient();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('tests')
+      .select('id, hidden, content')
+      .eq('id', resolvedId)
+      .maybeSingle();
+
+    if (!error && data) {
+      return data as Pick<SupabaseTestRow, 'id' | 'hidden' | 'content'>;
+    }
+  }
+  return null;
+}
+
+const getCachedTestRowById = unstable_cache(
+  async (resolvedId: string) => fetchTestByIdFromSource(resolvedId),
+  ['test-by-id'],
+  {
+    revalidate: 300,
+    tags: ['test-catalog'],
+  }
+);
 
 /**
  * Lấy nội dung chi tiết bài thi theo ID từ Supabase `public.tests`.
@@ -130,30 +187,26 @@ export async function getTestById(
   }
 
   const resolvedId = LEGACY_ID_ALIASES[id] || id;
-  const supabase = getSupabaseAdminClient();
+  let row: Pick<SupabaseTestRow, 'id' | 'hidden' | 'content'> | null = null;
+  try {
+    row = await getCachedTestRowById(resolvedId);
+  } catch {
+    row = await fetchTestByIdFromSource(resolvedId);
+  }
 
-  if (supabase) {
-    const { data, error } = await supabase
-      .from('tests')
-      .select('id, hidden, content')
-      .eq('id', resolvedId)
-      .maybeSingle();
-
-    if (!error && data) {
-      const row = data as Pick<SupabaseTestRow, 'id' | 'hidden' | 'content'>;
-      if (row.hidden && !options?.allowHidden) {
-        return null;
-      }
-
-      const validation = validateTestDocument(row.content);
-      if (!validation.valid || !validation.data) {
-        console.error(`Lỗi quy chuẩn JSON bài thi ${id} trong Supabase:`, validation.errors);
-        throw new Error(`Đề thi "${id}" không đạt chuẩn dữ liệu.`);
-      }
-
-      validation.data.id = row.id;
-      return validation.data;
+  if (row) {
+    if (row.hidden && !options?.allowHidden) {
+      return null;
     }
+
+    const validation = validateTestDocument(row.content);
+    if (!validation.valid || !validation.data) {
+      console.error(`Lỗi quy chuẩn JSON bài thi ${id} trong Supabase:`, validation.errors);
+      throw new Error(`Đề thi "${id}" không đạt chuẩn dữ liệu.`);
+    }
+
+    validation.data.id = row.id;
+    return validation.data;
   }
 
   // Fallback to local filesystem only if Supabase does not have the test
@@ -228,6 +281,8 @@ export async function toggleTestVisibility(
   if (updateErr) {
     throw new Error(`Lỗi khi cập nhật trạng thái ẩn/hiện: ${updateErr.message}`);
   }
+
+  revalidateTestCatalogCache(current.id);
 
   return {
     success: true,
@@ -326,6 +381,8 @@ export async function saveTestDocument(
     throw new Error(`Lỗi khi lưu đề thi vào Supabase: ${error.message}`);
   }
 
+  revalidateTestCatalogCache(validDoc.id);
+
   return {
     success: true,
     isNew: !existing,
@@ -366,6 +423,8 @@ export async function deleteTestById(id: string): Promise<{ success: boolean; id
   if (error) {
     throw new Error(`Lỗi khi xóa đề thi "${id}": ${error.message}`);
   }
+
+  revalidateTestCatalogCache(id);
 
   return { success: true, id };
 }
@@ -415,6 +474,8 @@ export async function updateTestListeningPartAudioUrl(
   if (audioMeta) {
     await upsertTestAudioMetadata(audioMeta);
   }
+
+  revalidateTestCatalogCache(testId);
 }
 
 /**

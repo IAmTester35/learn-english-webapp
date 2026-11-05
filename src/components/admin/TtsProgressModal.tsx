@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useReducer, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import {
   X,
@@ -36,23 +36,121 @@ interface TtsProgressModalProps {
   onFinished?: () => void;
 }
 
+interface ActionMessage {
+  type: 'success' | 'error';
+  text: string;
+}
+
+interface TtsModalState {
+  job: TtsJobProgress | null;
+  audioMetadata: TestAudioAssetMetadata[];
+  listeningParts: ListeningPartSummary[];
+  fetchError: string | null;
+  actionMessage: ActionMessage | null;
+  uploadingPartId: string | null;
+  regeneratingPartId: string | null;
+  isForceRunningAll: boolean;
+}
+
+type TtsModalAction =
+  | {
+      type: 'FETCH_SUCCESS';
+      job: TtsJobProgress | null;
+      audioMetadata?: TestAudioAssetMetadata[];
+      listeningParts?: ListeningPartSummary[];
+    }
+  | { type: 'FETCH_ERROR'; error: string }
+  | { type: 'SET_ACTION_MESSAGE'; message: ActionMessage | null }
+  | { type: 'START_TTS'; partId?: string; force?: boolean }
+  | { type: 'STOP_TTS_INDICATORS' }
+  | { type: 'START_UPLOAD'; partId: string }
+  | { type: 'FINISH_UPLOAD'; message?: ActionMessage };
+
+function ttsModalReducer(state: TtsModalState, action: TtsModalAction): TtsModalState {
+  switch (action.type) {
+    case 'FETCH_SUCCESS':
+      return {
+        ...state,
+        job: action.job,
+        audioMetadata: action.audioMetadata ?? state.audioMetadata,
+        listeningParts: action.listeningParts ?? state.listeningParts,
+        fetchError: null,
+      };
+
+    case 'FETCH_ERROR':
+      return {
+        ...state,
+        fetchError: action.error,
+      };
+
+    case 'SET_ACTION_MESSAGE':
+      return {
+        ...state,
+        actionMessage: action.message,
+      };
+
+    case 'START_TTS':
+      return {
+        ...state,
+        actionMessage: null,
+        regeneratingPartId: action.partId ?? null,
+        isForceRunningAll: Boolean(action.force && !action.partId),
+      };
+
+    case 'STOP_TTS_INDICATORS':
+      return {
+        ...state,
+        regeneratingPartId: null,
+        isForceRunningAll: false,
+      };
+
+    case 'START_UPLOAD':
+      return {
+        ...state,
+        uploadingPartId: action.partId,
+        actionMessage: null,
+      };
+
+    case 'FINISH_UPLOAD':
+      return {
+        ...state,
+        uploadingPartId: null,
+        actionMessage: action.message ?? state.actionMessage,
+      };
+
+    default:
+      return state;
+  }
+}
+
+const initialTtsModalState: TtsModalState = {
+  job: null,
+  audioMetadata: [],
+  listeningParts: [],
+  fetchError: null,
+  actionMessage: null,
+  uploadingPartId: null,
+  regeneratingPartId: null,
+  isForceRunningAll: false,
+};
+
 export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
   testId,
   testTitle,
   onClose,
   onFinished,
 }) => {
-  const [job, setJob] = useState<TtsJobProgress | null>(null);
-  const [audioMetadata, setAudioMetadata] = useState<TestAudioAssetMetadata[]>([]);
-  const [listeningParts, setListeningParts] = useState<ListeningPartSummary[]>([]);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-  const [actionMessage, setActionMessage] = useState<{
-    type: 'success' | 'error';
-    text: string;
-  } | null>(null);
-  const [uploadingPartId, setUploadingPartId] = useState<string | null>(null);
-  const [regeneratingPartId, setRegeneratingPartId] = useState<string | null>(null);
-  const [isForceRunningAll, setIsForceRunningAll] = useState(false);
+  const [state, dispatch] = useReducer(ttsModalReducer, initialTtsModalState);
+  const {
+    job,
+    audioMetadata,
+    listeningParts,
+    fetchError,
+    actionMessage,
+    uploadingPartId,
+    regeneratingPartId,
+    isForceRunningAll,
+  } = state;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const targetUploadPartRef = useRef<string | null>(null);
@@ -60,8 +158,9 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
   const fetchStatus = useCallback(
     async (withMeta = false) => {
       try {
-        const url = `/api/admin/generate-tts?testId=${encodeURIComponent(testId)}${withMeta ? '&includeAudioMeta=true' : ''
-          }`;
+        const url = `/api/admin/generate-tts?testId=${encodeURIComponent(testId)}${
+          withMeta ? '&includeAudioMeta=true' : ''
+        }`;
         const res = await fetch(url);
         const data = await res.json();
 
@@ -69,39 +168,46 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
           throw new Error(data.error || 'Không thể lấy trạng thái tiến trình.');
         }
 
-        setJob(data.job || null);
-        if (Array.isArray(data.audioMetadata)) {
-          setAudioMetadata(data.audioMetadata);
-        }
-        if (Array.isArray(data.listeningParts)) {
-          setListeningParts(data.listeningParts);
-        }
-        setFetchError(null);
+        dispatch({
+          type: 'FETCH_SUCCESS',
+          job: data.job || null,
+          audioMetadata: Array.isArray(data.audioMetadata) ? data.audioMetadata : undefined,
+          listeningParts: Array.isArray(data.listeningParts) ? data.listeningParts : undefined,
+        });
         return data.job as TtsJobProgress | null;
       } catch (err) {
-        setFetchError(err instanceof Error ? err.message : 'Lỗi kết nối.');
+        dispatch({
+          type: 'FETCH_ERROR',
+          error: err instanceof Error ? err.message : 'Lỗi kết nối.',
+        });
         return null;
       }
     },
     [testId]
   );
 
-  // Poll progress every 1000ms while running
+  const jobRef = useRef<TtsJobProgress | null>(job);
+
+  useEffect(() => {
+    jobRef.current = job;
+  }, [job]);
+
+  // Poll progress every 1200ms while running
   useEffect(() => {
     let isMounted = true;
     let timer: NodeJS.Timeout | null = null;
 
     const poll = async (firstLoad = false) => {
+      const activeJob = jobRef.current;
       const currentJob = await fetchStatus(
-        firstLoad || !job || job.status !== 'processing'
+        firstLoad || !activeJob || activeJob.status !== 'processing'
       );
       if (!isMounted) return;
 
       if (currentJob && currentJob.status === 'processing') {
         timer = setTimeout(() => poll(false), 1200);
       } else {
-        setRegeneratingPartId(null);
-        setIsForceRunningAll(false);
+        dispatch({ type: 'STOP_TTS_INDICATORS' });
         if (currentJob && (currentJob.status === 'completed' || currentJob.status === 'failed')) {
           await fetchStatus(true);
           if (onFinished) {
@@ -120,12 +226,7 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
   }, [testId, fetchStatus, onFinished]);
 
   const handleTriggerTts = async (options?: { force?: boolean; partId?: string }) => {
-    setActionMessage(null);
-    if (options?.partId) {
-      setRegeneratingPartId(options.partId);
-    } else if (options?.force) {
-      setIsForceRunningAll(true);
-    }
+    dispatch({ type: 'START_TTS', partId: options?.partId, force: options?.force });
 
     try {
       const res = await fetch('/api/admin/generate-tts', {
@@ -143,18 +244,20 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
         throw new Error(data.error || 'Không thể khởi chạy TTS.');
       }
       if (data.job) {
-        setJob(data.job);
+        dispatch({ type: 'FETCH_SUCCESS', job: data.job });
       }
       // Restart polling loop
       setTimeout(() => {
         void fetchStatus(true);
       }, 600);
     } catch (err) {
-      setRegeneratingPartId(null);
-      setIsForceRunningAll(false);
-      setActionMessage({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'Lỗi khi chạy TTS.',
+      dispatch({ type: 'STOP_TTS_INDICATORS' });
+      dispatch({
+        type: 'SET_ACTION_MESSAGE',
+        message: {
+          type: 'error',
+          text: err instanceof Error ? err.message : 'Lỗi khi chạy TTS.',
+        },
       });
     }
   };
@@ -170,8 +273,7 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
     e.target.value = '';
     if (!file || !partId) return;
 
-    setUploadingPartId(partId);
-    setActionMessage(null);
+    dispatch({ type: 'START_UPLOAD', partId });
 
     try {
       const formData = new FormData();
@@ -188,21 +290,25 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
         throw new Error(data.error || 'Tải file audio thất bại.');
       }
 
-      setActionMessage({
-        type: 'success',
-        text: `Đã tải lên thành công audio cho phần "${partId}" (${(
-          (data.byteLength || 0) / 1024
-        ).toFixed(0)} KB).`,
+      dispatch({
+        type: 'FINISH_UPLOAD',
+        message: {
+          type: 'success',
+          text: `Đã tải lên thành công audio cho phần "${partId}" (${(
+            (data.byteLength || 0) / 1024
+          ).toFixed(0)} KB).`,
+        },
       });
       await fetchStatus(true);
       if (onFinished) onFinished();
     } catch (err) {
-      setActionMessage({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'Không thể tải file audio lên.',
+      dispatch({
+        type: 'FINISH_UPLOAD',
+        message: {
+          type: 'error',
+          text: err instanceof Error ? err.message : 'Không thể tải file audio lên.',
+        },
       });
-    } finally {
-      setUploadingPartId(null);
     }
   };
 

@@ -131,6 +131,7 @@ export const AppHeader: React.FC = () => {
 
             <Link
               href="/admin"
+              prefetch={false}
               onClick={(e) => handleLinkClick(e, '/admin')}
               className={`border-2 border-black font-bold transition-colors cursor-pointer shrink-0 px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm inline-flex items-center gap-1.5 ${isAdmin
                   ? 'bg-black text-[#fffdf5]'

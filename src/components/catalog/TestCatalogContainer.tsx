@@ -71,7 +71,7 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
-  const isMounted = useSyncExternalStore(() => () => {}, () => true, () => false);
+  const isMounted = useSyncExternalStore(() => () => { }, () => true, () => false);
 
   const clientProgress = useTestProgress();
   const clientAttempts = useAttempts();
@@ -206,20 +206,18 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
                 key={tab.id}
                 type="button"
                 onClick={() => handleLanguageChange(tab.id as LanguageFilter)}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 font-bold text-xs sm:text-sm border transition-all cursor-pointer select-none ${
-                  isActive
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 font-bold text-xs sm:text-sm border transition-all cursor-pointer select-none ${isActive
                     ? 'bg-black text-[#fffdf5] border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]'
                     : 'bg-[#fffdf5] text-black border-transparent hover:border-black'
-                }`}
+                  }`}
                 aria-pressed={isActive}
               >
                 <span className="truncate">{tab.label}</span>
                 <span
-                  className={`font-mono text-xs px-1.5 py-0.2 border shrink-0 ${
-                    isActive
+                  className={`font-mono text-xs px-1.5 py-0.2 border shrink-0 ${isActive
                       ? 'border-[#fffdf5] bg-neutral-800 text-[#fffdf5]'
                       : 'border-black bg-[#f4eed9] text-black'
-                  }`}
+                    }`}
                 >
                   {tab.count}
                 </span>
@@ -266,9 +264,8 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`px-2.5 py-1 cursor-pointer transition-colors flex items-center gap-1 ${
-                  viewMode === 'grid' ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-[#f4eed9]'
-                }`}
+                className={`px-2.5 py-1 cursor-pointer transition-colors flex items-center gap-1 ${viewMode === 'grid' ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-[#f4eed9]'
+                  }`}
                 aria-pressed={viewMode === 'grid'}
                 title="Lưới"
               >
@@ -278,9 +275,8 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
               <button
                 type="button"
                 onClick={() => setViewMode('list')}
-                className={`px-2.5 py-1 border-l border-black cursor-pointer transition-colors flex items-center gap-1 ${
-                  viewMode === 'list' ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-[#f4eed9]'
-                }`}
+                className={`px-2.5 py-1 border-l border-black cursor-pointer transition-colors flex items-center gap-1 ${viewMode === 'list' ? 'bg-black text-[#fffdf5]' : 'bg-[#fffdf5] text-black hover:bg-[#f4eed9]'
+                  }`}
                 aria-pressed={viewMode === 'list'}
                 title="Danh sách"
               >
@@ -300,11 +296,10 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
                 key={level}
                 type="button"
                 onClick={() => setLevelFilter(level)}
-                className={`px-2 py-0.5 border font-semibold cursor-pointer transition-colors ${
-                  levelFilter === level
+                className={`px-2 py-0.5 border font-semibold cursor-pointer transition-colors ${levelFilter === level
                     ? 'border-black bg-black text-[#fffdf5]'
                     : 'border-neutral-300 bg-[#fcf8ed] text-black hover:border-black'
-                }`}
+                  }`}
                 aria-pressed={levelFilter === level}
               >
                 {level === 'all' ? 'Tất cả' : level}
@@ -326,11 +321,10 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
                 key={st.id}
                 type="button"
                 onClick={() => setStatusFilter(st.id as StatusFilter)}
-                className={`px-2 py-0.5 border font-semibold cursor-pointer transition-colors ${
-                  statusFilter === st.id
+                className={`px-2 py-0.5 border font-semibold cursor-pointer transition-colors ${statusFilter === st.id
                     ? 'border-black bg-black text-[#fffdf5]'
                     : 'border-neutral-300 bg-[#fcf8ed] text-black hover:border-black'
-                }`}
+                  }`}
                 aria-pressed={statusFilter === st.id}
               >
                 {st.label}
@@ -387,11 +381,10 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
               return (
                 <article
                   key={test.id}
-                  className={`border-2 border-black p-4 flex flex-col justify-between gap-3 transition-all hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
-                    initialProg
+                  className={`border-2 border-black p-4 flex flex-col justify-between gap-3 transition-all hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${initialProg
                       ? 'bg-[#fffcf0] border-l-4 border-l-amber-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
                       : 'bg-[#fffdf5] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
-                  }`}
+                    }`}
                 >
                   <div className="space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-1.5">
@@ -444,7 +437,7 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
             })}
           </div>
         ) : (
-          <div className="border-2 border-black divide-y border-neutral-300 divide-neutral-200 bg-[#fffdf5] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+          <div className="border-2 border-black divide-y divide-neutral-200 bg-[#fffdf5] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
             {filteredTests.map((test) => {
               const langInfo = getTestLanguageInfo(test);
               const initialProg = progressMap.get(test.id);
@@ -453,9 +446,8 @@ export const TestCatalogContainer: React.FC<TestCatalogContainerProps> = ({
               return (
                 <article
                   key={test.id}
-                  className={`p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 transition-colors ${
-                    initialProg ? 'bg-[#fffcf0] border-l-4 border-l-amber-500' : 'hover:bg-[#fcf8ed]'
-                  }`}
+                  className={`p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 transition-colors ${initialProg ? 'bg-[#fffcf0] border-l-4 border-l-amber-500' : 'hover:bg-[#fcf8ed]'
+                    }`}
                 >
                   <div className="space-y-1 flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 font-mono text-xs flex-wrap">

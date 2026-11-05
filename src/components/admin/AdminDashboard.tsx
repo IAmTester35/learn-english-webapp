@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -84,11 +84,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
     }
   }, []);
 
-  useEffect(() => {
-    if (showKeyManager && geminiKeys.length === 0) {
+  const handleToggleKeyManager = () => {
+    const next = !showKeyManager;
+    setShowKeyManager(next);
+    if (next && geminiKeys.length === 0) {
       void loadGeminiKeys();
     }
-  }, [showKeyManager, geminiKeys.length, loadGeminiKeys]);
+  };
 
   const handleToggle = async (testId: string) => {
     setTogglingId(testId);
@@ -312,7 +314,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => setShowKeyManager((prev) => !prev)}
+            onClick={handleToggleKeyManager}
             className={`border-2 border-black px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${showKeyManager
               ? 'bg-[#f4eed9] text-black'
               : 'bg-white hover:bg-neutral-100 text-black'

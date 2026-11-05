@@ -122,19 +122,21 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, initialSec
     const existing = getProgressByTestId(test.id);
 
     if (existing) {
-      setAnswers(existing.answers);
-      if (initialSection && ACTIVE_SKILL_TABS.includes(initialSection as SkillTab)) {
-        setActiveTab(initialSection as SkillTab);
-      } else {
-        const targetSection = ACTIVE_SKILL_TABS.includes(existing.lastActiveSection as SkillTab)
-          ? (existing.lastActiveSection as SkillTab)
-          : 'reading';
-        setActiveTab(targetSection);
-        window.history.replaceState(null, '', `/test/${test.id}/${targetSection}`);
-      }
-      setLastSavedNotice(
-        `Đã khôi phục tiến độ lưu lúc ${new Date(existing.updatedAt).toLocaleTimeString('vi-VN')}`
-      );
+      queueMicrotask(() => {
+        setAnswers(existing.answers);
+        if (initialSection && ACTIVE_SKILL_TABS.includes(initialSection as SkillTab)) {
+          setActiveTab(initialSection as SkillTab);
+        } else {
+          const targetSection = ACTIVE_SKILL_TABS.includes(existing.lastActiveSection as SkillTab)
+            ? (existing.lastActiveSection as SkillTab)
+            : 'reading';
+          setActiveTab(targetSection);
+          window.history.replaceState(null, '', `/test/${test.id}/${targetSection}`);
+        }
+        setLastSavedNotice(
+          `Đã khôi phục tiến độ lưu lúc ${new Date(existing.updatedAt).toLocaleTimeString('vi-VN')}`
+        );
+      });
     } else {
       if (!initialSection || !ACTIVE_SKILL_TABS.includes(initialSection as SkillTab)) {
         window.history.replaceState(null, '', `/test/${test.id}/reading`);
@@ -166,6 +168,11 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, initialSec
 
   const persistDraft = (updatedAnswers: UserAnswers, currentTab: SkillTab) => {
     const stats = calculateProgressStats(test, updatedAnswers);
+    if (stats.answeredCount === 0) {
+      deleteTestProgress(test.id);
+      setLastSavedNotice('');
+      return;
+    }
     const now = new Date().toISOString();
     saveTestProgress({
       testId: test.id,
