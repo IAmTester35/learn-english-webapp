@@ -7,7 +7,9 @@ import { Mp3Encoder } from '@breezystack/lamejs';
 import {
   buildListeningTtsRequest,
   combineAudioPartsToWavBytes,
+  extractPcmFromWav,
   getListeningTtsModel,
+  pcm16ToWavBytes,
 } from '../services/listeningTtsCore';
 import type {
   ListeningAudioConfig,
@@ -298,6 +300,8 @@ export function isFfmpegAvailable(): boolean {
 
 /**
  * Encodes a WAV buffer (16-bit PCM) into an MP3 buffer in-memory.
+ * - Extracts purely the audio PCM payload from the 'data' chunk, stripping
+ *   any trailing C2PA signature manifests or metadata chunks that sound like white noise.
  * - Uses ffmpeg via OS temp directory (192kbps, 24kHz) when available on host.
  * - Falls back to pure-JS @breezystack/lamejs in-memory encoder (128kbps, 24kHz) on serverless/Vercel.
  */
@@ -307,18 +311,9 @@ export function convertWavBytesToMp3Buffer(rawWavBytes: Uint8Array): {
   bitrateKbps: number;
   sampleRate: number;
 } {
-  let sampleRate = 24000;
-  if (rawWavBytes.byteLength > 44) {
-    const headerView = new DataView(
-      rawWavBytes.buffer,
-      rawWavBytes.byteOffset,
-      44
-    );
-    const parsedRate = headerView.getUint32(24, true);
-    if (parsedRate >= 8000 && parsedRate <= 96000) {
-      sampleRate = parsedRate;
-    }
-  }
+  const parsed = extractPcmFromWav(rawWavBytes);
+  const sampleRate = parsed.sampleRate || 24000;
+  const channels = parsed.channels || 1;
 
   // 1. Try ffmpeg via OS temp dir if available for 192kbps studio encoding
   if (isFfmpegAvailable()) {
@@ -326,7 +321,8 @@ export function convertWavBytesToMp3Buffer(rawWavBytes: Uint8Array): {
     const tmpWav = path.join(os.tmpdir(), `${tmpId}.wav`);
     const tmpMp3 = path.join(os.tmpdir(), `${tmpId}.mp3`);
     try {
-      fs.writeFileSync(tmpWav, rawWavBytes);
+      const cleanWavBytes = pcm16ToWavBytes(parsed.pcmBytes, sampleRate);
+      fs.writeFileSync(tmpWav, cleanWavBytes);
       const proc = spawnSync(
         'ffmpeg',
         ['-y', '-i', tmpWav, '-b:a', '192k', '-ar', String(sampleRate), tmpMp3],
@@ -356,28 +352,44 @@ export function convertWavBytesToMp3Buffer(rawWavBytes: Uint8Array): {
   }
 
   // 2. Pure-JS in-memory MP3 encoding via @breezystack/lamejs (works on Vercel & serverless Next.js)
-  const pcmBytes =
-    rawWavBytes.byteLength > 44 ? rawWavBytes.subarray(44) : rawWavBytes;
+  const pcmBytes = parsed.pcmBytes;
   const sampleCount = Math.floor(pcmBytes.byteLength / 2);
-  const samples = new Int16Array(sampleCount);
   const pcmView = new DataView(
     pcmBytes.buffer,
     pcmBytes.byteOffset,
     pcmBytes.byteLength
   );
-  for (let i = 0; i < sampleCount; i++) {
-    samples[i] = pcmView.getInt16(i * 2, true);
+
+  let leftSamples: Int16Array;
+  let rightSamples: Int16Array | undefined;
+
+  if (channels === 2) {
+    const totalFrames = Math.floor(sampleCount / 2);
+    leftSamples = new Int16Array(totalFrames);
+    rightSamples = new Int16Array(totalFrames);
+    for (let i = 0; i < totalFrames; i++) {
+      leftSamples[i] = pcmView.getInt16(i * 4, true);
+      rightSamples[i] = pcmView.getInt16(i * 4 + 2, true);
+    }
+  } else {
+    leftSamples = new Int16Array(sampleCount);
+    for (let i = 0; i < sampleCount; i++) {
+      leftSamples[i] = pcmView.getInt16(i * 2, true);
+    }
   }
 
   const bitrateKbps = 128;
-  const encoder = new Mp3Encoder(1, sampleRate, bitrateKbps);
+  const encoder = new Mp3Encoder(channels, sampleRate, bitrateKbps);
   const chunkSize = 1152;
   const mp3Chunks: Uint8Array[] = [];
   let totalBytes = 0;
 
-  for (let i = 0; i < samples.length; i += chunkSize) {
-    const sampleChunk = samples.subarray(i, i + chunkSize);
-    const mp3buf = encoder.encodeBuffer(sampleChunk);
+  for (let i = 0; i < leftSamples.length; i += chunkSize) {
+    const leftChunk = leftSamples.subarray(i, i + chunkSize);
+    const rightChunk = rightSamples ? rightSamples.subarray(i, i + chunkSize) : undefined;
+    const mp3buf = rightChunk
+      ? encoder.encodeBuffer(leftChunk, rightChunk)
+      : encoder.encodeBuffer(leftChunk);
     if (mp3buf.length > 0) {
       const copy = new Uint8Array(mp3buf.buffer, mp3buf.byteOffset, mp3buf.byteLength);
       mp3Chunks.push(new Uint8Array(copy));

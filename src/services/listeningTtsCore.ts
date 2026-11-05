@@ -504,6 +504,110 @@ function hasRiffWavHeader(bytes: Uint8Array): boolean {
   );
 }
 
+export interface ParsedWavAudio {
+  pcmBytes: Uint8Array;
+  sampleRate: number;
+  channels: number;
+  bitsPerSample: number;
+  audioFormat: number;
+}
+
+/**
+ * Robustly parses a RIFF WAVE container and extracts purely the PCM audio samples
+ * from the 'data' chunk.
+ * 
+ * Crucially strips trailing metadata chunks (such as Google Gemini's 6KB+ C2PA
+ * authenticity manifest) which otherwise gets treated as 16-bit PCM samples
+ * and produces loud white noise bursts at the end of audio files.
+ */
+export function extractPcmFromWav(wavBytes: Uint8Array): ParsedWavAudio {
+  const fallback: ParsedWavAudio = {
+    pcmBytes: wavBytes.byteLength > 44 ? wavBytes.subarray(44) : wavBytes,
+    sampleRate: DEFAULT_SAMPLE_RATE,
+    channels: 1,
+    bitsPerSample: 16,
+    audioFormat: 1,
+  };
+
+  if (wavBytes.byteLength < 12) {
+    return fallback;
+  }
+
+  const isLittleEndian =
+    wavBytes[0] === 0x52 &&
+    wavBytes[1] === 0x49 &&
+    wavBytes[2] === 0x46 &&
+    wavBytes[3] === 0x46; // "RIFF"
+
+  const isBigEndian =
+    wavBytes[0] === 0x52 &&
+    wavBytes[1] === 0x49 &&
+    wavBytes[2] === 0x46 &&
+    wavBytes[3] === 0x58; // "RIFX"
+
+  if (!isLittleEndian && !isBigEndian) {
+    return fallback;
+  }
+
+  const isWave =
+    wavBytes[8] === 0x57 &&
+    wavBytes[9] === 0x41 &&
+    wavBytes[10] === 0x56 &&
+    wavBytes[11] === 0x45; // "WAVE"
+
+  if (!isWave) {
+    return fallback;
+  }
+
+  const view = new DataView(wavBytes.buffer, wavBytes.byteOffset, wavBytes.byteLength);
+  const le = isLittleEndian;
+
+  let offset = 12;
+  let sampleRate = DEFAULT_SAMPLE_RATE;
+  let channels = 1;
+  let bitsPerSample = 16;
+  let audioFormat = 1;
+  let pcmBytes: Uint8Array | null = null;
+
+  while (offset + 8 <= wavBytes.byteLength) {
+    const chunkId = String.fromCharCode(
+      wavBytes[offset],
+      wavBytes[offset + 1],
+      wavBytes[offset + 2],
+      wavBytes[offset + 3]
+    );
+    const chunkSize = view.getUint32(offset + 4, le);
+    const dataOffset = offset + 8;
+    const safeChunkSize = Math.max(0, Math.min(chunkSize, wavBytes.byteLength - dataOffset));
+
+    if (chunkId === 'fmt ') {
+      if (safeChunkSize >= 16) {
+        audioFormat = view.getUint16(dataOffset, le);
+        channels = view.getUint16(dataOffset + 2, le);
+        const parsedRate = view.getUint32(dataOffset + 4, le);
+        if (parsedRate >= 8000 && parsedRate <= 192000) {
+          sampleRate = parsedRate;
+        }
+        bitsPerSample = view.getUint16(dataOffset + 14, le);
+      }
+    } else if (chunkId === 'data') {
+      pcmBytes = wavBytes.subarray(dataOffset, dataOffset + safeChunkSize);
+    }
+
+    // RIFF chunk payload is word-aligned (padded to an even number of bytes)
+    const paddedSize = (chunkSize + 1) & ~1;
+    offset += 8 + paddedSize;
+  }
+
+  return {
+    pcmBytes: pcmBytes || (wavBytes.byteLength > 44 ? wavBytes.subarray(44) : wavBytes),
+    sampleRate,
+    channels: channels || 1,
+    bitsPerSample: bitsPerSample || 16,
+    audioFormat,
+  };
+}
+
 export function pcm16ToWavBytes(
   pcmBytes: Uint8Array,
   sampleRate: number
@@ -549,13 +653,22 @@ export function combineAudioPartsToWavBytes(parts: InlineAudioPart[]): {
     const rawBytes = base64ToUint8Array(parts[0].data);
     const mimeType = parts[0].mimeType || '';
     const alreadyWav = hasRiffWavHeader(rawBytes);
-    const isPlayableContainer =
-      alreadyWav || /^audio\/(wav|x-wav|wave|mpeg|mp3|ogg|webm)/i.test(mimeType);
 
-    if (isPlayableContainer) {
+    if (alreadyWav) {
+      // Re-package clean WAV bytes: extracts exact PCM from data chunk,
+      // eliminating trailing C2PA signature chunks or other non-audio metadata.
+      const parsed = extractPcmFromWav(rawBytes);
+      return {
+        bytes: pcm16ToWavBytes(parsed.pcmBytes, parsed.sampleRate),
+        mimeType: 'audio/wav',
+      };
+    }
+
+    const isOtherPlayable = /^audio\/(mpeg|mp3|ogg|webm)/i.test(mimeType);
+    if (isOtherPlayable) {
       return {
         bytes: rawBytes,
-        mimeType: alreadyWav ? 'audio/wav' : mimeType,
+        mimeType,
       };
     }
 
@@ -567,13 +680,21 @@ export function combineAudioPartsToWavBytes(parts: InlineAudioPart[]): {
 
   const pcmChunks: Uint8Array[] = [];
   let totalLength = 0;
-  const sampleRate = parseSampleRate(parts[0]?.mimeType);
+  let detectedSampleRate = parseSampleRate(parts[0]?.mimeType);
 
   for (const part of parts) {
     const bytes = base64ToUint8Array(part.data);
-    const pcmPayload = hasRiffWavHeader(bytes) ? bytes.subarray(44) : bytes;
-    pcmChunks.push(pcmPayload);
-    totalLength += pcmPayload.byteLength;
+    if (hasRiffWavHeader(bytes)) {
+      const parsed = extractPcmFromWav(bytes);
+      pcmChunks.push(parsed.pcmBytes);
+      totalLength += parsed.pcmBytes.byteLength;
+      if (parsed.sampleRate > 0) {
+        detectedSampleRate = parsed.sampleRate;
+      }
+    } else {
+      pcmChunks.push(bytes);
+      totalLength += bytes.byteLength;
+    }
   }
 
   const combinedPcm = new Uint8Array(totalLength);
@@ -584,7 +705,7 @@ export function combineAudioPartsToWavBytes(parts: InlineAudioPart[]): {
   }
 
   return {
-    bytes: pcm16ToWavBytes(combinedPcm, sampleRate),
+    bytes: pcm16ToWavBytes(combinedPcm, detectedSampleRate),
     mimeType: 'audio/wav',
   };
 }
