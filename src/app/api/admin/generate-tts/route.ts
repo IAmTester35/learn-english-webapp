@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import {
   generateAudioForTest,
-  triggerBackgroundTts,
   getTtsJobProgressAsync,
   getAllTtsJobProgresses,
   uploadManualPartAudioToSupabase,
+  requestStopTts,
 } from '@/server/ttsService';
-import { getTestAudioMetadataList, getTestById } from '@/server/testRepository';
+import { getTestAudioMetadataList, getTestListeningPartsOnly } from '@/server/testRepository';
 import { verifyAdminSession } from '@/server/auth';
 
 export const maxDuration = 300;
@@ -27,14 +27,16 @@ export async function GET(request: NextRequest) {
 
   if (testId) {
     const cleanId = testId.trim();
-    const job = await getTtsJobProgressAsync(cleanId);
 
     if (includeAudioMeta) {
-      const [audioMetadata, testDoc] = await Promise.all([
+      // Run job status, audio metadata, and lightweight listening parts queries in parallel
+      // Avoids loading the heavy ~100KB full testDoc (Reading, Writing, Speaking)
+      const [job, audioMetadata, parts] = await Promise.all([
+        getTtsJobProgressAsync(cleanId),
         getTestAudioMetadataList(cleanId),
-        getTestById(cleanId, { allowHidden: true }),
+        getTestListeningPartsOnly(cleanId),
       ]);
-      const listeningParts = (testDoc?.sections?.listening?.parts || []).map((p, idx) => ({
+      const listeningParts = parts.map((p, idx) => ({
         id: p.id,
         index: idx,
         title: p.title,
@@ -47,6 +49,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ job, audioMetadata, listeningParts });
     }
 
+    const job = await getTtsJobProgressAsync(cleanId);
     return NextResponse.json({ job });
   }
 
@@ -84,11 +87,13 @@ export async function POST(request: NextRequest) {
     background = true,
     force = false,
     partId,
+    action,
   } = body as {
     testId?: unknown;
     background?: boolean;
     force?: boolean;
     partId?: string;
+    action?: string;
   };
 
   if (!testId || typeof testId !== 'string' || !testId.trim()) {
@@ -101,6 +106,18 @@ export async function POST(request: NextRequest) {
   const cleanTestId = testId.trim();
   const cleanPartId = typeof partId === 'string' && partId.trim() ? partId.trim() : undefined;
 
+  // Safe stop handling: signal stop, abort further key allocation
+  if (action === 'stop') {
+    const job = requestStopTts(cleanTestId);
+    return NextResponse.json({
+      success: true,
+      stopRequested: true,
+      job,
+      message:
+        'Đã gửi tín hiệu dừng an toàn. Các request đang chạy sẽ tiếp tục cho đến khi hoàn thành, không cấp phát thêm key mới.',
+    });
+  }
+
   const activeJob = await getTtsJobProgressAsync(cleanTestId);
   if (activeJob && activeJob.status === 'processing' && !force) {
     return NextResponse.json({
@@ -111,13 +128,26 @@ export async function POST(request: NextRequest) {
   }
 
   if (background) {
-    triggerBackgroundTts(cleanTestId, { force: Boolean(force), partId: cleanPartId });
-    await new Promise((resolve) => setTimeout(resolve, 120));
-    const job = await getTtsJobProgressAsync(cleanTestId);
+    after(async () => {
+      try {
+        await generateAudioForTest(cleanTestId, { force: Boolean(force), partId: cleanPartId });
+      } catch (err) {
+        console.error(`[Background TTS Error] Lỗi xử lý "${cleanTestId}":`, err);
+      }
+    });
+
     return NextResponse.json({
       success: true,
       started: true,
-      job,
+      job: activeJob || {
+        testId: cleanTestId,
+        status: 'processing',
+        total: 0,
+        completed: 0,
+        percent: 0,
+        startedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
     });
   }
 

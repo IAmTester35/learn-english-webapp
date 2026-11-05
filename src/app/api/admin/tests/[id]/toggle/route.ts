@@ -27,8 +27,8 @@ export async function POST(
     const result = await toggleTestVisibility(id);
 
     try {
-      revalidatePath('/', 'layout');
-      revalidatePath('/test');
+      revalidatePath('/');
+      revalidatePath(`/test/${id}`);
       revalidatePath('/admin');
     } catch {
       // Revalidation might be skipped in non-cache contexts

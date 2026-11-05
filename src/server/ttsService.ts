@@ -60,10 +60,56 @@ export interface TtsJobProgress {
   errors: string[];
   startedAt: string;
   updatedAt: string;
+  stopRequested?: boolean;
 }
 
 // In-memory live job store (synced with Supabase public.tts_jobs)
 const ttsJobStore = new Map<string, TtsJobProgress>();
+
+// In-memory stop signals set
+const ttsStopSignals = new Set<string>();
+
+export function requestStopTts(testId: string): TtsJobProgress | null {
+  const cleanId = testId.trim().replace(/\.json$/i, '');
+  ttsStopSignals.add(cleanId);
+  const job = ttsJobStore.get(cleanId);
+  if (job) {
+    job.stopRequested = true;
+    job.currentMessage = '[STOP_REQUESTED] Đang dừng an toàn... Các phần đang xử lý sẽ hoàn tất, không cấp phát thêm key.';
+    job.updatedAt = new Date().toISOString();
+    void syncJobToSupabase(job);
+    return job;
+  }
+  return null;
+}
+
+export function isTtsStopRequested(testId: string): boolean {
+  const cleanId = testId.trim().replace(/\.json$/i, '');
+  if (ttsStopSignals.has(cleanId)) return true;
+  const job = ttsJobStore.get(cleanId);
+  return Boolean(job?.stopRequested);
+}
+
+export async function isTtsStopRequestedAsync(testId: string): Promise<boolean> {
+  const cleanId = testId.trim().replace(/\.json$/i, '');
+  if (isTtsStopRequested(cleanId)) return true;
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return false;
+  try {
+    const { data } = await supabase
+      .from('tts_jobs')
+      .select('current_message')
+      .eq('test_id', cleanId)
+      .maybeSingle();
+    if (data?.current_message?.includes('[STOP_REQUESTED]')) {
+      ttsStopSignals.add(cleanId);
+      return true;
+    }
+  } catch {
+    // Non-fatal
+  }
+  return false;
+}
 
 async function syncJobToSupabase(job: TtsJobProgress): Promise<void> {
   const supabase = getSupabaseAdminClient();
@@ -113,7 +159,9 @@ export async function getTtsJobProgressAsync(
   try {
     const { data, error } = await supabase
       .from('tts_jobs')
-      .select('*')
+      .select(
+        'test_id, status, total, completed, current_part_index, current_part_id, current_part_title, current_message, percent, parts, errors, started_at, updated_at'
+      )
       .eq('test_id', cleanId)
       .maybeSingle();
 
@@ -195,7 +243,8 @@ async function callGeminiTtsWithTimeout(
 export async function generateAudioBytesWithKeyRotation(
   transcript: string,
   audioConfig?: ListeningAudioConfig,
-  speakers?: SpeakerConfig[]
+  speakers?: SpeakerConfig[],
+  options?: { isStopRequested?: () => boolean }
 ): Promise<Uint8Array> {
   const requestParams = buildListeningTtsRequest({
     transcript,
@@ -203,25 +252,28 @@ export async function generateAudioBytesWithKeyRotation(
     speakers,
   });
 
-  return executeWithGeminiKeyRotation(async (client) => {
-    const response = await callGeminiTtsWithTimeout(
-      client,
-      requestParams,
-      TTS_TIMEOUT_MS
-    );
-    const parts =
-      response.candidates?.[0]?.content?.parts
-        ?.map((p) => p.inlineData)
-        .filter((d): d is { data: string; mimeType?: string } => Boolean(d?.data)) ||
-      [];
+  return executeWithGeminiKeyRotation(
+    async (client) => {
+      const response = await callGeminiTtsWithTimeout(
+        client,
+        requestParams,
+        TTS_TIMEOUT_MS
+      );
+      const parts =
+        response.candidates?.[0]?.content?.parts
+          ?.map((p) => p.inlineData)
+          .filter((d): d is { data: string; mimeType?: string } => Boolean(d?.data)) ||
+        [];
 
-    if (parts.length === 0) {
-      throw new Error('Gemini API không trả về dữ liệu audio inlineData.');
-    }
+      if (parts.length === 0) {
+        throw new Error('Gemini API không trả về dữ liệu audio inlineData.');
+      }
 
-    const { bytes } = combineAudioPartsToWavBytes(parts);
-    return bytes;
-  });
+      const { bytes } = combineAudioPartsToWavBytes(parts);
+      return bytes;
+    },
+    { isStopRequested: options?.isStopRequested }
+  );
 }
 
 /**
@@ -378,18 +430,45 @@ export async function uploadAudioBytesToSupabase(params: {
   const mimeType = format === 'mp3' ? 'audio/mpeg' : 'audio/wav';
   const storagePath = `${params.testId}/${params.partId}.${format}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from(AUDIO_STORAGE_BUCKET)
-    .upload(storagePath, params.audioBytes, {
-      contentType: mimeType,
-      cacheControl: '31536000',
-      upsert: true,
-    });
+  let lastError: Error | null = null;
+  const maxRetries = 3;
 
-  if (uploadError) {
-    throw new Error(
-      `Lỗi tải file audio lên Supabase Storage (${storagePath}): ${uploadError.message}`
-    );
+  const filePayload = Buffer.isBuffer(params.audioBytes)
+    ? params.audioBytes
+    : Buffer.from(params.audioBytes);
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from(AUDIO_STORAGE_BUCKET)
+        .upload(storagePath, filePayload, {
+          contentType: mimeType,
+          cacheControl: '31536000',
+          upsert: true,
+        });
+
+      if (!uploadError) {
+        lastError = null;
+        break;
+      }
+
+      lastError = new Error(
+        `Lỗi tải file audio lên Supabase Storage (${storagePath}): ${uploadError.message}`
+      );
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+    }
+
+    if (attempt < maxRetries) {
+      console.warn(
+        `[Storage Upload] Lần thử ${attempt}/${maxRetries} thất bại (${storagePath}): ${lastError.message}. Thử lại sau ${attempt * 600}ms...`
+      );
+      await new Promise((resolve) => setTimeout(resolve, attempt * 600));
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
   }
 
   const { data: publicUrlData } = supabase.storage
@@ -581,6 +660,24 @@ export async function generateAudioForTest(
   };
 
   for (let idx = 0; idx < partsWithTranscript.length; idx++) {
+    // Check if safe stop was requested before allocating keys or processing this part
+    if (await isTtsStopRequestedAsync(cleanTestId)) {
+      console.log(`[TTS Engine] 🛑 Đã nhận tín hiệu dừng an toàn cho "${cleanTestId}". Dừng xử lý các phần tiếp theo.`);
+      for (let r = idx; r < partsWithTranscript.length; r++) {
+        const remainingPart = partsWithTranscript[r];
+        stats.skipped++;
+        const j = ttsJobStore.get(cleanTestId);
+        if (j) {
+          const target = j.parts.find((p) => p.id === remainingPart.id);
+          if (target && target.status === 'pending') {
+            target.status = 'skipped';
+            target.error = 'Đã dừng an toàn theo yêu cầu.';
+          }
+        }
+      }
+      break;
+    }
+
     const part = partsWithTranscript[idx];
     const partIndexInDoc = allParts.findIndex((p) => p.id === part.id);
     const currentHash = computeListeningTranscriptHash(part);
@@ -636,7 +733,8 @@ export async function generateAudioForTest(
       const wavBytes = await generateAudioBytesWithKeyRotation(
         part.transcript!,
         part.audioConfig,
-        part.speakers
+        part.speakers,
+        { isStopRequested: () => isTtsStopRequested(cleanTestId) }
       );
 
       if (currentJob) {
@@ -713,22 +811,32 @@ export async function generateAudioForTest(
     }
   }
 
+  const wasStopped = isTtsStopRequested(cleanTestId);
+  ttsStopSignals.delete(cleanTestId);
+
   const finalJob = ttsJobStore.get(cleanTestId);
   if (finalJob) {
     finalJob.percent = 100;
     finalJob.currentPartId = undefined;
     finalJob.currentPartTitle = undefined;
-    finalJob.status =
-      finalJob.errors.length === 0
-        ? 'completed'
-        : stats.generated > 0 || stats.skipped > 0
+    finalJob.stopRequested = false;
+
+    if (wasStopped) {
+      finalJob.status = stats.generated > 0 || stats.skipped > 0 ? 'completed' : 'failed';
+      finalJob.currentMessage = `Đã dừng an toàn theo yêu cầu. Đã tạo ${stats.generated} phần, có sẵn ${stats.skipped} phần.${stats.errors.length ? ` (${stats.errors.length} lỗi)` : ''}`;
+    } else {
+      finalJob.status =
+        finalJob.errors.length === 0
           ? 'completed'
-          : 'failed';
-    finalJob.currentMessage =
-      finalJob.status === 'completed'
-        ? `Hoàn tất trên Supabase! Đã tạo mới ${stats.generated} phần, có sẵn ${stats.skipped} phần.${stats.errors.length ? ` (${stats.errors.length} lỗi)` : ''
-        }`
-        : `Tạo audio thất bại (${stats.errors.length} lỗi).`;
+          : stats.generated > 0 || stats.skipped > 0
+            ? 'completed'
+            : 'failed';
+      finalJob.currentMessage =
+        finalJob.status === 'completed'
+          ? `Hoàn tất trên Supabase! Đã tạo mới ${stats.generated} phần, có sẵn ${stats.skipped} phần.${stats.errors.length ? ` (${stats.errors.length} lỗi)` : ''
+          }`
+          : `Tạo audio thất bại (${stats.errors.length} lỗi).`;
+    }
     finalJob.updatedAt = new Date().toISOString();
     await syncJobToSupabase(finalJob);
   }

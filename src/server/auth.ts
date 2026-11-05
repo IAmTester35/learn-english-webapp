@@ -1,10 +1,40 @@
 import 'server-only';
+import { cache } from 'react';
+import { cookies } from 'next/headers';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { getSupabaseAdminClient } from '@/lib/supabase/admin';
 import { isSupabaseConfigured } from '@/lib/supabase/config';
 
 export const DEFAULT_ADMIN_EMAIL =
   (process.env.ADMIN_EMAIL || 'admin@ltestlab.local').trim();
+
+interface CachedSession {
+  isValid: boolean;
+  email?: string;
+  expiresAt: number;
+}
+
+// In-memory short-lived session cache to eliminate redundant GET /auth/v1/user network storms
+const sessionCache = new Map<string, CachedSession>();
+
+/**
+ * Extracts a signature of Supabase Auth cookies from the current request.
+ * If no Supabase auth token cookies are present, returns null (meaning definitely unauthenticated).
+ */
+async function getAuthCookieSignature(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies();
+    const all = cookieStore.getAll();
+    const authTokens = all
+      .filter((c) => c.name.startsWith('sb-') && c.name.includes('-auth-token'))
+      .map((c) => `${c.name}=${c.value}`)
+      .sort()
+      .join(';');
+    return authTokens || null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Ensures the single Admin account exists in Supabase Auth if `ADMIN_PASSWORD` is configured
@@ -80,6 +110,9 @@ export async function signInAdminWithSupabase(
     };
   }
 
+  // Invalidate any old session cache
+  sessionCache.clear();
+
   return {
     success: true,
     email: data.user.email,
@@ -90,6 +123,7 @@ export async function signInAdminWithSupabase(
  * Signs out the current Supabase Auth session and clears SSR cookies.
  */
 export async function clearAdminSessionCookie(): Promise<void> {
+  sessionCache.clear();
   if (!isSupabaseConfigured()) return;
 
   const supabase = await getSupabaseServerClient();
@@ -99,47 +133,75 @@ export async function clearAdminSessionCookie(): Promise<void> {
 }
 
 /**
- * Verifies whether the current request holds a valid authenticated Supabase session.
- * Because the system enforces a single Admin account on Supabase Auth (with no public user auth),
- * a verified user from `supabase.auth.getUser()` is the Admin.
+ * Internal session verifier with 30s in-memory TTL caching and fast-path for requests without auth cookies.
  */
-export async function verifyAdminSession(): Promise<boolean> {
+async function resolveAdminSessionInternal(): Promise<{ isValid: boolean; email?: string }> {
+  if (!isSupabaseConfigured()) {
+    return { isValid: false };
+  }
+
+  const authSig = await getAuthCookieSignature();
+  // Fast-path: If the request has no Supabase auth token cookie at all, skip network call entirely.
+  if (!authSig) {
+    return { isValid: false };
+  }
+
+  // Check TTL cache (reduces polling / repeated API calls to Supabase Auth by 95%+)
+  const cached = sessionCache.get(authSig);
+  const now = Date.now();
+  if (cached && now < cached.expiresAt) {
+    return { isValid: cached.isValid, email: cached.email };
+  }
+
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) {
+    return { isValid: false };
+  }
+
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data?.user) {
+    sessionCache.set(authSig, { isValid: false, expiresAt: now + 5_000 });
+    return { isValid: false };
+  }
+
+  const validSession = {
+    isValid: true,
+    email: data.user.email,
+    expiresAt: now + 30_000, // Cache valid admin session for 30 seconds
+  };
+
+  if (sessionCache.size > 200) {
+    sessionCache.clear();
+  }
+  sessionCache.set(authSig, validSession);
+
+  return validSession;
+}
+
+/**
+ * Verifies whether the current request holds a valid authenticated Supabase session.
+ * Deduplicated per-request with React cache() and cross-request with 30s token cache.
+ */
+export const verifyAdminSession = cache(async (): Promise<boolean> => {
   try {
-    if (!isSupabaseConfigured()) {
-      return false;
-    }
-
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      return false;
-    }
-
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data?.user) {
-      return false;
-    }
-
-    return true;
+    const session = await resolveAdminSessionInternal();
+    return session.isValid;
   } catch (err: unknown) {
     if ((err as { digest?: string })?.digest === 'DYNAMIC_SERVER_USAGE') {
       throw err;
     }
     return false;
   }
-}
+});
 
 /**
  * Returns the currently authenticated admin user's email, if any.
  */
-export async function getAdminUserEmail(): Promise<string | null> {
+export const getAdminUserEmail = cache(async (): Promise<string | null> => {
   try {
-    if (!isSupabaseConfigured()) return null;
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) return null;
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data?.user) return null;
-    return data.user.email || null;
+    const session = await resolveAdminSessionInternal();
+    return session.isValid ? session.email || null : null;
   } catch {
     return null;
   }
-}
+});

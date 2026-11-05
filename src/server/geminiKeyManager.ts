@@ -225,10 +225,15 @@ export function loadEnvGeminiKeys(): Array<{ label: string; apiKey: string }> {
   return result;
 }
 
+let hasCheckedEnvSeed = false;
+
 /**
  * Automatically seeds keys from .env into Supabase `gemini_api_keys` if the table is empty.
+ * Uses in-memory caching to avoid redundant queries on subsequent requests.
  */
 export async function ensureEnvKeysSeededInSupabase(): Promise<void> {
+  if (hasCheckedEnvSeed) return;
+
   const supabase = getSupabaseAdminClient();
   if (!supabase) return;
 
@@ -238,11 +243,15 @@ export async function ensureEnvKeysSeededInSupabase(): Promise<void> {
       .select('id', { count: 'exact', head: true });
 
     if (error || (count !== null && count > 0)) {
+      hasCheckedEnvSeed = true;
       return;
     }
 
     const envKeys = loadEnvGeminiKeys();
-    if (envKeys.length === 0) return;
+    if (envKeys.length === 0) {
+      hasCheckedEnvSeed = true;
+      return;
+    }
 
     const rowsToInsert = envKeys.map((item) => ({
       label: item.label,
@@ -255,6 +264,7 @@ export async function ensureEnvKeysSeededInSupabase(): Promise<void> {
     await supabase.from('gemini_api_keys').upsert(rowsToInsert, {
       onConflict: 'key_hash',
     });
+    hasCheckedEnvSeed = true;
   } catch {
     // Ignore seed errors if table is not migrated yet
   }
@@ -272,7 +282,9 @@ export async function listGeminiKeysForAdmin(): Promise<GeminiKeyPublicInfo[]> {
 
   const { data, error } = await supabase
     .from('gemini_api_keys')
-    .select('*')
+    .select(
+      'id, label, key_masked, status, cooldown_until, last_used_at, last_checked_at, last_latency_ms, last_error_code, last_error_message, success_count, rate_limit_count, error_count, created_at, updated_at'
+    )
     .order('created_at', { ascending: true });
 
   if (error || !data) {
@@ -320,7 +332,9 @@ export async function addGeminiKeyToSupabase(params: {
       },
       { onConflict: 'key_hash' }
     )
-    .select('*')
+    .select(
+      'id, label, key_masked, status, cooldown_until, last_used_at, last_checked_at, last_latency_ms, last_error_code, last_error_message, success_count, rate_limit_count, error_count, created_at, updated_at'
+    )
     .single();
 
   if (error || !data) {
@@ -365,7 +379,9 @@ export async function toggleGeminiKeyStatusInSupabase(
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
-    .select('*')
+    .select(
+      'id, label, key_masked, status, cooldown_until, last_used_at, last_checked_at, last_latency_ms, last_error_code, last_error_message, success_count, rate_limit_count, error_count, created_at, updated_at'
+    )
     .single();
 
   if (error || !data) {
@@ -406,7 +422,7 @@ export async function probeSingleGeminiKeyHealth(id: string): Promise<GeminiKeyP
 
   const { data: row, error: fetchErr } = await supabase
     .from('gemini_api_keys')
-    .select('*')
+    .select('id, label, encrypted_key, status, success_count, rate_limit_count, error_count')
     .eq('id', id)
     .single();
 
@@ -481,7 +497,9 @@ export async function probeSingleGeminiKeyHealth(id: string): Promise<GeminiKeyP
       updated_at: nowIso,
     })
     .eq('id', id)
-    .select('*')
+    .select(
+      'id, label, key_masked, status, cooldown_until, last_used_at, last_checked_at, last_latency_ms, last_error_code, last_error_message, success_count, rate_limit_count, error_count, created_at, updated_at'
+    )
     .single();
 
   if (updateErr || !updated) {
@@ -516,7 +534,7 @@ async function getCandidateKeysForExecution(): Promise<CandidateKeyItem[]> {
   if (supabase) {
     const { data, error } = await supabase
       .from('gemini_api_keys')
-      .select('*')
+      .select('id, label, encrypted_key, status, cooldown_until, success_count, error_count, rate_limit_count')
       .neq('status', 'disabled')
       .neq('status', 'dead');
 
@@ -562,13 +580,22 @@ async function getCandidateKeysForExecution(): Promise<CandidateKeyItem[]> {
     .map((k) => ({ label: k.label, plainKey: k.apiKey }));
 }
 
+export interface KeyRotationOptions {
+  isStopRequested?: () => boolean;
+}
+
 /**
  * Unified Zero-Wait Failover executor across all active Gemini keys in Supabase.
  * Used by both Writing AI Grader and Listening TTS Generator.
  */
 export async function executeWithGeminiKeyRotation<T>(
-  operation: (client: GoogleGenAI, keyLabel: string) => Promise<T>
+  operation: (client: GoogleGenAI, keyLabel: string) => Promise<T>,
+  options?: KeyRotationOptions
 ): Promise<T> {
+  if (options?.isStopRequested?.()) {
+    throw new Error('Đã nhận tín hiệu dừng an toàn. Không cấp phát thêm Gemini API Key.');
+  }
+
   const candidates = await getCandidateKeysForExecution();
   if (candidates.length === 0) {
     throw new Error(
@@ -579,7 +606,15 @@ export async function executeWithGeminiKeyRotation<T>(
   const supabase = getSupabaseAdminClient();
   let lastError: unknown = null;
 
-  for (const candidate of candidates) {
+  for (let i = 0; i < candidates.length; i++) {
+    const candidate = candidates[i];
+    if (i > 0 && options?.isStopRequested?.()) {
+      throw (
+        (lastError instanceof Error ? lastError : null) ||
+        new Error('Đã nhận tín hiệu dừng an toàn. Không cấp phát thêm key để thử lại.')
+      );
+    }
+
     const client = getOrCreateGenAIClient(candidate.plainKey);
     const startMs = Date.now();
 
@@ -609,6 +644,12 @@ export async function executeWithGeminiKeyRotation<T>(
       return result;
     } catch (err: unknown) {
       lastError = err;
+
+      // If stop was requested while this request was running, do not allocate any more keys
+      if (options?.isStopRequested?.()) {
+        throw err;
+      }
+
       const now = Date.now();
       const nowIso = new Date(now).toISOString();
       const anyErr = err as { status?: number; code?: number; message?: string };

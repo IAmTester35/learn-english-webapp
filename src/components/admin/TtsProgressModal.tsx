@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Upload,
   RotateCcw,
+  Square,
 } from 'lucide-react';
 import type { TtsJobProgress } from '@/server/ttsService';
 import type { TestAudioAssetMetadata } from '@/types/test';
@@ -50,19 +51,22 @@ interface TtsModalState {
   uploadingPartId: string | null;
   regeneratingPartId: string | null;
   isForceRunningAll: boolean;
+  isStopping: boolean;
 }
 
 type TtsModalAction =
   | {
-      type: 'FETCH_SUCCESS';
-      job: TtsJobProgress | null;
-      audioMetadata?: TestAudioAssetMetadata[];
-      listeningParts?: ListeningPartSummary[];
-    }
+    type: 'FETCH_SUCCESS';
+    job: TtsJobProgress | null;
+    audioMetadata?: TestAudioAssetMetadata[];
+    listeningParts?: ListeningPartSummary[];
+  }
   | { type: 'FETCH_ERROR'; error: string }
   | { type: 'SET_ACTION_MESSAGE'; message: ActionMessage | null }
   | { type: 'START_TTS'; partId?: string; force?: boolean }
   | { type: 'STOP_TTS_INDICATORS' }
+  | { type: 'START_STOPPING' }
+  | { type: 'FINISH_STOPPING' }
   | { type: 'START_UPLOAD'; partId: string }
   | { type: 'FINISH_UPLOAD'; message?: ActionMessage };
 
@@ -104,6 +108,18 @@ function ttsModalReducer(state: TtsModalState, action: TtsModalAction): TtsModal
         isForceRunningAll: false,
       };
 
+    case 'START_STOPPING':
+      return {
+        ...state,
+        isStopping: true,
+      };
+
+    case 'FINISH_STOPPING':
+      return {
+        ...state,
+        isStopping: false,
+      };
+
     case 'START_UPLOAD':
       return {
         ...state,
@@ -132,6 +148,7 @@ const initialTtsModalState: TtsModalState = {
   uploadingPartId: null,
   regeneratingPartId: null,
   isForceRunningAll: false,
+  isStopping: false,
 };
 
 export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
@@ -150,6 +167,7 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
     uploadingPartId,
     regeneratingPartId,
     isForceRunningAll,
+    isStopping,
   } = state;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -158,9 +176,8 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
   const fetchStatus = useCallback(
     async (withMeta = false) => {
       try {
-        const url = `/api/admin/generate-tts?testId=${encodeURIComponent(testId)}${
-          withMeta ? '&includeAudioMeta=true' : ''
-        }`;
+        const url = `/api/admin/generate-tts?testId=${encodeURIComponent(testId)}${withMeta ? '&includeAudioMeta=true' : ''
+          }`;
         const res = await fetch(url);
         const data = await res.json();
 
@@ -205,7 +222,7 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
       if (!isMounted) return;
 
       if (currentJob && currentJob.status === 'processing') {
-        timer = setTimeout(() => poll(false), 1200);
+        timer = setTimeout(() => poll(false), 2000);
       } else {
         dispatch({ type: 'STOP_TTS_INDICATORS' });
         if (currentJob && (currentJob.status === 'completed' || currentJob.status === 'failed')) {
@@ -259,6 +276,46 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
           text: err instanceof Error ? err.message : 'Lỗi khi chạy TTS.',
         },
       });
+    }
+  };
+
+  const handleRequestSafeStop = async () => {
+    dispatch({ type: 'START_STOPPING' });
+
+    try {
+      const res = await fetch('/api/admin/generate-tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          testId,
+          action: 'stop',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Không thể gửi tín hiệu dừng.');
+      }
+      dispatch({
+        type: 'SET_ACTION_MESSAGE',
+        message: {
+          type: 'success',
+          text: 'Đã gửi tín hiệu dừng an toàn: không cấp phát thêm key mới. Các request đang chạy sẽ tiếp tục cho đến khi hoàn thành.',
+        },
+      });
+      if (data.job) {
+        dispatch({ type: 'FETCH_SUCCESS', job: data.job });
+      }
+      void fetchStatus(true);
+    } catch (err) {
+      dispatch({
+        type: 'SET_ACTION_MESSAGE',
+        message: {
+          type: 'error',
+          text: err instanceof Error ? err.message : 'Lỗi khi gửi tín hiệu dừng.',
+        },
+      });
+    } finally {
+      dispatch({ type: 'FINISH_STOPPING' });
     }
   };
 
@@ -367,17 +424,27 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
 
           {actionMessage && (
             <div
-              className={`p-3 border-2 text-xs font-medium flex items-center gap-2 ${actionMessage.type === 'success'
+              className={`p-3 border-2 text-xs font-medium flex items-center justify-between gap-2 ${actionMessage.type === 'success'
                 ? 'bg-[#e6f4ea] border-[#137333] text-[#137333]'
                 : 'bg-red-100 border-red-600 text-red-900'
                 }`}
             >
-              {actionMessage.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-              ) : (
-                <AlertCircle className="w-4 h-4 shrink-0" />
-              )}
-              <span>{actionMessage.text}</span>
+              <div className="flex items-center gap-2">
+                {actionMessage.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                )}
+                <span>{actionMessage.text}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => dispatch({ type: 'SET_ACTION_MESSAGE', message: null })}
+                className="p-0.5 hover:opacity-70 transition-opacity cursor-pointer shrink-0"
+                title="Đóng thông báo"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
@@ -386,10 +453,17 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
               <div className="flex items-center gap-2">
                 {isRunning ? (
-                  <span className="inline-flex items-center gap-1.5 text-blue-700 font-black">
-                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                    <span>ĐANG TẠO AUDIO & TẢI LÊN...</span>
-                  </span>
+                  job?.stopRequested || job?.currentMessage?.includes('STOP_REQUESTED') || isStopping ? (
+                    <span className="inline-flex items-center gap-1.5 text-amber-800 font-black">
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0 text-amber-700" />
+                      <span>ĐANG DỪNG AN TOÀN...</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-blue-700 font-black">
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                      <span>ĐANG TẠO AUDIO & TẢI LÊN...</span>
+                    </span>
+                  )
                 ) : isCompleted ? (
                   <span className="inline-flex items-center gap-1.5 text-[#137333] font-black">
                     <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -416,16 +490,46 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
                   </span>
                 </span>
 
+                {isRunning && (
+                  <button
+                    type="button"
+                    onClick={handleRequestSafeStop}
+                    disabled={isStopping || job?.stopRequested || job?.currentMessage?.includes('STOP_REQUESTED')}
+                    className="border-2 border-red-700 bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 text-[11px] font-bold inline-flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
+                    title="Dừng an toàn: Không cấp phát thêm key mới. Các request đang chạy sẽ tiếp tục cho đến khi hoàn thành, nếu gặp lỗi sẽ chấp nhận fail ngay."
+                  >
+                    {isStopping || job?.stopRequested || job?.currentMessage?.includes('STOP_REQUESTED') ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Square className="w-3 h-3 fill-current" />
+                    )}
+                    <span>
+                      {isStopping || job?.stopRequested || job?.currentMessage?.includes('STOP_REQUESTED')
+                        ? 'Đang dừng...'
+                        : 'Dừng an toàn'}
+                    </span>
+                  </button>
+                )}
+
                 {!isRunning && listeningParts.length > 0 && (
                   <button
                     type="button"
                     onClick={() => handleTriggerTts({ force: true })}
                     disabled={isForceRunningAll}
-                    className="border border-black bg-[#f4eed9] hover:bg-black hover:text-[#fffdf5] text-black px-2 py-1 text-[11px] font-bold inline-flex items-center gap-1 transition-colors cursor-pointer"
+                    className="border border-black bg-[#f4eed9] hover:bg-black hover:text-[#fffdf5] text-black px-2 py-1 text-[11px] font-bold inline-flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-wait"
                     title="Tạo lại toàn bộ audio cho các phần nghe bằng Gemini TTS"
                   >
-                    <RotateCcw className="w-3 h-3" />
-                    <span>Tạo lại toàn bộ</span>
+                    {isForceRunningAll ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+                        <span>Đang khởi tạo...</span>
+                      </>
+                    ) : (
+                      <>
+                        <RotateCcw className="w-3 h-3 shrink-0" />
+                        <span>Tạo lại toàn bộ</span>
+                      </>
+                    )}
                   </button>
                 )}
               </div>
@@ -534,31 +638,51 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
                           {part.hasTranscript && (
                             <button
                               type="button"
-                              disabled={isRunning || isUploadingThis}
+                              disabled={isRunning || isUploadingThis || regeneratingPartId !== null}
                               onClick={() =>
                                 handleTriggerTts({ force: true, partId: part.id })
                               }
-                              className="border border-black bg-[#fffdf5] hover:bg-black hover:text-[#fffdf5] text-black px-2 py-0.5 text-[11px] font-bold inline-flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-40"
+                              className={`border border-black font-bold px-2 py-0.5 text-[11px] inline-flex items-center justify-center min-w-19 gap-1 transition-colors ${regeneratingPartId === part.id
+                                  ? 'bg-blue-600 text-white cursor-wait'
+                                  : 'bg-[#fffdf5] hover:bg-black hover:text-[#fffdf5] text-black cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed'
+                                }`}
                               title="Tạo lại audio cho phần nghe này bằng Gemini TTS"
                             >
-                              <RotateCcw className="w-3 h-3" />
-                              <span>Tạo TTS</span>
+                              {regeneratingPartId === part.id ? (
+                                <>
+                                  <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+                                  <span>Đang tạo...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <RotateCcw className="w-3 h-3 shrink-0" />
+                                  <span>Tạo TTS</span>
+                                </>
+                              )}
                             </button>
                           )}
 
                           <button
                             type="button"
-                            disabled={isRunning || isUploadingThis}
+                            disabled={isRunning || isUploadingThis || regeneratingPartId !== null}
                             onClick={() => handleOpenManualUpload(part.id)}
-                            className="border border-black bg-[#f4eed9] hover:bg-black hover:text-[#fffdf5] text-black px-2 py-0.5 text-[11px] font-bold inline-flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-40"
+                            className={`border border-black font-bold px-2 py-0.5 text-[11px] inline-flex items-center justify-center min-w-22 gap-1 transition-colors ${isUploadingThis
+                                ? 'bg-amber-500 text-black cursor-wait'
+                                : 'bg-[#f4eed9] hover:bg-black hover:text-[#fffdf5] text-black cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed'
+                              }`}
                             title="Tải file MP3/WAV từ máy tính"
                           >
                             {isUploadingThis ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+                                <span>Đang tải...</span>
+                              </>
                             ) : (
-                              <Upload className="w-3 h-3" />
+                              <>
+                                <Upload className="w-3 h-3 shrink-0" />
+                                <span>Upload MP3</span>
+                              </>
                             )}
-                            <span>Upload MP3</span>
                           </button>
                         </div>
                       </div>

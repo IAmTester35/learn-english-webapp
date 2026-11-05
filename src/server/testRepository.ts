@@ -394,7 +394,11 @@ export async function saveTestDocument(
 }
 
 /**
- * Xóa đề thi khỏi Supabase `public.tests` và dọn dẹp các file audio trong bucket `test-audio`.
+ * Xóa đề thi khỏi Supabase `public.tests` và dọn dẹp triệt để các file audio trong bucket `test-audio`.
+ * Đảm bảo:
+ *  1. Quét toàn bộ file trong thư mục storage `${id}/` lẫn các đường dẫn trong bảng `test_audio`.
+ *  2. BẮT BUỘC AWAIT quá trình xóa file trên Supabase Storage trước khi hoàn thành response.
+ *  3. Xóa dữ liệu DB trong `tests`, `test_audio`, và `tts_jobs`.
  */
 export async function deleteTestById(id: string): Promise<{ success: boolean; id: string }> {
   if (!id || typeof id !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(id)) {
@@ -406,27 +410,109 @@ export async function deleteTestById(id: string): Promise<{ success: boolean; id
     throw new Error('Chưa cấu hình kết nối Supabase Admin.');
   }
 
-  // Query storage paths from test_audio before deleting
+  // 1. Lấy danh sách đường dẫn lưu trữ từ bảng test_audio trước khi xóa DB
   const { data: audioRows } = await supabase
     .from('test_audio')
     .select('storage_path')
     .eq('test_id', id);
 
-  if (audioRows && audioRows.length > 0) {
-    const paths = audioRows.map((r) => r.storage_path).filter(Boolean);
-    if (paths.length > 0) {
-      await supabase.storage.from(AUDIO_STORAGE_BUCKET).remove(paths);
+  const dbPaths = (audioRows || []).map((r) => r.storage_path).filter(Boolean);
+
+  // 2. Quét trực tiếp thư mục ${id} trong Storage bucket test-audio để tìm tất cả các file (kể cả file sinh dở hoặc không ghi vào bảng DB)
+  let folderPaths: string[] = [];
+  try {
+    const { data: storageObjects, error: listErr } = await supabase.storage
+      .from(AUDIO_STORAGE_BUCKET)
+      .list(id, { limit: 1000 });
+
+    if (!listErr && storageObjects) {
+      folderPaths = storageObjects
+        .filter((item) => item.name && !item.name.startsWith('.'))
+        .map((item) => `${id}/${item.name}`);
+    }
+  } catch (scanErr) {
+    console.warn(`[Storage Clean] Không thể quét thư mục audio "${id}":`, scanErr);
+  }
+
+  const allAudioPaths = Array.from(new Set([...dbPaths, ...folderPaths]));
+
+  // 3. Xóa triệt để toàn bộ file audio khỏi Supabase Storage và BẮT BUỘC AWAIT để tránh bị kill process
+  if (allAudioPaths.length > 0) {
+    try {
+      const { error: removeErr } = await supabase.storage
+        .from(AUDIO_STORAGE_BUCKET)
+        .remove(allAudioPaths);
+
+      if (removeErr) {
+        console.error(`[Storage Delete] Lỗi xóa file audio cho đề "${id}":`, removeErr.message);
+      }
+    } catch (removeEx) {
+      console.error(`[Storage Delete] Ngoại lệ khi xóa file audio cho đề "${id}":`, removeEx);
     }
   }
 
-  const { error } = await supabase.from('tests').delete().eq('id', id);
-  if (error) {
-    throw new Error(`Lỗi khi xóa đề thi "${id}": ${error.message}`);
+  // 4. Xóa bài thi khỏi bảng public.tests (Cascade sẽ tự động xóa test_audio & tts_jobs)
+  const { error: testDeleteErr } = await supabase.from('tests').delete().eq('id', id);
+  if (testDeleteErr) {
+    throw new Error(`Lỗi khi xóa đề thi "${id}": ${testDeleteErr.message}`);
   }
+
+  // 5. Dự phòng: Dọn dẹp test_audio và tts_jobs nếu cascade DB chưa kịp hoàn tất
+  await Promise.allSettled([
+    supabase.from('test_audio').delete().eq('test_id', id),
+    supabase.from('tts_jobs').delete().eq('test_id', id),
+  ]);
 
   revalidateTestCatalogCache(id);
 
   return { success: true, id };
+}
+
+/**
+ * Quét dọn các thư mục audio mồ côi (orphaned audio) trong Storage bucket `test-audio`
+ * mà mã đề thi (testId) tương ứng không còn tồn tại trong bảng `public.tests`.
+ */
+export async function cleanupOrphanedAudioStorage(): Promise<{
+  deletedFolders: string[];
+  deletedFilesCount: number;
+}> {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) {
+    return { deletedFolders: [], deletedFilesCount: 0 };
+  }
+
+  const { data: testRows } = await supabase.from('tests').select('id');
+  const validTestIds = new Set((testRows || []).map((t) => t.id));
+
+  const { data: rootItems, error: listErr } = await supabase.storage
+    .from(AUDIO_STORAGE_BUCKET)
+    .list();
+
+  if (listErr || !rootItems) {
+    return { deletedFolders: [], deletedFilesCount: 0 };
+  }
+
+  const orphanedFolders = rootItems
+    .filter((item) => !item.id && !validTestIds.has(item.name))
+    .map((item) => item.name);
+
+  let totalDeletedFiles = 0;
+  const deletedFolders: string[] = [];
+
+  for (const folderName of orphanedFolders) {
+    const { data: files } = await supabase.storage
+      .from(AUDIO_STORAGE_BUCKET)
+      .list(folderName, { limit: 1000 });
+
+    if (files && files.length > 0) {
+      const filePaths = files.map((f) => `${folderName}/${f.name}`);
+      await supabase.storage.from(AUDIO_STORAGE_BUCKET).remove(filePaths);
+      totalDeletedFiles += filePaths.length;
+    }
+    deletedFolders.push(folderName);
+  }
+
+  return { deletedFolders, deletedFilesCount: totalDeletedFiles };
 }
 
 /**
@@ -525,6 +611,7 @@ export async function upsertTestAudioMetadata(
 
 /**
  * Lấy danh sách metadata audio của một đề thi từ bảng `public.test_audio`.
+ * Chỉ select đúng các trường kỹ thuật cần thiết, không dùng select *.
  */
 export async function getTestAudioMetadataList(
   testId: string
@@ -534,7 +621,9 @@ export async function getTestAudioMetadataList(
 
   const { data, error } = await supabase
     .from('test_audio')
-    .select('*')
+    .select(
+      'id, test_id, part_id, part_index, part_title, storage_bucket, storage_path, public_url, mime_type, format, file_size_bytes, duration_seconds, sample_rate, bitrate_kbps, channels, language_code, scenario, accent, pacing, speakers, transcript_hash, transcript_char_count, turn_count, tts_model, updated_at'
+    )
     .eq('test_id', testId)
     .order('part_index', { ascending: true });
 
@@ -567,4 +656,39 @@ export async function getTestAudioMetadataList(
     ttsModel: row.tts_model,
     updatedAt: row.updated_at,
   }));
+}
+
+export interface MinimalListeningPart {
+  id: string;
+  title: string;
+  audioUrl?: string | null;
+  transcript?: string;
+  audioConfig?: {
+    scenario?: string;
+    accent?: string;
+    pacing?: string;
+  };
+}
+
+/**
+ * Chỉ trích xuất mảng `listening.parts` trực tiếp từ JSONB trong DB Postgres bằng toán tử mũi tên PostgREST,
+ * tuyệt đối không tải toàn bộ cột content JSONB (vốn chứa cả Reading, Writing, Speaking 50-100KB).
+ */
+export async function getTestListeningPartsOnly(
+  testId: string
+): Promise<MinimalListeningPart[]> {
+  const cleanId = testId.trim();
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('tests')
+    .select('content->sections->listening->parts')
+    .eq('id', cleanId)
+    .maybeSingle();
+
+  if (error || !data) return [];
+
+  const rawParts = (data as unknown as { parts?: MinimalListeningPart[] })?.parts;
+  return Array.isArray(rawParts) ? rawParts : [];
 }

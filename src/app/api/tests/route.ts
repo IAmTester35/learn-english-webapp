@@ -104,8 +104,7 @@ export async function POST(request: NextRequest) {
     const result = await saveTestDocument(validation.data, { overwrite });
 
     try {
-      revalidatePath('/', 'layout');
-      revalidatePath('/test');
+      revalidatePath('/');
       revalidatePath(`/test/${result.id}`);
       revalidatePath('/admin');
     } catch {
@@ -165,8 +164,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const result = await deleteTestById(id.trim());
     try {
-      revalidatePath('/', 'layout');
-      revalidatePath('/test');
+      revalidatePath('/');
       revalidatePath(`/test/${result.id}`);
       revalidatePath('/admin');
     } catch {

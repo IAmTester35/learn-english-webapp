@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -21,6 +21,7 @@ import {
   Key,
   RefreshCw,
   Activity,
+  X,
 } from 'lucide-react';
 import type { TestCatalogItem } from '@/types/test';
 import type { GeminiKeyPublicInfo } from '@/server/geminiKeyManager';
@@ -51,9 +52,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
   const [geminiKeys, setGeminiKeys] = useState<GeminiKeyPublicInfo[]>([]);
   const [isLoadingKeys, setIsLoadingKeys] = useState(false);
   const [isProbingKeys, setIsProbingKeys] = useState(false);
+  const [isResettingCooldowns, setIsResettingCooldowns] = useState(false);
+  const [deletingKeyId, setDeletingKeyId] = useState<string | null>(null);
   const [newKeyInput, setNewKeyInput] = useState('');
   const [newKeyLabel, setNewKeyLabel] = useState('');
   const [isAddingKey, setIsAddingKey] = useState(false);
+
+  // Global & Action states
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isReloading, setIsReloading] = useState(false);
+
+  // Auto-dismiss success notification
+  useEffect(() => {
+    if (statusMessage?.type === 'success') {
+      const timer = setTimeout(() => {
+        setStatusMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [statusMessage]);
 
   const reloadTestsCatalog = useCallback(async () => {
     try {
@@ -68,6 +85,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
       // ignore reload error
     }
   }, []);
+
+  const handleManualReload = async () => {
+    setIsReloading(true);
+    try {
+      await reloadTestsCatalog();
+      router.refresh();
+      setStatusMessage({
+        type: 'success',
+        text: 'Đã làm mới dữ liệu danh sách bài thi thành công.',
+      });
+    } catch {
+      setStatusMessage({
+        type: 'error',
+        text: 'Không thể làm mới danh sách bài thi.',
+      });
+    } finally {
+      setIsReloading(false);
+    }
+  };
 
   const loadGeminiKeys = useCallback(async () => {
     setIsLoadingKeys(true);
@@ -93,6 +129,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
   };
 
   const handleToggle = async (testId: string) => {
+    if (togglingId || deletingId) return;
     setTogglingId(testId);
     setStatusMessage(null);
 
@@ -126,6 +163,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
   };
 
   const handleDeleteTest = async (testId: string, testTitle: string) => {
+    if (deletingId || togglingId) return;
     if (
       !window.confirm(
         `Bạn có chắc chắn muốn XÓA VĨNH VIỄN đề thi "${testTitle}" (${testId}) và toàn bộ file audio của đề này?`
@@ -224,6 +262,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
 
   const handleProbeAllKeys = async () => {
     setIsProbingKeys(true);
+    setStatusMessage(null);
     try {
       const res = await fetch('/api/admin/gemini-keys', {
         method: 'POST',
@@ -233,14 +272,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
       const data = await res.json();
       if (res.ok && Array.isArray(data.keys)) {
         setGeminiKeys(data.keys);
+        setStatusMessage({
+          type: 'success',
+          text: `Đã kiểm tra kết nối cho ${data.keys.length} API keys.`,
+        });
+      } else {
+        throw new Error(data.error || 'Kiểm tra thất bại.');
       }
+    } catch (err) {
+      setStatusMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Lỗi khi kiểm tra sức khỏe keys.',
+      });
     } finally {
       setIsProbingKeys(false);
     }
   };
 
   const handleResetCooldowns = async () => {
-    setIsProbingKeys(true);
+    setIsResettingCooldowns(true);
+    setStatusMessage(null);
     try {
       const res = await fetch('/api/admin/gemini-keys', {
         method: 'POST',
@@ -250,34 +301,61 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
       const data = await res.json();
       if (res.ok && Array.isArray(data.keys)) {
         setGeminiKeys(data.keys);
+        setStatusMessage({
+          type: 'success',
+          text: 'Đã đặt lại trạng thái Cooldown cho toàn bộ API keys.',
+        });
+      } else {
+        throw new Error(data.error || 'Đặt lại cooldown thất bại.');
       }
+    } catch (err) {
+      setStatusMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Lỗi khi đặt lại cooldown keys.',
+      });
     } finally {
-      setIsProbingKeys(false);
+      setIsResettingCooldowns(false);
     }
   };
 
   const handleDeleteGeminiKey = async (id: string) => {
+    setDeletingKeyId(id);
+    setStatusMessage(null);
     try {
       const res = await fetch('/api/admin/gemini-keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete', id }),
       });
+      const data = await res.json();
       if (res.ok) {
         setGeminiKeys((prev) => prev.filter((k) => k.id !== id));
+        setStatusMessage({
+          type: 'success',
+          text: 'Đã xóa API key thành công.',
+        });
+      } else {
+        throw new Error(data.error || 'Không thể xóa API key.');
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      setStatusMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Lỗi khi xóa key.',
+      });
+    } finally {
+      setDeletingKeyId(null);
     }
   };
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
     try {
       await fetch('/api/admin/logout', { method: 'POST' });
       router.push('/admin/login');
       router.refresh();
     } catch (err) {
       console.error('Lỗi khi đăng xuất:', err);
+      setIsLoggingOut(false);
     }
   };
 
@@ -298,8 +376,47 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
   const hiddenCount = tests.filter((t) => t.hidden).length;
   const publicCount = totalCount - hiddenCount;
 
+  const isAnyActionPending = Boolean(
+    togglingId ||
+    deletingId ||
+    isLoggingOut ||
+    isProbingKeys ||
+    isResettingCooldowns ||
+    isAddingKey ||
+    isReloading
+  );
+
+  const pendingActionText = togglingId
+    ? `Đang đổi trạng thái hiển thị cho đề "${togglingId}"...`
+    : deletingId
+      ? `Đang xóa đề thi "${deletingId}" và toàn bộ file audio...`
+      : isLoggingOut
+        ? 'Đang đăng xuất khỏi hệ thống quản trị...'
+        : isProbingKeys
+          ? `Đang kiểm tra kết nối cho ${geminiKeys.length} Gemini API keys...`
+          : isResettingCooldowns
+            ? 'Đang đặt lại trạng thái Cooldown cho các API keys...'
+            : isAddingKey
+              ? 'Đang xác thực và lưu Gemini API Key mới...'
+              : isReloading
+                ? 'Đang đồng bộ và tải lại danh sách đề thi...'
+                : null;
+
   return (
     <div className="space-y-6">
+      {/* Visual Live API Processing Indicator */}
+      {isAnyActionPending && (
+        <div className="border-2 border-black bg-[#fef7e0] text-[#b06000] p-3 shadow-[3px_3px_0px_0px_#000] flex items-center justify-between gap-3 text-xs sm:text-sm font-bold animate-in fade-in duration-150">
+          <div className="flex items-center gap-2 min-w-0">
+            <Loader2 className="w-4 h-4 animate-spin shrink-0 text-[#b06000]" />
+            <span className="truncate">{pendingActionText}</span>
+          </div>
+          <span className="text-[11px] font-mono uppercase bg-white border border-[#b06000] px-2 py-0.5 shrink-0 hidden sm:inline">
+            Vui lòng đợi
+          </span>
+        </div>
+      )}
+
       {/* Top Banner */}
       <div className="border-2 border-black bg-[#fffdf5] p-4 sm:p-6 shadow-[4px_4px_0px_0px_#000] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -326,6 +443,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
 
           <Link
             href="/test/create"
+            prefetch={false}
             className="border-2 border-black bg-black text-[#fffdf5] hover:bg-[#222] px-3.5 py-2 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-transform active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
@@ -335,10 +453,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
           <button
             type="button"
             onClick={handleLogout}
-            className="border-2 border-black bg-white hover:bg-neutral-100 text-black px-3.5 py-2 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+            disabled={isLoggingOut}
+            className="border-2 border-black bg-white hover:bg-neutral-100 text-black px-3.5 py-2 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-wait"
           >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">Đăng xuất</span>
+            {isLoggingOut ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                <span>Đang đăng xuất...</span>
+              </>
+            ) : (
+              <>
+                <LogOut className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">Đăng xuất</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -358,25 +486,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
               <button
                 type="button"
                 onClick={handleProbeAllKeys}
-                disabled={isProbingKeys}
-                className="border border-black bg-white hover:bg-neutral-100 px-2.5 py-1 text-xs font-bold inline-flex items-center gap-1 cursor-pointer"
+                disabled={isProbingKeys || isResettingCooldowns}
+                className="border border-black bg-white hover:bg-neutral-100 px-2.5 py-1 text-xs font-bold inline-flex items-center gap-1 cursor-pointer disabled:opacity-60 disabled:cursor-wait transition-colors"
               >
                 {isProbingKeys ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                    <span>Đang kiểm tra...</span>
+                  </>
                 ) : (
-                  <Activity className="w-3.5 h-3.5" />
+                  <>
+                    <Activity className="w-3.5 h-3.5 shrink-0" />
+                    <span>Kiểm tra sức khỏe</span>
+                  </>
                 )}
-                <span>Kiểm tra sức khỏe</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleResetCooldowns}
-                disabled={isProbingKeys}
-                className="border border-black bg-[#f4eed9] hover:bg-black hover:text-[#fffdf5] px-2.5 py-1 text-xs font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
+                disabled={isProbingKeys || isResettingCooldowns}
+                className="border border-black bg-[#f4eed9] hover:bg-black hover:text-[#fffdf5] px-2.5 py-1 text-xs font-bold inline-flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-wait"
               >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Reset Cooldown</span>
+                {isResettingCooldowns ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                    <span>Đang đặt lại...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+                    <span>Reset Cooldown</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -385,36 +527,47 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
             <input
               type="text"
               value={newKeyLabel}
+              disabled={isAddingKey}
               onChange={(e) => setNewKeyLabel(e.target.value)}
               placeholder="Nhãn (VD: GEMINI_KEY_9)"
-              className="border-2 border-black bg-white px-3 py-1.5 text-xs font-mono sm:w-44 focus:outline-none"
+              className="border-2 border-black bg-white px-3 py-1.5 text-xs font-mono sm:w-44 focus:outline-none disabled:bg-neutral-100 disabled:opacity-60"
             />
             <input
               type="password"
               value={newKeyInput}
+              disabled={isAddingKey}
               onChange={(e) => setNewKeyInput(e.target.value)}
               placeholder="Dán Gemini API Key mới vào đây..."
-              className="border-2 border-black bg-white px-3 py-1.5 text-xs font-mono flex-1 focus:outline-none"
+              className="border-2 border-black bg-white px-3 py-1.5 text-xs font-mono flex-1 focus:outline-none disabled:bg-neutral-100 disabled:opacity-60"
             />
             <button
               type="submit"
               disabled={isAddingKey || !newKeyInput.trim()}
-              className="border-2 border-black bg-black text-[#fffdf5] px-4 py-1.5 text-xs font-bold cursor-pointer disabled:opacity-40"
+              className="border-2 border-black bg-black text-[#fffdf5] px-4 py-1.5 text-xs font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 min-w-23.75"
             >
-              {isAddingKey ? 'Đang thêm...' : 'Thêm Key'}
+              {isAddingKey ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                  <span>Đang thêm...</span>
+                </>
+              ) : (
+                <span>Thêm Key</span>
+              )}
             </button>
           </form>
 
           {isLoadingKeys ? (
-            <div className="text-xs text-neutral-500 py-3 text-center">
-              Đang tải danh sách Gemini API Keys...
+            <div className="text-xs text-neutral-500 py-4 text-center flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Đang tải danh sách Gemini API Keys...</span>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
               {geminiKeys.map((k) => (
                 <div
                   key={k.id}
-                  className="border border-black bg-white p-2.5 text-xs flex items-center justify-between gap-2"
+                  className={`border border-black bg-white p-2.5 text-xs flex items-center justify-between gap-2 transition-opacity ${deletingKeyId === k.id ? 'opacity-40 pointer-events-none bg-red-50' : ''
+                    }`}
                 >
                   <div className="min-w-0">
                     <div className="font-bold text-black flex items-center gap-1.5">
@@ -437,10 +590,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                   <button
                     type="button"
                     onClick={() => handleDeleteGeminiKey(k.id)}
-                    className="text-neutral-400 hover:text-red-700 p-1 cursor-pointer"
+                    disabled={deletingKeyId === k.id}
+                    className="text-neutral-400 hover:text-red-700 p-1 cursor-pointer disabled:cursor-wait shrink-0"
                     title="Xóa key này"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    {deletingKeyId === k.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5" />
+                    )}
                   </button>
                 </div>
               ))}
@@ -472,17 +630,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
       {/* Notifications */}
       {statusMessage && (
         <div
-          className={`p-3.5 border-2 flex items-center gap-2 text-sm font-medium ${statusMessage.type === 'success'
+          className={`p-3.5 border-2 flex items-center justify-between gap-2 text-sm font-medium animate-in fade-in duration-150 ${statusMessage.type === 'success'
             ? 'bg-[#e6f4ea] border-[#137333] text-[#137333]'
             : 'bg-[#fce8e6] border-[#c5221f] text-[#c5221f]'
             }`}
         >
-          {statusMessage.type === 'success' ? (
-            <CheckCircle2 className="w-5 h-5 shrink-0" />
-          ) : (
-            <AlertCircle className="w-5 h-5 shrink-0" />
-          )}
-          <span>{statusMessage.text}</span>
+          <div className="flex items-center gap-2">
+            {statusMessage.type === 'success' ? (
+              <CheckCircle2 className="w-5 h-5 shrink-0" />
+            ) : (
+              <AlertCircle className="w-5 h-5 shrink-0" />
+            )}
+            <span>{statusMessage.text}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setStatusMessage(null)}
+            className="p-1 hover:opacity-70 transition-opacity cursor-pointer shrink-0"
+            title="Đóng thông báo"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -530,6 +698,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
           >
             Đang ẩn ({hiddenCount})
           </button>
+
+          <button
+            type="button"
+            onClick={handleManualReload}
+            disabled={isReloading}
+            className="border-2 border-black bg-white hover:bg-neutral-100 text-black px-2.5 py-1.5 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-wait transition-colors"
+            title="Tải lại danh sách đề thi từ máy chủ"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isReloading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{isReloading ? 'Đang tải...' : 'Làm mới'}</span>
+          </button>
         </div>
       </div>
 
@@ -555,6 +734,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                 const isHidden = Boolean(test.hidden);
                 const isToggling = togglingId === test.id;
                 const isDeleting = deletingId === test.id;
+                const isRowBusy = isToggling || isDeleting;
                 const isGeneratingTts = generatingTtsId === test.id;
                 const totalListening = test.listeningPartCount ?? 0;
                 const readyListening = test.audioReadyCount ?? 0;
@@ -562,7 +742,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                   totalListening === 0 || readyListening >= totalListening;
 
                 return (
-                  <tr key={test.id} className="hover:bg-neutral-50 transition-colors">
+                  <tr
+                    key={test.id}
+                    className={`transition-all duration-150 ${isDeleting
+                        ? 'opacity-40 pointer-events-none bg-red-50'
+                        : isToggling
+                          ? 'bg-amber-50/70'
+                          : 'hover:bg-neutral-50'
+                      }`}
+                  >
                     <td className="p-3">
                       <div className="flex items-start gap-2.5">
                         <FileText className="w-5 h-5 text-neutral-500 shrink-0 mt-0.5" />
@@ -630,10 +818,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                         <button
                           type="button"
                           onClick={() => handleToggle(test.id)}
-                          disabled={isToggling}
-                          className={`border-2 border-black font-bold px-2.5 py-1 text-xs inline-flex items-center gap-1 transition-colors cursor-pointer ${isHidden
-                            ? 'bg-[#137333] text-white hover:bg-[#0d5926]'
-                            : 'bg-[#fffdf5] text-black hover:bg-neutral-200'
+                          disabled={isRowBusy || Boolean(togglingId) || Boolean(deletingId)}
+                          className={`border-2 border-black font-bold px-2.5 py-1 text-xs inline-flex items-center justify-center min-w-19 gap-1 transition-all ${isRowBusy
+                              ? 'cursor-wait opacity-80'
+                              : 'cursor-pointer hover:shadow-xs'
+                            } ${isHidden
+                              ? 'bg-[#137333] text-white hover:bg-[#0d5926]'
+                              : 'bg-[#fffdf5] text-black hover:bg-neutral-200'
                             }`}
                           title={
                             isHidden
@@ -642,15 +833,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                           }
                         >
                           {isToggling ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                              <span>{isHidden ? 'Đang hiện...' : 'Đang ẩn...'}</span>
+                            </>
                           ) : isHidden ? (
                             <>
-                              <Eye className="w-3.5 h-3.5" />
+                              <Eye className="w-3.5 h-3.5 shrink-0" />
                               <span>Hiện</span>
                             </>
                           ) : (
                             <>
-                              <EyeOff className="w-3.5 h-3.5" />
+                              <EyeOff className="w-3.5 h-3.5 shrink-0" />
                               <span>Ẩn</span>
                             </>
                           )}
@@ -660,25 +854,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                         <button
                           type="button"
                           onClick={() => handleGenerateTts(test.id, test.title)}
-                          disabled={isGeneratingTts && activeModalTest?.id === test.id}
-                          className="border-2 border-black bg-[#fffdf5] hover:bg-neutral-200 text-black font-bold px-2.5 py-1 text-xs inline-flex items-center gap-1 transition-colors cursor-pointer"
+                          disabled={isRowBusy || (isGeneratingTts && activeModalTest?.id === test.id)}
+                          className={`border-2 border-black bg-[#fffdf5] hover:bg-neutral-200 text-black font-bold px-2.5 py-1 text-xs inline-flex items-center justify-center min-w-21.25 gap-1 transition-colors ${isRowBusy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                            }`}
                           title="Quản lý Audio, tạo giọng đọc TTS hoặc tải file MP3"
                         >
                           {isGeneratingTts && activeModalTest?.id === test.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                              <span>Đang mở...</span>
+                            </>
                           ) : (
-                            <Volume2 className="w-3.5 h-3.5" />
+                            <>
+                              <Volume2 className="w-3.5 h-3.5 shrink-0" />
+                              <span>Audio/TTS</span>
+                            </>
                           )}
-                          <span>Audio/TTS</span>
                         </button>
 
                         {/* Edit JSON in Authoring View */}
                         <Link
                           href={`/test/create?edit=${encodeURIComponent(test.id)}`}
-                          className="border-2 border-black bg-[#f4eed9] hover:bg-black hover:text-[#fffdf5] text-black font-bold px-2 py-1 text-xs inline-flex items-center gap-1 transition-colors"
+                          prefetch={false}
+                          className={`border-2 border-black bg-[#f4eed9] hover:bg-black hover:text-[#fffdf5] text-black font-bold px-2 py-1 text-xs inline-flex items-center gap-1 transition-colors ${isRowBusy ? 'pointer-events-none opacity-40' : ''
+                            }`}
                           title="Chỉnh sửa JSON đề thi trực tiếp"
                         >
-                          <Edit3 className="w-3.5 h-3.5" />
+                          <Edit3 className="w-3.5 h-3.5 shrink-0" />
                           <span>Sửa</span>
                         </Link>
 
@@ -686,14 +888,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                         <button
                           type="button"
                           onClick={() => handleDeleteTest(test.id, test.title)}
-                          disabled={isDeleting}
-                          className="border-2 border-black bg-white hover:bg-red-600 hover:text-white text-red-700 font-bold px-2 py-1 text-xs inline-flex items-center gap-1 transition-colors cursor-pointer"
+                          disabled={isRowBusy || Boolean(togglingId) || Boolean(deletingId)}
+                          className={`border-2 border-black font-bold px-2.5 py-1 text-xs inline-flex items-center justify-center min-w-8.5 sm:min-w-16 gap-1 transition-all ${isDeleting
+                              ? 'bg-red-600 text-white cursor-wait opacity-90'
+                              : isRowBusy
+                                ? 'opacity-40 cursor-not-allowed bg-white text-red-700'
+                                : 'bg-white hover:bg-red-600 hover:text-white text-red-700 cursor-pointer'
+                            }`}
                           title="Xóa đề thi và audio"
                         >
                           {isDeleting ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                              <span className="hidden sm:inline">Đang xóa...</span>
+                            </>
                           ) : (
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <>
+                              <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                              <span className="hidden sm:inline">Xóa</span>
+                            </>
                           )}
                         </button>
 
@@ -701,10 +914,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                         <Link
                           href={`/test/${encodeURIComponent(test.id)}`}
                           target="_blank"
-                          className="border-2 border-black bg-white hover:bg-neutral-100 text-black font-bold px-2 py-1 text-xs inline-flex items-center gap-1 transition-colors"
+                          prefetch={false}
+                          className={`border-2 border-black bg-white hover:bg-neutral-100 text-black font-bold px-2 py-1 text-xs inline-flex items-center gap-1 transition-colors ${isRowBusy ? 'pointer-events-none opacity-40' : ''
+                            }`}
                           title="Xem bài thi trực tiếp"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
+                          <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                         </Link>
                       </div>
                     </td>
