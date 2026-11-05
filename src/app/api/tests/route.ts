@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import {
   deleteTestById,
@@ -9,9 +9,9 @@ import {
 import { validateTestDocument } from '@/domain/validator';
 import { SAMPLE_TEST_TEMPLATE } from '@/services/testTemplate';
 import { verifyAdminSession } from '@/server/auth';
-import { triggerBackgroundTts } from '@/server/ttsService';
+import { generateAudioForTest } from '@/server/ttsService';
 
-export const maxDuration = 30;
+export const maxDuration = 90;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -112,14 +112,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Auto-run Pipeline: Tự động chạy TTS nền trên Supabase nếu đề thi có phần nghe
-    try {
-      if (
-        validation.data.sections?.listening?.parts?.some((p) => p.transcript?.trim())
-      ) {
-        triggerBackgroundTts(result.id);
-      }
-    } catch (ttsErr) {
-      console.warn('[Auto-run TTS] Không thể khởi chạy background TTS:', ttsErr);
+    if (
+      validation.data.sections?.listening?.parts?.some((p) => p.transcript?.trim())
+    ) {
+      after(async () => {
+        try {
+          await generateAudioForTest(result.id);
+        } catch (ttsErr) {
+          console.error(
+            `[Auto-run TTS Error] Lỗi background TTS cho "${result.id}":`,
+            ttsErr
+          );
+        }
+      });
     }
 
     return NextResponse.json({

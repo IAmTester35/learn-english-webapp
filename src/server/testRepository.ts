@@ -658,6 +658,45 @@ export async function getTestAudioMetadataList(
   }));
 }
 
+export interface TestAudioSummaryItem {
+  partId: string;
+  transcriptHash: string;
+  fileSizeBytes: number;
+  durationSeconds: number | null;
+}
+
+/**
+ * Lấy tóm tắt metadata audio chỉ gồm các trường phục vụ kiểm tra/so khớp transcript hash cho TTS.
+ * Chỉ select đúng 4 trường cần thiết (part_id, transcript_hash, file_size_bytes, duration_seconds),
+ * loại bỏ hoàn toàn việc truyền tải 25 trường metadata chi tiết và JSON speakers nặng.
+ */
+export async function getTestAudioSummaryMap(
+  testId: string
+): Promise<Map<string, TestAudioSummaryItem>> {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return new Map();
+
+  const { data, error } = await supabase
+    .from('test_audio')
+    .select('part_id, transcript_hash, file_size_bytes, duration_seconds')
+    .eq('test_id', testId);
+
+  if (error || !data) return new Map();
+
+  return new Map(
+    data.map((row) => [
+      row.part_id,
+      {
+        partId: row.part_id,
+        transcriptHash: row.transcript_hash,
+        fileSizeBytes: Number(row.file_size_bytes || 0),
+        durationSeconds:
+          row.duration_seconds !== null ? Number(row.duration_seconds) : null,
+      },
+    ])
+  );
+}
+
 export interface MinimalListeningPart {
   id: string;
   title: string;

@@ -27,7 +27,7 @@ import {
   resetAllKeyCooldownsInSupabase,
 } from './geminiKeyManager';
 import {
-  getTestAudioMetadataList,
+  getTestAudioSummaryMap,
   getTestById,
   updateTestListeningPartAudioUrl,
 } from './testRepository';
@@ -205,10 +205,10 @@ export function getShortestCooldownRemainingMs(): number {
   return 0;
 }
 
-const TTS_TIMEOUT_MS = 45_000;
+const TTS_TIMEOUT_MS = 90_000;
 
 /**
- * Calls Gemini TTS API with an exact 45-second timeout.
+ * Calls Gemini TTS API with an exact 90-second timeout.
  */
 async function callGeminiTtsWithTimeout(
   client: GoogleGenAI,
@@ -431,7 +431,7 @@ export async function uploadAudioBytesToSupabase(params: {
   const storagePath = `${params.testId}/${params.partId}.${format}`;
 
   let lastError: Error | null = null;
-  const maxRetries = 3;
+  const maxRetries = 4;
 
   const filePayload = Buffer.isBuffer(params.audioBytes)
     ? params.audioBytes
@@ -461,9 +461,9 @@ export async function uploadAudioBytesToSupabase(params: {
 
     if (attempt < maxRetries) {
       console.warn(
-        `[Storage Upload] Lần thử ${attempt}/${maxRetries} thất bại (${storagePath}): ${lastError.message}. Thử lại sau ${attempt * 600}ms...`
+        `[Storage Upload] Lần thử ${attempt}/${maxRetries} thất bại (${storagePath}): ${lastError.message}. Thử lại sau ${attempt * 1000}ms...`
       );
-      await new Promise((resolve) => setTimeout(resolve, attempt * 600));
+      await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
     }
   }
 
@@ -622,8 +622,7 @@ export async function generateAudioForTest(
   }
 
   const allParts: ListeningPart[] = doc.sections?.listening?.parts || [];
-  const existingAudioList = await getTestAudioMetadataList(cleanTestId);
-  const existingAudioMap = new Map(existingAudioList.map((a) => [a.partId, a]));
+  const existingAudioMap = await getTestAudioSummaryMap(cleanTestId);
 
   const partsWithTranscript = allParts.filter((p) => {
     if (!p.transcript || !p.transcript.trim()) return false;
