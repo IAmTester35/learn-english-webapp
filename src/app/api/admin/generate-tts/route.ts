@@ -204,7 +204,7 @@ export async function PUT(request: NextRequest) {
     });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Lỗi khi tải file audio lên Supabase.' },
+      { error: err instanceof Error ? err.message : 'Lỗi khi tải file audio.' },
       { status: 500 }
     );
   }

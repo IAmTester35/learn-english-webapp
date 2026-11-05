@@ -58,7 +58,7 @@ export async function signInAdminWithSupabase(
   if (!supabase) {
     return {
       success: false,
-      error: 'Không thể khởi tạo kết nối Supabase Auth.',
+      error: 'Không thể khởi tạo kết nối.',
     };
   }
 

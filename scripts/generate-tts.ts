@@ -44,7 +44,7 @@ async function main() {
 
   if (resetHealth) {
     await resetAllKeyCooldownsInSupabase();
-    console.log('🔄 Đã reset trạng thái Cooldown của toàn bộ Gemini API Keys trên Supabase.');
+    console.log('🔄 Đã reset trạng thái Cooldown của toàn bộ API Keys.');
   }
 
   const catalog = await getTestCatalog({ includeHidden: true });
@@ -53,12 +53,12 @@ async function main() {
     : catalog.tests;
 
   if (tests.length === 0) {
-    console.log('⚠️ Không tìm thấy đề thi nào trên Supabase cần tạo audio.');
+    console.log('⚠️ Không tìm thấy đề thi nào cần tạo audio.');
     return;
   }
 
   console.log(
-    `🎙️ Bắt đầu kiểm tra & tạo Audio TTS trực tiếp lên Supabase cho ${tests.length} đề thi...`
+    `🎙️ Bắt đầu kiểm tra & tạo Audio TTS trực tiếp cho ${tests.length} đề thi...`
   );
 
   let totalGenerated = 0;
@@ -80,7 +80,7 @@ async function main() {
 
   console.log('\n============================================================');
   console.log(
-    `🎉 Hoàn tất TTS Supabase: Đã tạo mới ${totalGenerated} phần, Bỏ qua (đã có) ${totalSkipped} phần.`
+    `🎉 Hoàn tất TTS: Đã tạo mới ${totalGenerated} phần, Bỏ qua (đã có) ${totalSkipped} phần.`
   );
   if (allErrors.length > 0) {
     console.warn(`⚠️ Có ${allErrors.length} lỗi:\n- ${allErrors.join('\n- ')}`);

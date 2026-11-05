@@ -815,11 +815,10 @@ export const TestAuthoringView: React.FC = () => {
                         key={tab.id}
                         type="button"
                         onClick={() => setActivePreviewTab(tab.id)}
-                        className={`px-2 py-1 font-semibold transition-colors cursor-pointer border shrink-0 text-xs ${
-                          activePreviewTab === tab.id
+                        className={`px-2 py-1 font-semibold transition-colors cursor-pointer border shrink-0 text-xs ${activePreviewTab === tab.id
                             ? 'bg-black text-[#fffdf5] border-black'
                             : 'bg-[#fffdf5] text-black border-transparent hover:border-black'
-                        }`}
+                          }`}
                       >
                         {tab.label}
                       </button>
@@ -1077,7 +1076,7 @@ export const TestAuthoringView: React.FC = () => {
             </div>
 
             <p className="text-xs text-neutral-800 leading-relaxed">
-              Mã <code className="bg-amber-100 px-1 border border-black font-bold font-mono">{conflictModal.currentId}</code> đã tồn tại trên Supabase. Bạn muốn ghi đè (cập nhật) đề thi này hay tự động tăng mã sang <code className="bg-amber-200 px-1 border border-black font-bold font-mono">{conflictModal.suggestedId}</code>?
+              Mã <code className="bg-amber-100 px-1 border border-black font-bold font-mono">{conflictModal.currentId}</code> đã tồn tại. Bạn muốn ghi đè (cập nhật) đề thi này hay tự động tăng mã sang <code className="bg-amber-200 px-1 border border-black font-bold font-mono">{conflictModal.suggestedId}</code>?
             </p>
 
             <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-neutral-200">
@@ -1160,11 +1159,10 @@ const QuestionReviewCard: React.FC<{
             return (
               <div
                 key={opt.id}
-                className={`p-1 border flex items-center justify-between text-xs ${
-                  isCorrect
+                className={`p-1 border flex items-center justify-between text-xs ${isCorrect
                     ? 'bg-emerald-50 border-emerald-600 text-emerald-950 font-semibold'
                     : 'bg-white border-neutral-200 text-neutral-700'
-                }`}
+                  }`}
               >
                 <span>{opt.id}. {opt.text}</span>
                 {isCorrect && <span className="text-[10px] text-emerald-700 font-bold">Đúng</span>}
@@ -1181,11 +1179,10 @@ const QuestionReviewCard: React.FC<{
             return (
               <div
                 key={opt.id}
-                className={`p-1 border flex items-center justify-between text-xs ${
-                  isCorrect
+                className={`p-1 border flex items-center justify-between text-xs ${isCorrect
                     ? 'bg-emerald-50 border-emerald-600 text-emerald-950 font-semibold'
                     : 'bg-white border-neutral-200 text-neutral-700'
-                }`}
+                  }`}
               >
                 <span>{opt.id}. {opt.text}</span>
                 {isCorrect && <span className="text-[10px] text-emerald-700 font-bold">Đúng</span>}
@@ -1209,11 +1206,10 @@ const QuestionReviewCard: React.FC<{
             return (
               <span
                 key={choice}
-                className={`px-1.5 py-0.5 border text-[10px] ${
-                  isCorrect
+                className={`px-1.5 py-0.5 border text-[10px] ${isCorrect
                     ? 'bg-emerald-600 text-white border-black font-bold'
                     : 'bg-white text-neutral-600 border-neutral-300'
-                }`}
+                  }`}
               >
                 {choice}
               </span>

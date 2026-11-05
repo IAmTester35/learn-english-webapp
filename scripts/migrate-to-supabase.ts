@@ -99,7 +99,7 @@ async function main() {
 
   if (!supabaseUrl || !serviceRoleKey) {
     console.error(
-      '❌ Thiếu NEXT_PUBLIC_SUPABASE_URL hoặc SUPABASE_SERVICE_ROLE_KEY trong .env'
+      '❌ Thiếu secret key'
     );
     process.exit(1);
   }
@@ -108,10 +108,8 @@ async function main() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  console.log(`🚀 Bắt đầu đồng bộ dữ liệu lên Supabase (${supabaseUrl})...\n`);
+  console.log(`🚀 Bắt đầu đồng bộ dữ liệu (${supabaseUrl})...\n`);
 
-  // 1. Provision Single Admin Account in Supabase Auth
-  console.log('1️⃣  Kiểm tra & khởi tạo tài khoản Admin duy nhất (Supabase Auth)...');
   const { data: usersData, error: listUsersErr } =
     await supabase.auth.admin.listUsers({ page: 1, perPage: 10 });
   if (listUsersErr) {
@@ -172,7 +170,7 @@ async function main() {
   }
 
   // 3. Migrate Tests & Audio Files + Rich Metadata
-  console.log('\n3️⃣  Đưa toàn bộ bài Test & Audio kèm Metadata chuẩn lên Supabase...');
+  console.log('\n3️⃣  Đưa toàn bộ bài Test & Audio kèm Metadata chuẩn...');
   const indexPath = path.join(TESTS_DIR, 'index.json');
   const indexRaw = fs.readFileSync(indexPath, 'utf-8');
   const catalogItems: TestCatalogItem[] = JSON.parse(indexRaw).tests || [];
@@ -367,7 +365,7 @@ async function main() {
   }
 
   console.log('\n============================================================');
-  console.log(`🎉 HOÀN TẤT ĐỒNG BỘ SUPABASE!`);
+  console.log(`🎉 HOÀN TẤT ĐỒNG BỘ!`);
   console.log(`   - Tài khoản Admin duy nhất: ${adminEmail}`);
   console.log(`   - Tổng số đề thi (public.tests): ${migratedTestsCount} đề`);
   console.log(`   - Tổng số file audio (storage.test-audio & public.test_audio): ${migratedAudioCount} files`);
@@ -375,6 +373,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('❌ Lỗi khi migrate dữ liệu lên Supabase:', err);
+  console.error('❌ Lỗi khi migrate dữ liệu lên:', err);
   process.exit(1);
 });

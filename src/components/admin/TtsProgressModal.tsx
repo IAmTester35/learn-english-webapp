@@ -60,9 +60,8 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
   const fetchStatus = useCallback(
     async (withMeta = false) => {
       try {
-        const url = `/api/admin/generate-tts?testId=${encodeURIComponent(testId)}${
-          withMeta ? '&includeAudioMeta=true' : ''
-        }`;
+        const url = `/api/admin/generate-tts?testId=${encodeURIComponent(testId)}${withMeta ? '&includeAudioMeta=true' : ''
+          }`;
         const res = await fetch(url);
         const data = await res.json();
 
@@ -191,7 +190,7 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
 
       setActionMessage({
         type: 'success',
-        text: `Đã tải lên thành công audio cho phần "${partId}" lên Supabase Storage (${(
+        text: `Đã tải lên thành công audio cho phần "${partId}" (${(
           (data.byteLength || 0) / 1024
         ).toFixed(0)} KB).`,
       });
@@ -232,7 +231,7 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
             <div className="flex items-center gap-2">
               <Volume2 className="w-5 h-5 text-black shrink-0" />
               <h2 className="text-base sm:text-lg font-black uppercase tracking-tight text-black truncate">
-                Quản Lý Audio & TTS (Supabase Storage)
+                Quản Lý Audio & TTS
               </h2>
             </div>
             <p className="text-xs font-mono text-neutral-600 mt-0.5 truncate">
@@ -262,11 +261,10 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
 
           {actionMessage && (
             <div
-              className={`p-3 border-2 text-xs font-medium flex items-center gap-2 ${
-                actionMessage.type === 'success'
-                  ? 'bg-[#e6f4ea] border-[#137333] text-[#137333]'
-                  : 'bg-red-100 border-red-600 text-red-900'
-              }`}
+              className={`p-3 border-2 text-xs font-medium flex items-center gap-2 ${actionMessage.type === 'success'
+                ? 'bg-[#e6f4ea] border-[#137333] text-[#137333]'
+                : 'bg-red-100 border-red-600 text-red-900'
+                }`}
             >
               {actionMessage.type === 'success' ? (
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -284,12 +282,12 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
                 {isRunning ? (
                   <span className="inline-flex items-center gap-1.5 text-blue-700 font-black">
                     <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                    <span>ĐANG TẠO AUDIO & TẢI LÊN SUPABASE...</span>
+                    <span>ĐANG TẠO AUDIO & TẢI LÊN...</span>
                   </span>
                 ) : isCompleted ? (
                   <span className="inline-flex items-center gap-1.5 text-[#137333] font-black">
                     <CheckCircle2 className="w-4 h-4 shrink-0" />
-                    <span>ĐỒNG BỘ SUPABASE HOÀN TẤT</span>
+                    <span>ĐỒNG BỘ HOÀN TẤT</span>
                   </span>
                 ) : isFailed ? (
                   <span className="inline-flex items-center gap-1.5 text-red-700 font-black">
@@ -330,13 +328,12 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
             {/* Visual Progress Bar */}
             <div className="w-full bg-neutral-200 border-2 border-black h-4 overflow-hidden relative">
               <div
-                className={`h-full transition-all duration-300 ${
-                  isCompleted
-                    ? 'bg-[#137333]'
-                    : isFailed
+                className={`h-full transition-all duration-300 ${isCompleted
+                  ? 'bg-[#137333]'
+                  : isFailed
                     ? 'bg-red-600'
                     : 'bg-black'
-                }`}
+                  }`}
                 style={{ width: `${Math.max(percent, isRunning ? 5 : 0)}%` }}
               />
             </div>
@@ -373,15 +370,15 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
                 (listeningParts.length > 0
                   ? listeningParts
                   : (job?.parts || []).map((jp, idx) => ({
-                      id: jp.id,
-                      index: idx,
-                      title: jp.title,
-                      audioUrl: jp.webUrl || null,
-                      hasTranscript: true,
-                      scenario: null,
-                      accent: null,
-                      pacing: null,
-                    }))
+                    id: jp.id,
+                    index: idx,
+                    title: jp.title,
+                    audioUrl: jp.webUrl || null,
+                    hasTranscript: true,
+                    scenario: null,
+                    accent: null,
+                    pacing: null,
+                  }))
                 ).map((part) => {
                   const jp = jobPartMap.get(part.id);
                   const meta = audioMetaMap.get(part.id);
@@ -395,15 +392,14 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
                   return (
                     <div
                       key={part.id}
-                      className={`p-3 flex flex-col gap-2 text-xs ${
-                        status === 'processing'
-                          ? 'bg-blue-50/70'
-                          : status === 'completed'
+                      className={`p-3 flex flex-col gap-2 text-xs ${status === 'processing'
+                        ? 'bg-blue-50/70'
+                        : status === 'completed'
                           ? 'bg-[#e6f4ea]/30'
                           : status === 'failed'
-                          ? 'bg-red-50'
-                          : 'bg-white'
-                      }`}
+                            ? 'bg-red-50'
+                            : 'bg-white'
+                        }`}
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
@@ -449,7 +445,7 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
                             disabled={isRunning || isUploadingThis}
                             onClick={() => handleOpenManualUpload(part.id)}
                             className="border border-black bg-[#f4eed9] hover:bg-black hover:text-[#fffdf5] text-black px-2 py-0.5 text-[11px] font-bold inline-flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-40"
-                            title="Tải file MP3/WAV từ máy tính lên Supabase Storage cho phần này"
+                            title="Tải file MP3/WAV từ máy tính"
                           >
                             {isUploadingThis ? (
                               <Loader2 className="w-3 h-3 animate-spin" />
@@ -493,7 +489,7 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
                           </span>
                         ) : (
                           <span className="text-neutral-400 italic">
-                            Chưa có metadata audio trên Supabase
+                            Chưa có metadata audio
                           </span>
                         )}
                       </div>
@@ -541,8 +537,8 @@ export const TtsProgressModal: React.FC<TtsProgressModalProps> = ({
         <div className="border-t-2 border-black pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <p className="text-neutral-500 text-[11px]">
             {isRunning
-              ? 'Tiến trình đang chạy ngầm và đồng bộ trực tiếp với Supabase Storage & Database.'
-              : 'Mọi thay đổi audio được lưu trực tiếp lên Supabase Storage bucket "test-audio".'}
+              ? 'Tiến trình đang chạy ngầm và đồng bộ trực tiếp'
+              : 'Mọi thay đổi audio được lưu trực tiếp'}
           </p>
 
           <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">

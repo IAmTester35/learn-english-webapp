@@ -9,7 +9,7 @@ function AdminLoginForm() {
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/admin';
 
-  const [email, setEmail] = useState('admin@ltestlab.local');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +40,7 @@ function AdminLoginForm() {
       router.push(redirectUrl);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi xác thực với Supabase Auth.');
+      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi xác thực.');
     } finally {
       setIsLoading(false);
     }
@@ -52,9 +52,6 @@ function AdminLoginForm() {
         <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
         <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight">Khu Vực Quản Trị</h1>
       </div>
-      <p className="text-xs text-neutral-600 mb-5 font-medium">
-        Xác thực qua hệ thống Supabase Auth.
-      </p>
 
       {error && (
         <div className="mb-5 p-3 bg-red-100 border-2 border-red-600 text-red-900 text-xs sm:text-sm flex items-start gap-2 font-medium">
@@ -69,7 +66,7 @@ function AdminLoginForm() {
             htmlFor="admin-email"
             className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-black"
           >
-            Email Quản trị (Supabase Auth)
+            Email Quản trị
           </label>
           <div className="relative">
             <input
@@ -77,7 +74,7 @@ function AdminLoginForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@ltestlab.local"
+              placeholder="your email"
               className="w-full border-2 border-black bg-white px-3.5 py-2.5 pr-9 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-black"
               disabled={isLoading}
               required

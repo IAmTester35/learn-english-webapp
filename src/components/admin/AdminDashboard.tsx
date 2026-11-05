@@ -110,7 +110,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
 
       setStatusMessage({
         type: 'success',
-        text: `Đã ${data.hidden ? 'ẨN' : 'CÔNG KHAI'} bài thi "${testId}" trên Supabase.`,
+        text: `Đã ${data.hidden ? 'ẨN' : 'CÔNG KHAI'} bài thi "${testId}".`,
       });
       router.refresh();
     } catch (err) {
@@ -126,7 +126,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
   const handleDeleteTest = async (testId: string, testTitle: string) => {
     if (
       !window.confirm(
-        `Bạn có chắc chắn muốn XÓA VĨNH VIỄN đề thi "${testTitle}" (${testId}) và toàn bộ file audio của đề này khỏi Supabase?`
+        `Bạn có chắc chắn muốn XÓA VĨNH VIỄN đề thi "${testTitle}" (${testId}) và toàn bộ file audio của đề này?`
       )
     ) {
       return;
@@ -147,7 +147,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
       setTests((prev) => prev.filter((t) => t.id !== testId));
       setStatusMessage({
         type: 'success',
-        text: `Đã xóa đề thi "${testId}" và toàn bộ audio liên quan khỏi Supabase.`,
+        text: `Đã xóa đề thi "${testId}" và toàn bộ audio liên quan.`,
       });
       router.refresh();
     } catch (err) {
@@ -208,7 +208,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
       await loadGeminiKeys();
       setStatusMessage({
         type: 'success',
-        text: `Đã thêm và kiểm tra Gemini API Key "${data.key?.label}" trên Supabase.`,
+        text: `Đã thêm và kiểm tra Gemini API Key "${data.key?.label}".`,
       });
     } catch (err) {
       setStatusMessage({
@@ -304,23 +304,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
           <div className="flex items-center gap-2 text-black">
             <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
             <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight">
-              Quản Lý Đề Thi & Audio (Supabase)
+              Quản Lý Đề Thi & Audio
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-neutral-600 mt-1 font-medium">
-            Quản trị viên duy nhất (Supabase Auth). Quản lý đề thi, metadata, lưu trữ audio trên Supabase Storage và Gemini TTS.
-          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={() => setShowKeyManager((prev) => !prev)}
-            className={`border-2 border-black px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
-              showKeyManager
-                ? 'bg-[#f4eed9] text-black'
-                : 'bg-white hover:bg-neutral-100 text-black'
-            }`}
+            className={`border-2 border-black px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${showKeyManager
+              ? 'bg-[#f4eed9] text-black'
+              : 'bg-white hover:bg-neutral-100 text-black'
+              }`}
           >
             <Key className="w-4 h-4" />
             <span>Gemini Keys</span>
@@ -345,14 +341,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
         </div>
       </div>
 
-      {/* Gemini API Keys Pool Manager (Supabase) */}
+      {/* Gemini API Keys Pool Manager */}
       {showKeyManager && (
         <div className="border-2 border-black bg-[#fffdf5] p-4 shadow-[3px_3px_0px_0px_#000] space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black pb-2.5">
             <div className="flex items-center gap-2">
               <Key className="w-4 h-4 text-black" />
               <h2 className="text-sm font-black uppercase tracking-wider">
-                Quản Lý Pool Gemini API Keys (Lưu mã hóa AES-256 trên Supabase)
+                Quản Lý Pool AI API Keys
               </h2>
             </div>
 
@@ -403,13 +399,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
               disabled={isAddingKey || !newKeyInput.trim()}
               className="border-2 border-black bg-black text-[#fffdf5] px-4 py-1.5 text-xs font-bold cursor-pointer disabled:opacity-40"
             >
-              {isAddingKey ? 'Đang thêm...' : 'Thêm Key vào Supabase'}
+              {isAddingKey ? 'Đang thêm...' : 'Thêm Key'}
             </button>
           </form>
 
           {isLoadingKeys ? (
             <div className="text-xs text-neutral-500 py-3 text-center">
-              Đang tải danh sách Gemini API Keys từ Supabase...
+              Đang tải danh sách Gemini API Keys...
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
@@ -422,13 +418,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                     <div className="font-bold text-black flex items-center gap-1.5">
                       <span className="truncate">{k.label}</span>
                       <span
-                        className={`px-1.5 py-0.2 text-[10px] font-mono uppercase border ${
-                          k.status === 'healthy'
-                            ? 'bg-[#e6f4ea] text-[#137333] border-[#137333]'
-                            : k.status === 'cooldown'
+                        className={`px-1.5 py-0.2 text-[10px] font-mono uppercase border ${k.status === 'healthy'
+                          ? 'bg-[#e6f4ea] text-[#137333] border-[#137333]'
+                          : k.status === 'cooldown'
                             ? 'bg-[#fef7e0] text-[#b06000] border-[#b06000]'
                             : 'bg-red-100 text-red-800 border-red-600'
-                        }`}
+                          }`}
                       >
                         {k.status}
                       </span>
@@ -456,7 +451,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div className="border-2 border-black bg-white p-4 shadow-sm">
           <span className="text-xs font-bold text-neutral-500 uppercase">
-            Tổng số đề thi trên Supabase
+            Tổng số đề thi
           </span>
           <div className="text-2xl font-black mt-1 font-mono">{totalCount}</div>
         </div>
@@ -475,11 +470,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
       {/* Notifications */}
       {statusMessage && (
         <div
-          className={`p-3.5 border-2 flex items-center gap-2 text-sm font-medium ${
-            statusMessage.type === 'success'
-              ? 'bg-[#e6f4ea] border-[#137333] text-[#137333]'
-              : 'bg-[#fce8e6] border-[#c5221f] text-[#c5221f]'
-          }`}
+          className={`p-3.5 border-2 flex items-center gap-2 text-sm font-medium ${statusMessage.type === 'success'
+            ? 'bg-[#e6f4ea] border-[#137333] text-[#137333]'
+            : 'bg-[#fce8e6] border-[#c5221f] text-[#c5221f]'
+            }`}
         >
           {statusMessage.type === 'success' ? (
             <CheckCircle2 className="w-5 h-5 shrink-0" />
@@ -507,33 +501,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
           <button
             type="button"
             onClick={() => setFilterStatus('all')}
-            className={`border-2 border-black px-2.5 py-1.5 text-xs font-bold cursor-pointer transition-colors ${
-              filterStatus === 'all'
-                ? 'bg-black text-[#fffdf5]'
-                : 'bg-[#fffdf5] text-black hover:bg-neutral-100'
-            }`}
+            className={`border-2 border-black px-2.5 py-1.5 text-xs font-bold cursor-pointer transition-colors ${filterStatus === 'all'
+              ? 'bg-black text-[#fffdf5]'
+              : 'bg-[#fffdf5] text-black hover:bg-neutral-100'
+              }`}
           >
             Tất cả ({totalCount})
           </button>
           <button
             type="button"
             onClick={() => setFilterStatus('public')}
-            className={`border-2 border-black px-2.5 py-1.5 text-xs font-bold cursor-pointer transition-colors ${
-              filterStatus === 'public'
-                ? 'bg-black text-[#fffdf5]'
-                : 'bg-[#fffdf5] text-black hover:bg-neutral-100'
-            }`}
+            className={`border-2 border-black px-2.5 py-1.5 text-xs font-bold cursor-pointer transition-colors ${filterStatus === 'public'
+              ? 'bg-black text-[#fffdf5]'
+              : 'bg-[#fffdf5] text-black hover:bg-neutral-100'
+              }`}
           >
             Công khai ({publicCount})
           </button>
           <button
             type="button"
             onClick={() => setFilterStatus('hidden')}
-            className={`border-2 border-black px-2.5 py-1.5 text-xs font-bold cursor-pointer transition-colors ${
-              filterStatus === 'hidden'
-                ? 'bg-black text-[#fffdf5]'
-                : 'bg-[#fffdf5] text-black hover:bg-neutral-100'
-            }`}
+            className={`border-2 border-black px-2.5 py-1.5 text-xs font-bold cursor-pointer transition-colors ${filterStatus === 'hidden'
+              ? 'bg-black text-[#fffdf5]'
+              : 'bg-[#fffdf5] text-black hover:bg-neutral-100'
+              }`}
           >
             Đang ẩn ({hiddenCount})
           </button>
@@ -617,11 +608,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                       {totalListening > 0 && (
                         <div>
                           <span
-                            className={`inline-flex items-center gap-1 border px-2 py-0.5 text-[10px] font-mono font-bold rounded-sm ${
-                              isAudioFull
-                                ? 'border-[#137333] bg-[#e6f4ea]/60 text-[#137333]'
-                                : 'border-[#b06000] bg-[#fef7e0] text-[#b06000]'
-                            }`}
+                            className={`inline-flex items-center gap-1 border px-2 py-0.5 text-[10px] font-mono font-bold rounded-sm ${isAudioFull
+                              ? 'border-[#137333] bg-[#e6f4ea]/60 text-[#137333]'
+                              : 'border-[#b06000] bg-[#fef7e0] text-[#b06000]'
+                              }`}
                           >
                             <Volume2 className="w-3 h-3" />
                             <span>
@@ -639,11 +629,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                           type="button"
                           onClick={() => handleToggle(test.id)}
                           disabled={isToggling}
-                          className={`border-2 border-black font-bold px-2.5 py-1 text-xs inline-flex items-center gap-1 transition-colors cursor-pointer ${
-                            isHidden
-                              ? 'bg-[#137333] text-white hover:bg-[#0d5926]'
-                              : 'bg-[#fffdf5] text-black hover:bg-neutral-200'
-                          }`}
+                          className={`border-2 border-black font-bold px-2.5 py-1 text-xs inline-flex items-center gap-1 transition-colors cursor-pointer ${isHidden
+                            ? 'bg-[#137333] text-white hover:bg-[#0d5926]'
+                            : 'bg-[#fffdf5] text-black hover:bg-neutral-200'
+                            }`}
                           title={
                             isHidden
                               ? 'Mở hiển thị công khai bài này'
@@ -671,7 +660,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                           onClick={() => handleGenerateTts(test.id, test.title)}
                           disabled={isGeneratingTts && activeModalTest?.id === test.id}
                           className="border-2 border-black bg-[#fffdf5] hover:bg-neutral-200 text-black font-bold px-2.5 py-1 text-xs inline-flex items-center gap-1 transition-colors cursor-pointer"
-                          title="Quản lý Audio, tạo giọng đọc Gemini TTS hoặc tải file MP3 lên Supabase Storage"
+                          title="Quản lý Audio, tạo giọng đọc TTS hoặc tải file MP3"
                         >
                           {isGeneratingTts && activeModalTest?.id === test.id ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -685,7 +674,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                         <Link
                           href={`/test/create?edit=${encodeURIComponent(test.id)}`}
                           className="border-2 border-black bg-[#f4eed9] hover:bg-black hover:text-[#fffdf5] text-black font-bold px-2 py-1 text-xs inline-flex items-center gap-1 transition-colors"
-                          title="Chỉnh sửa JSON đề thi trực tiếp trên Supabase"
+                          title="Chỉnh sửa JSON đề thi trực tiếp"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                           <span>Sửa</span>
@@ -697,7 +686,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialTests }) 
                           onClick={() => handleDeleteTest(test.id, test.title)}
                           disabled={isDeleting}
                           className="border-2 border-black bg-white hover:bg-red-600 hover:text-white text-red-700 font-bold px-2 py-1 text-xs inline-flex items-center gap-1 transition-colors cursor-pointer"
-                          title="Xóa đề thi và audio khỏi Supabase"
+                          title="Xóa đề thi và audio"
                         >
                           {isDeleting ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />

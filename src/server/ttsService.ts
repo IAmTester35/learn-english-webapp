@@ -371,7 +371,7 @@ export async function uploadAudioBytesToSupabase(params: {
 }): Promise<UploadedAudioResult> {
   const supabase = getSupabaseAdminClient();
   if (!supabase) {
-    throw new Error('Chưa cấu hình kết nối Supabase Admin để lưu trữ audio.');
+    throw new Error('Chưa cấu hình kết nối Admin để lưu trữ audio.');
   }
 
   const format = params.format || 'mp3';
@@ -722,13 +722,12 @@ export async function generateAudioForTest(
       finalJob.errors.length === 0
         ? 'completed'
         : stats.generated > 0 || stats.skipped > 0
-        ? 'completed'
-        : 'failed';
+          ? 'completed'
+          : 'failed';
     finalJob.currentMessage =
       finalJob.status === 'completed'
-        ? `Hoàn tất trên Supabase! Đã tạo mới ${stats.generated} phần, có sẵn ${stats.skipped} phần.${
-            stats.errors.length ? ` (${stats.errors.length} lỗi)` : ''
-          }`
+        ? `Hoàn tất trên Supabase! Đã tạo mới ${stats.generated} phần, có sẵn ${stats.skipped} phần.${stats.errors.length ? ` (${stats.errors.length} lỗi)` : ''
+        }`
         : `Tạo audio thất bại (${stats.errors.length} lỗi).`;
     finalJob.updatedAt = new Date().toISOString();
     await syncJobToSupabase(finalJob);
