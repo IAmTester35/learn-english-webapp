@@ -118,10 +118,13 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, initialSec
 
   // Restore saved progress on mount & initialize navigation guard
   useEffect(() => {
-    setIsTestInProgress(true);
     const existing = getProgressByTestId(test.id);
 
     if (existing) {
+      const stats = calculateProgressStats(test, existing.answers);
+      const hasAnswers = stats.answeredCount > 0;
+      setIsTestInProgress(hasAnswers);
+
       queueMicrotask(() => {
         setAnswers(existing.answers);
         if (initialSection && ACTIVE_SKILL_TABS.includes(initialSection as SkillTab)) {
@@ -133,11 +136,14 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, initialSec
           setActiveTab(targetSection);
           window.history.replaceState(null, '', `/test/${test.id}/${targetSection}`);
         }
-        setLastSavedNotice(
-          `Đã khôi phục tiến độ lưu lúc ${new Date(existing.updatedAt).toLocaleTimeString('vi-VN')}`
-        );
+        if (hasAnswers) {
+          setLastSavedNotice(
+            `Đã khôi phục tiến độ lưu lúc ${new Date(existing.updatedAt).toLocaleTimeString('vi-VN')}`
+          );
+        }
       });
     } else {
+      setIsTestInProgress(false);
       if (!initialSection || !ACTIVE_SKILL_TABS.includes(initialSection as SkillTab)) {
         window.history.replaceState(null, '', `/test/${test.id}/reading`);
       }
@@ -149,7 +155,7 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, initialSec
         window.speechSynthesis.cancel();
       }
     };
-  }, [test.id, initialSection, setIsTestInProgress]);
+  }, [test, initialSection, setIsTestInProgress]);
 
   // Handle browser back/forward buttons (popstate)
   useEffect(() => {
@@ -170,9 +176,11 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, initialSec
     const stats = calculateProgressStats(test, updatedAnswers);
     if (stats.answeredCount === 0) {
       deleteTestProgress(test.id);
+      setIsTestInProgress(false);
       setLastSavedNotice('');
       return;
     }
+    setIsTestInProgress(true);
     const now = new Date().toISOString();
     saveTestProgress({
       testId: test.id,
@@ -253,15 +261,17 @@ export const TestRunnerView: React.FC<TestRunnerViewProps> = ({ test, initialSec
   };
 
   const handleDiscardAndExit = () => {
-    const ok = window.confirm(
-      'Bạn có chắc chắn muốn hủy bài làm này và quay về trang chủ? Toàn bộ câu trả lời chưa nộp của đề này sẽ bị xóa khỏi bộ nhớ.'
-    );
-    if (ok) {
-      deleteTestProgress(test.id);
-      setIsTestInProgress(false);
-      stopAudio();
-      router.push('/');
+    const stats = calculateProgressStats(test, answers);
+    if (stats.answeredCount > 0) {
+      const ok = window.confirm(
+        'Bạn có chắc chắn muốn hủy bài làm này và quay về trang chủ? Toàn bộ câu trả lời chưa nộp của đề này sẽ bị xóa khỏi bộ nhớ.'
+      );
+      if (!ok) return;
     }
+    deleteTestProgress(test.id);
+    setIsTestInProgress(false);
+    stopAudio();
+    router.push('/');
   };
 
   const handleSubmit = async () => {

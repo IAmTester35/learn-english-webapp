@@ -37,10 +37,10 @@ export function calculateProgressStats(
   let answeredCount = 0;
 
   // Reading
-  test.sections.reading.passages.forEach((p) => {
-    totalCount += p.questions.length;
-    p.questions.forEach((q) => {
-      const ans = answers.reading[q.id];
+  test.sections?.reading?.passages?.forEach((p) => {
+    totalCount += p.questions?.length || 0;
+    p.questions?.forEach((q) => {
+      const ans = answers.reading?.[q.id];
       if (Array.isArray(ans) ? ans.length > 0 : typeof ans === 'string' && ans.trim() !== '') {
         answeredCount += 1;
       }
@@ -48,10 +48,10 @@ export function calculateProgressStats(
   });
 
   // Listening
-  test.sections.listening.parts.forEach((p) => {
-    totalCount += p.questions.length;
-    p.questions.forEach((q) => {
-      const ans = answers.listening[q.id];
+  test.sections?.listening?.parts?.forEach((p) => {
+    totalCount += p.questions?.length || 0;
+    p.questions?.forEach((q) => {
+      const ans = answers.listening?.[q.id];
       if (Array.isArray(ans) ? ans.length > 0 : typeof ans === 'string' && ans.trim() !== '') {
         answeredCount += 1;
       }
